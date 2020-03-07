@@ -69,6 +69,7 @@
     "rxdb": "^8.7.5",
     "rxjs": "^6.5.4",
     "socket.io": "^2.3.0",
+    "threadedclass": "^0.7.0",
     "tslib": "^1.10.0"
   },
   "devDependencies": {

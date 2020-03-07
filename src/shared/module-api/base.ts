@@ -7,7 +7,16 @@ import { CompanionPreset } from "./preset";
 import { InstanceStatus, LogLevel } from "./enums";
 
 export interface CompanionModuleSystem {
+	setActionDefinitions(actions: CompanionActions): Promise<void>
+	setVariableDefinitions(variables: CompanionVariable[]): Promise<void>
+	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void>
+	setPresetDefinitions(presets: CompanionPreset[]): Promise<void>
 
+	variableChanged(variableId: string, value: string): void
+	checkFeedbacks(feedbackId?: string): void
+
+	updateStatus(level: InstanceStatus | null, message?: string): void
+	log(level: LogLevel, message: string): void
 }
 
 export abstract class InstanceBase<TConfig> {
@@ -20,7 +29,10 @@ export abstract class InstanceBase<TConfig> {
 	 */
 	constructor(system: CompanionModuleSystem, id: string) {
         this.system = system
-        this.id = id;
+		this.id = id;
+		
+		this.updateStatus(null, 'Initializing')
+		this.log(LogLevel.DEBUG, 'Initializing')
     }
 
 	/**
@@ -59,34 +71,30 @@ export abstract class InstanceBase<TConfig> {
     }
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
-        // TODO
-        return Promise.resolve()
+        return this.system.setActionDefinitions(actions)
     }
 	setVariableDefinitions(variables: CompanionVariable[]): Promise<void> {
-        // TODO
-        return Promise.resolve()
+        return this.system.setVariableDefinitions(variables)
     }
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
-        // TODO
-        return Promise.resolve()
+        return this.system.setFeedbackDefinitions(feedbacks)
     }
 	setPresetDefinitions(presets: CompanionPreset[]): Promise<void> {
-        // TODO
-        return Promise.resolve()
+		return this.system.setPresetDefinitions(presets)
     }
 
 	variableChanged(variableId: string, value: string): void {
-        // TODO
+		return this.system.variableChanged(variableId, value)
     }
 	checkFeedbacks(feedbackId?: string): void {
-        // TODO
+		return this.system.checkFeedbacks(feedbackId)
     }
 
     updateStatus(level: InstanceStatus | null, message?: string): void {
-        // TODO
+		return this.system.updateStatus(level, message)
     }
 
 	log(level: LogLevel, message: string): void {
-        // TODO
+        return this.system.log(level, message)
     }
 }

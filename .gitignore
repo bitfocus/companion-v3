@@ -1,0 +1,9 @@
+dist
+.env
+.idea
+.vscode
+node_modules
+
+
+/config.json
+/log.txt

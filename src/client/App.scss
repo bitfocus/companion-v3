@@ -1,0 +1,61 @@
+// Override default variables before the import
+// $body-bg: #ccc;
+// Import Bootstrap and its default variables
+@import "~bootswatch/dist/darkly/variables";
+@import "~bootstrap/scss/bootstrap";
+@import "~bootswatch/dist/darkly/bootswatch";
+
+@import 'contextmenu.scss';
+
+
+.rundownItem {
+    border: 1px solid transparent;
+    // margin: -1px;
+
+    &.selected {
+        border: 1px solid #0f0 !important;
+        background-color: rgb(0, 75, 0);
+    }
+    
+    &:nth-of-type(odd) {
+        background-color: #444;
+        &.selected {
+        background-color: rgb(0, 100, 0);
+        }
+    }
+
+    .wrapper {
+        display: table;
+        width: 100%;
+    }
+
+    .leftColor {
+        width: 20px;
+        display: table-cell;
+        background-color: yellow;
+    }
+
+    .status {
+        width: 5px;
+        display: table-cell;
+    }
+
+    .content {
+        display: table-cell;
+
+        table {
+            width: 100%;
+            font-size: 0.8em;
+
+            .label {
+                font-size: 1.5em;
+            }
+        }
+    }
+
+    .icon {
+        width: 60px;
+        display: table-cell;
+        background-color: #ccc;
+    }
+}

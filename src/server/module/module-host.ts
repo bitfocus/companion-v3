@@ -1,16 +1,10 @@
-import { CompanionModuleSystem } from '../../shared/module-api';
 import { threadedClass } from 'threadedclass';
-import { MockModule } from './mock';
 import { readdirSync } from 'fs';
 import { join } from 'path';
 import { ModuleProxy } from './bootstrap';
 
 // Inject asar parsing
 require('asar-node').register();
-
-export function createInstance(moduleSystem: CompanionModuleSystem, id: string) {
-	return threadedClass('./mock', MockModule, [moduleSystem, id]);
-}
 
 // TODO - this is pretty shitty naming and code
 export async function loadModulesFromDirectory() {
@@ -43,7 +37,7 @@ export async function loadModulesFromDirectory() {
             () => Promise.resolve(),
 			(level, msg) => console.log('status', level, msg),
 			(level, msg) => console.log(level, 'abc', msg)
-		]);
+        ]);
 		// const mocked2 = await mocked.initModule(asarPath)
 		await mocked.init({});
 		console.log('config', await mocked.getConfigFields());

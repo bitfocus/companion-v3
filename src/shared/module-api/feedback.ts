@@ -13,7 +13,6 @@ export interface CompanionFeedback {
 	label: string;
 	description: string;
 	options: SomeCompanionInputField[];
-	callback?: (feedback: CompanionFeedbackEvent) => CompanionFeedbackResult;
 }
 
 export interface CompanionFeedbacks {

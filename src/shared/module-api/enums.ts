@@ -13,15 +13,15 @@ export enum LogLevel {
 }
 
 export namespace Regex {
-    const IP = ''
-    const BOOLEAN = ''
-    const PORT = ''
-    const PERCENT = ''
-    const FLOAT = ''
-    const SIGNED_FLOAT = ''
-    const FLOAT_OR_INT = ''
-    const NUMBER = ''
-    const SIGNED_NUMBER = ''
-    const SOMETHING = ''
-    const TIMECODE = ''
+    export const IP = ''
+    export const BOOLEAN = ''
+    export const PORT = ''
+    export const PERCENT = ''
+    export const FLOAT = ''
+    export const SIGNED_FLOAT = ''
+    export const FLOAT_OR_INT = ''
+    export const NUMBER = ''
+    export const SIGNED_NUMBER = ''
+    export const SOMETHING = ''
+    export const TIMECODE = ''
 }

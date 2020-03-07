@@ -9,6 +9,7 @@ import RxDBServerPlugin from 'rxdb/plugins/server';
 import http from 'http';
 import createSocketIO from 'socket.io';
 import { ICore } from './core';
+import { loadModulesFromDirectory } from './module/module-host';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -24,6 +25,8 @@ console.log(`*******************************************`);
 	const app = express();
 	const server = http.createServer(app);
 	const io = createSocketIO(server);
+
+	loadModulesFromDirectory()
 
 	const core: ICore = {
 		db: db,

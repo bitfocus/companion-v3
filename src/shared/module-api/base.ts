@@ -47,12 +47,12 @@ export abstract class InstanceBase<TConfig> {
 	/**
 	 * Executes the provided action.
 	 */
-	abstract executeAction(action: CompanionActionEvent): void;
+	abstract executeAction(event: CompanionActionEvent): void;
 
 	/**
 	 * Processes a feedback state.
 	 */
-	abstract executeFeedback(feedback: CompanionFeedbackEvent): CompanionFeedbackResult;
+	abstract executeFeedback(event: CompanionFeedbackEvent): CompanionFeedbackResult;
 
 	protected addUpgradeScript(fcn: CompanionUpgradeScript<TConfig>): void {
         // TODO

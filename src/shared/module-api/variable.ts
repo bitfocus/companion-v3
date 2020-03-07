@@ -1,4 +1,4 @@
-export interface CompanionVariables {
+export interface CompanionVariable {
 	name: string;
 	description: string;
 }

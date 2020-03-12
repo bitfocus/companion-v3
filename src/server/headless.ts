@@ -26,7 +26,7 @@ console.log(`*******************************************`);
 	const server = http.createServer(app);
 	const io = createSocketIO(server);
 
-	loadModulesFromDirectory()
+	// loadModulesFromDirectory()
 
 	const core: ICore = {
 		db: db,
@@ -35,8 +35,9 @@ console.log(`*******************************************`);
 	};
 
 	app.set('view engine', 'ejs');
+	app.set('views', path.join(__dirname, '../../views'));
 
-	app.use('/assets', express.static(path.join(process.cwd(), 'assets')));
+	app.use('/assets', express.static(path.join(__dirname, '../../assets')));
 	app.use('/db', dbApp);
 
 	app.use(apiRouter(core));

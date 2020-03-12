@@ -12,7 +12,7 @@
     "lib": ["ES2019", "DOM"],
     "types": [],
     "jsx": "react",
-    "composite": true,
+    "declaration": false,
     "strict": true,
     "rootDir": ".."
   },

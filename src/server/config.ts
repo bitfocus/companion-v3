@@ -1,18 +1,13 @@
-import dotenv from 'dotenv';
-import findUp from 'find-up';
-import path from 'path';
-import fs from 'fs';
+import readPkgUp from 'read-pkg-up';
+import electron from 'electron'
 
-const IS_DEV = process.env.NODE_ENV !== 'production';
+const IS_DEV = electron.app ? !electron.app.isPackaged : process.env.NODE_ENV !== 'production';
 
-if (IS_DEV) {
-	dotenv.config({ path: findUp.sync('.env') });
+const PackageJson = readPkgUp.sync();
+if (!PackageJson) {
+	throw new Error('Failed to open package.json');
 }
-
-const packageJsonPath = path.join(process.cwd(), 'package.json');
-const rawPackageJson = fs.readFileSync(packageJsonPath).toString();
-const PackageJson = JSON.parse(rawPackageJson);
-const { version: VERSION } = PackageJson;
+const { version: VERSION } = PackageJson.packageJson;
 
 // server
 const SERVER_PORT = process.env.PORT || 3000;

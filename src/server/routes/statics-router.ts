@@ -8,16 +8,16 @@ export function staticsRouter() {
 
 	if (IS_DEV) {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const proxy = require('http-proxy-middleware');
+		const { createProxyMiddleware } = require('http-proxy-middleware');
 		// All the assets are hosted by Webpack on localhost:${config.WEBPACK_PORT} (Webpack-dev-server)
 		router.use(
 			'/statics',
-			proxy({
+			createProxyMiddleware({
 				target: `http://localhost:${WEBPACK_PORT}/`,
 			}),
 		);
 	} else {
-		const staticsPath = path.join(process.cwd(), 'dist', 'statics');
+		const staticsPath = path.join(__dirname, '../../../dist/statics');
 
 		// All the assets are in "statics" folder (Done by Webpack during the build phase)
 		router.use('/statics', express.static(staticsPath));

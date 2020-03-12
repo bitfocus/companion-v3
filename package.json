@@ -40,7 +40,16 @@
     "directories": {
       "buildResources": "assets/",
       "output": "electron-output/"
-    }
+    },
+    "files": [
+      "views",
+      "assets",
+      "dist",
+      "LICENSE",
+      "!**/*.d.ts",
+      "!**/*.tsbuildinfo",
+      "!**/*.map"
+    ]
   },
   "jest": {
     "roots": [

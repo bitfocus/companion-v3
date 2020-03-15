@@ -1,7 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 
 // Import the main server code
-import './headless'
+import { startup } from './main'
+
+startup(app.getPath('userData'))
 
 function createWindow() {
 	// Create the browser window.

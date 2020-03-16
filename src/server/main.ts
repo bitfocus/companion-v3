@@ -9,7 +9,7 @@ import RxDBServerPlugin from 'rxdb/plugins/server';
 import http from 'http';
 import createSocketIO from 'socket.io';
 import { ICore } from './core';
-import { loadModulesFromDirectory } from './module/module-host';
+import { ModuleFactory } from './module/module-host';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -23,7 +23,6 @@ export async function startup(configPath: string) {
 	process.chdir(configPath)
 
 	const db = await createDb(configPath);
-	// const connections = new ConnectionStore();
 
 	const { app: dbApp } = RxDBServerPlugin.spawnServer.bind(db as any)({ startServer: false });
 
@@ -31,12 +30,20 @@ export async function startup(configPath: string) {
 	const server = http.createServer(app);
 	const io = createSocketIO(server);
 
-	// loadModulesFromDirectory()
+	const moduleFactory = new ModuleFactory(configPath)
+
+	const modules = moduleFactory.listModules()
+	modules.then(modList => {
+		console.log(`Loaded ${modList.length} modules:`)
+		modList.forEach(m => {
+			console.log(` - ${m.name}@${m.version} (${m.asarPath})`)
+		})
+	})
 
 	const core: ICore = {
-		db: db,
-		io: io,
-		// connections: connections,
+		db,
+		io,
+		moduleFactory
 	};
 
 	app.set('view engine', 'ejs');

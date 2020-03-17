@@ -21,13 +21,13 @@ console.log(`config: ${JSON.stringify(config, null, 2)}`);
 console.log(`*******************************************`);
 
 export async function startup(configPath: string) {
-	console.log('loading config from:', configPath)
+	console.log('loading config from:', configPath);
 
 	// Ensure the config directory exists
 	fs.mkdirSync(configPath, { recursive: true });
 
 	// Note: rxdb uses pouchdb-all-dbs which creates a folder in the working directory. This forces that to be done where we want it
-	process.chdir(configPath)
+	process.chdir(configPath);
 
 	const db = await createDb(configPath);
 
@@ -37,20 +37,20 @@ export async function startup(configPath: string) {
 	const server = http.createServer(app);
 	const io = createSocketIO(server);
 
-	const moduleFactory = new ModuleFactory(configPath)
+	const moduleFactory = new ModuleFactory(configPath);
 
-	const modules = moduleFactory.listModules()
+	const modules = moduleFactory.listModules();
 	modules.then(modList => {
-		console.log(`Discovered ${modList.length} modules:`)
+		console.log(`Discovered ${modList.length} modules:`);
 		modList.forEach(m => {
-			console.log(` - ${m.name}@${m.version} (${m.asarPath})`)
-		})
-	})
+			console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
+		});
+	});
 
 	const core: ICore = {
 		db,
 		io,
-		moduleFactory
+		moduleFactory,
 	};
 
 	app.set('view engine', 'ejs');

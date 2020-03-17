@@ -1,39 +1,39 @@
-import { CompanionInputField } from "./input";
-import { CompanionActionEvent, CompanionActions } from "./action";
-import { CompanionUpgradeScript } from "./upgrade";
-import { CompanionFeedbackEvent, CompanionFeedbackResult, CompanionFeedbacks } from "./feedback";
-import { CompanionVariable } from "./variable";
-import { CompanionPreset } from "./preset";
-import { InstanceStatus, LogLevel } from "./enums";
+import { CompanionInputField } from './input';
+import { CompanionActionEvent, CompanionActions } from './action';
+import { CompanionUpgradeScript } from './upgrade';
+import { CompanionFeedbackEvent, CompanionFeedbackResult, CompanionFeedbacks } from './feedback';
+import { CompanionVariable } from './variable';
+import { CompanionPreset } from './preset';
+import { InstanceStatus, LogLevel } from './enums';
 
 export interface CompanionModuleSystem {
-	setActionDefinitions(actions: CompanionActions): Promise<void>
-	setVariableDefinitions(variables: CompanionVariable[]): Promise<void>
-	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void>
-	setPresetDefinitions(presets: CompanionPreset[]): Promise<void>
+	setActionDefinitions(actions: CompanionActions): Promise<void>;
+	setVariableDefinitions(variables: CompanionVariable[]): Promise<void>;
+	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void>;
+	setPresetDefinitions(presets: CompanionPreset[]): Promise<void>;
 
-	variableChanged(variableId: string, value: string): void
-	checkFeedbacks(feedbackId?: string): void
+	variableChanged(variableId: string, value: string): void;
+	checkFeedbacks(feedbackId?: string): void;
 
-	updateStatus(level: InstanceStatus | null, message?: string): void
-	log(level: LogLevel, message: string): void
+	updateStatus(level: InstanceStatus | null, message?: string): void;
+	log(level: LogLevel, message: string): void;
 }
 
 export abstract class InstanceBase<TConfig> {
-    private readonly system: CompanionModuleSystem;
+	private readonly system: CompanionModuleSystem;
 
-    public readonly id: string;
+	public readonly id: string;
 
 	/**
 	 * Create an instance of the module.
 	 */
 	constructor(system: CompanionModuleSystem, id: string) {
-        this.system = system
+		this.system = system;
 		this.id = id;
-		
-		this.updateStatus(null, 'Initializing')
-		this.log(LogLevel.DEBUG, 'Initializing')
-    }
+
+		this.updateStatus(null, 'Initializing');
+		this.log(LogLevel.DEBUG, 'Initializing');
+	}
 
 	/**
 	 * Main initialization function called once the module
@@ -67,34 +67,34 @@ export abstract class InstanceBase<TConfig> {
 	abstract executeFeedback(event: CompanionFeedbackEvent): CompanionFeedbackResult;
 
 	protected addUpgradeScript(fcn: CompanionUpgradeScript<TConfig>): void {
-        // TODO
-    }
+		// TODO
+	}
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
-        return this.system.setActionDefinitions(actions)
-    }
+		return this.system.setActionDefinitions(actions);
+	}
 	setVariableDefinitions(variables: CompanionVariable[]): Promise<void> {
-        return this.system.setVariableDefinitions(variables)
-    }
+		return this.system.setVariableDefinitions(variables);
+	}
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
-        return this.system.setFeedbackDefinitions(feedbacks)
-    }
+		return this.system.setFeedbackDefinitions(feedbacks);
+	}
 	setPresetDefinitions(presets: CompanionPreset[]): Promise<void> {
-		return this.system.setPresetDefinitions(presets)
-    }
+		return this.system.setPresetDefinitions(presets);
+	}
 
 	variableChanged(variableId: string, value: string): void {
-		return this.system.variableChanged(variableId, value)
-    }
+		return this.system.variableChanged(variableId, value);
+	}
 	checkFeedbacks(feedbackId?: string): void {
-		return this.system.checkFeedbacks(feedbackId)
-    }
+		return this.system.checkFeedbacks(feedbackId);
+	}
 
-    updateStatus(level: InstanceStatus | null, message?: string): void {
-		return this.system.updateStatus(level, message)
-    }
+	updateStatus(level: InstanceStatus | null, message?: string): void {
+		return this.system.updateStatus(level, message);
+	}
 
 	log(level: LogLevel, message: string): void {
-        return this.system.log(level, message)
-    }
+		return this.system.log(level, message);
+	}
 }

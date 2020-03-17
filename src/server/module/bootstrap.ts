@@ -31,21 +31,21 @@ export class ModuleProxy {
 		const modulePackage = require(entrypoint).default;
 
 		const system: CompanionModuleSystem = {
-            setActionDefinitions,
-            setVariableDefinitions,
-            setFeedbackDefinitions,
-            setPresetDefinitions,
-            variableChanged,
-            checkFeedbacks,
+			setActionDefinitions,
+			setVariableDefinitions,
+			setFeedbackDefinitions,
+			setPresetDefinitions,
+			variableChanged,
+			checkFeedbacks,
 			log,
 			updateStatus,
 		};
 		this.base = new modulePackage(system, id);
 	}
 
-    /**
-     * The same user methods from InstanceBase, exposed for core to call 
-     */
+	/**
+	 * The same user methods from InstanceBase, exposed for core to call
+	 */
 
 	init(config: any) {
 		return this.base.init(config);

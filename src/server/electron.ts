@@ -1,9 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 
 // Import the main server code
-import { startup } from './main'
+import { startup } from './main';
 
-startup(app.getPath('userData'))
+startup(app.getPath('userData'));
 
 function createWindow() {
 	// Create the browser window.

@@ -1,9 +1,9 @@
 import RxDB, { RxDatabase } from 'rxdb';
 import RxDBServerPlugin from 'rxdb/plugins/server';
 // import MemoryAdapter from 'pouchdb-adapter-memory';
-import LevelDbAdapter from 'pouchdb-adapter-leveldb'
-import path from 'path'
-import fs from 'fs'
+import LevelDbAdapter from 'pouchdb-adapter-leveldb';
+import path from 'path';
+import fs from 'fs';
 
 import { CollectionCreator, ICollections } from '../shared/collections';
 
@@ -13,8 +13,8 @@ RxDB.plugin(LevelDbAdapter);
 
 export async function createDb(configPath: string) {
 	fs.mkdirSync(path.join(configPath, 'db'), {
-		recursive: true
-	})
+		recursive: true,
+	});
 
 	const db = await RxDB.create<ICollections>({
 		name: path.join(configPath, 'db/companion'),

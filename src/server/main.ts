@@ -10,6 +10,10 @@ import http from 'http';
 import createSocketIO from 'socket.io';
 import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
+import fs from 'fs';
+
+// Inject asar parsing
+require('asar-node').register();
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -18,6 +22,9 @@ console.log(`*******************************************`);
 
 export async function startup(configPath: string) {
 	console.log('loading config from:', configPath)
+
+	// Ensure the config directory exists
+	fs.mkdirSync(configPath, { recursive: true });
 
 	// Note: rxdb uses pouchdb-all-dbs which creates a folder in the working directory. This forces that to be done where we want it
 	process.chdir(configPath)
@@ -34,7 +41,7 @@ export async function startup(configPath: string) {
 
 	const modules = moduleFactory.listModules()
 	modules.then(modList => {
-		console.log(`Loaded ${modList.length} modules:`)
+		console.log(`Discovered ${modList.length} modules:`)
 		modList.forEach(m => {
 			console.log(` - ${m.name}@${m.version} (${m.asarPath})`)
 		})

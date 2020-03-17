@@ -5,16 +5,37 @@ import { ModuleProxy } from './bootstrap';
 import { promisify } from 'util'
 import { literal } from '../../shared/util'
 import _ from 'underscore';
+import semver from 'semver';
+import { IS_PACKAGED } from '../config';
 
 const readdirProm = promisify(fs.readdir)
-
-// Inject asar parsing
-require('asar-node').register();
 
 export interface ModuleInfo {
 	name: string
 	version: string
 	asarPath: string
+	isSystem: boolean
+}
+
+function readModuleInfo (modulePath: string, filename: string, isSystem: boolean) {
+	try {
+		if (!filename.endsWith('.asar')) {
+			return undefined
+		}
+
+		const asarPath = path.join(modulePath, filename);
+		const modulePackage = require(path.join(asarPath, 'package.json'))
+
+		return literal<ModuleInfo>({
+			name: modulePackage.name,
+			version: modulePackage.version,
+			asarPath,
+			isSystem
+		})
+	} catch (e) {
+		console.error(`Failed to read module info: ${e}`)
+		return undefined
+	}
 }
 
 export class ModuleFactory {
@@ -22,27 +43,37 @@ export class ModuleFactory {
 
 	constructor(configPath: string) {
 		this.modulePath = path.join(configPath, 'modules');
+		fs.mkdirSync(this.modulePath, { recursive: true });
 	}
 
 	async listModules(): Promise<Array<ModuleInfo>> {
-		// TODO - this needs to handle that there could be multiple versions of a module in the folder
-		// TODO - handle loading from system and user folders
-		const moduleFiles = await readdirProm(this.modulePath)
-		const res = moduleFiles.map(filename => {
-			try {
-				const asarPath = path.join(this.modulePath, filename);
-				const modulePackage = require(path.join(asarPath, 'package.json'))
+		const systemModulePath = IS_PACKAGED ? path.join(__dirname, '../../../../../bundled-modules') : path.join(__dirname, '../../../bundled-modules');
 
-				return literal<ModuleInfo>({
-					name: modulePackage.name,
-					version: modulePackage.version,
-					asarPath
-				})
-			} catch (e) {
-				console.error(`Failed to read module info: ${e}`)
-				return undefined
-			}
+		const [userModuleFiles, systemModuleFiles] = await Promise.all([
+			readdirProm(this.modulePath),
+			readdirProm(systemModulePath)
+		])
+		const rawUserModules = userModuleFiles.map(filename => readModuleInfo(this.modulePath, filename, false))
+		const rawSystemModules = systemModuleFiles.map(filename => readModuleInfo(systemModulePath, filename, true))
+
+		const groupedModules = _.groupBy(_.compact([...rawUserModules, ...rawSystemModules]), mod => mod.name.toLowerCase())
+
+		const res: ModuleInfo[] = []
+
+		_.each(groupedModules, (options, id) => {
+			// Sort by version, then asarPath (just to be safe)
+			const sortedOptions = _.sortBy(options.sort((a, b) => {
+				if (semver.lt(a.version, b.version)) {
+					return -1
+				}
+				if (semver.gt(a.version, b.version)) {
+					return 1
+				}
+				return 0
+			}), opt => opt.asarPath)
+			res.push(sortedOptions[0])
 		})
+
 		return _.compact(res)
 	}
 

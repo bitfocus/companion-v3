@@ -159,5 +159,8 @@
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.10.1",
     "webpack-manifest-plugin": "^2.2.0"
+  },
+  "resolutions": {
+    "**/pouchdb-promise": "5.4.3"
   }
 }

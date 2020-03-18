@@ -31,7 +31,32 @@ export async function startup(configPath: string) {
 
 	const db = await createDb(configPath);
 
-	const { app: dbApp } = RxDBServerPlugin.spawnServer.bind(db as any)({ startServer: false });
+	const { app: dbApp, pouchApp } = RxDBServerPlugin.spawnServer.bind(db as any)({ startServer: false });
+
+	// Load in an default admin users
+	if (!Object.keys(pouchApp.couchConfig.getSection('admins')).length) {
+		console.log('Creating default admin user');
+
+		// const usersDb = db.users.pouch as any;
+		const adminDetails = await require('pouchdb-auth').hashAdminPasswords({
+			admin: 'admin', // TODO - better/random password
+		});
+
+		await Promise.all(
+			Object.keys(adminDetails).map(
+				name =>
+					new Promise(resolve => {
+						pouchApp.couchConfig.set('admins', name, adminDetails[name], resolve);
+					}),
+			),
+		);
+	}
+
+	const app2 = express();
+	app2.use('/', dbApp);
+	app2.listen(Number(config.SERVER_PORT) + 1, () => {
+		console.log(`Fauxton listening on port ${Number(config.SERVER_PORT) + 1}!`);
+	});
 
 	const app = express();
 	const server = http.createServer(app);

@@ -5,6 +5,7 @@ import { Form, Nav, Navbar, Button } from 'react-bootstrap';
 import { LinkContainer, IndexLinkContainer } from 'react-router-bootstrap';
 import io from 'socket.io-client';
 import SocketContext from './SocketContext';
+import { getAuthDb, get } from './database';
 
 const socket = io();
 socket.on('connect', () => {
@@ -22,6 +23,18 @@ class TmpPage extends React.Component {
 }
 
 class App extends React.Component {
+	constructor(props: any) {
+		super(props);
+
+		getAuthDb().then((authDb: any) => {
+			console.log('setup');
+			authDb.logIn('jan', 'apple', (a: any, b: any) => {
+				console.log('login', a, b);
+			});
+
+			get();
+		});
+	}
 	render() {
 		return (
 			<Router>

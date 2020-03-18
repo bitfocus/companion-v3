@@ -13,84 +13,140 @@ RxDB.PouchDB.plugin(require('pouchdb-auth'));
 const syncURL = `${window.location.protocol}//${window.location.host}/db/`;
 console.log('host: ' + syncURL);
 
-let authDbPromise: Promise<RxDatabase<ICollections>> | null = null;
-const _createAuthDb = async () => {
-	const authDb: any = new RxDB.PouchDB(`${syncURL}_users`, {
-		// eslint-disable-next-line @typescript-eslint/camelcase
-		skip_setup: true,
-	});
+export class DatabaseManager {
+	private authDb: any | null;
+	private mainDb: RxDatabase<ICollections> | null = null;
+	private loginPromise: Promise<void> | null = null;
+	private logoutPromise: Promise<void> | null = null;
+	private _isLoggedIn: boolean = false;
 
-	await authDb.useAsAuthenticationDB({
-		isOnlineAuthDB: true,
-		timeout: 0,
-	});
-
-	return authDb;
-};
-
-export const getAuthDb = () => {
-	if (!authDbPromise) authDbPromise = _createAuthDb();
-	return authDbPromise;
-};
-
-let dbPromise: Promise<RxDatabase<ICollections>> | null = null;
-
-const _create = async () => {
-	// cleanup old data on connect, to ensure we dont try to push anything
-	console.log('DatabaseService: purging old');
-	await RxDB.removeDatabase('companion3', 'idb');
-
-	console.log('DatabaseService: creating database..');
-	const db = await RxDB.create<ICollections>({
-		name: 'companion3',
-		adapter: 'idb',
-		pouchSettings: {
+	constructor() {
+		this.authDb = new RxDB.PouchDB(`${syncURL}_users`, {
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			skip_setup: true,
-		},
-	});
-	console.log('DatabaseService: created database');
-	(window as any)['db'] = db; // write to window for debugging
+		});
 
-	// show leadership in title
-	db.waitForLeadership().then(() => {
-		console.log('isLeader now');
-		document.title = '♛ ' + document.title;
-	});
+		this.authDb
+			.useAsAuthenticationDB({
+				isOnlineAuthDB: true,
+				timeout: 0,
+			})
+			.catch((e: any) => {
+				console.error(`Failed to setup authdb: ${e}`);
+			});
+	}
 
-	// create collections
-	console.log('DatabaseService: create collections');
-	await Promise.all(CollectionCreator.map(colData => db.collection(colData)));
+	public pendingLogin() {
+		return !!this.loginPromise;
+	}
+	public pendingLogout() {
+		return !!this.logoutPromise;
+	}
+	public isLoggedIn() {
+		return this._isLoggedIn;
+	}
 
-	// // hooks
-	// console.log('DatabaseService: add hooks');
-	// db.collections.heroes.preInsert(docObj => {
-	//     const { color } = docObj;
-	//     return db.collections.heroes.findOne({color}).exec().then(has => {
-	//         if (has != null) {
-	//             alert('another hero already has the color ' + color);
-	//             throw new Error('color already there');
-	//         }
-	//         return db;
-	//     });
-	// }, false);
+	public sessionName(): Promise<string | null> {
+		return this.authDb.session().then((res: any) => res.userCtx.name);
+	}
 
-	// sync
-	console.log('DatabaseService: sync');
-	CollectionCreator
-		// .filter(col => col.sync)
-		.map(col => col.name)
-		.map(collectionName =>
-			((db as any)[collectionName] as RxCollection).sync({
-				remote: syncURL + collectionName + '/',
-			}),
-		);
+	public login(username: string, password: string) {
+		if (this.loginPromise) {
+			// 'fail' in case username/password are different
+			return null;
+		} else if (this.logoutPromise) {
+			return null;
+		} else {
+			this.mainDb = null;
+			this.loginPromise = this.authDb.logIn(username, password).then(async (v: any) => {
+				// Cleanup
+				this.loginPromise = null;
+				this._isLoggedIn = true;
+				const name: string = v.name;
+				const db = (this.mainDb = await this.createDatabase());
 
-	(window as any).db = db;
-	return db;
-};
+				return {
+					name,
+					db,
+				};
+			});
+			return this.loginPromise;
+		}
+	}
 
-export const get = () => {
-	if (!dbPromise) dbPromise = _create();
-	return dbPromise;
-};
+	public logout(): Promise<void> | null {
+		if (this.logoutPromise) {
+			return this.logoutPromise;
+		} else if (this.loginPromise) {
+			return null;
+		} else {
+			this.mainDb = null;
+			this._isLoggedIn = false;
+			this.logoutPromise = this.authDb.logOut().then(async () => {
+				// Cleanup
+				this.logoutPromise = null;
+				await RxDB.removeDatabase('companion3', 'idb');
+			});
+			return this.logoutPromise;
+		}
+	}
+
+	public getDatabase(): RxDatabase<ICollections> | null {
+		return this.mainDb;
+	}
+
+	private async createDatabase() {
+		// cleanup old data on connect, to ensure we dont try to push anything
+		console.log('DatabaseService: purging old');
+		await RxDB.removeDatabase('companion3', 'idb');
+
+		console.log('DatabaseService: creating database..');
+		const db = await RxDB.create<ICollections>({
+			name: 'companion3',
+			adapter: 'idb',
+			pouchSettings: {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				skip_setup: true,
+			},
+		});
+		console.log('DatabaseService: created database');
+		(window as any)['db'] = db; // write to window for debugging
+
+		// show leadership in title
+		db.waitForLeadership().then(() => {
+			console.log('isLeader now');
+			document.title = '♛ ' + document.title;
+		});
+
+		// create collections
+		console.log('DatabaseService: create collections');
+		await Promise.all(CollectionCreator.map(colData => db.collection(colData)));
+
+		// // hooks
+		// console.log('DatabaseService: add hooks');
+		// db.collections.heroes.preInsert(docObj => {
+		//     const { color } = docObj;
+		//     return db.collections.heroes.findOne({color}).exec().then(has => {
+		//         if (has != null) {
+		//             alert('another hero already has the color ' + color);
+		//             throw new Error('color already there');
+		//         }
+		//         return db;
+		//     });
+		// }, false);
+
+		// sync
+		console.log('DatabaseService: sync');
+		CollectionCreator
+			// .filter(col => col.sync)
+			.map(col => col.name)
+			.map(collectionName =>
+				((db as any)[collectionName] as RxCollection).sync({
+					remote: syncURL + collectionName + '/',
+				}),
+			);
+
+		(window as any).db = db;
+		return db;
+	}
+}

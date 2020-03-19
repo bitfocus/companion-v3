@@ -27,11 +27,39 @@ export async function createDb(configPath: string) {
 	console.log(`DatabaseService: create collections at ${dbPath}`);
 	await Promise.all(
 		CollectionCreator.map(colData =>
-			db
-				.collection(colData)
-				.then(col => (col.pouch as any).putSecurity({ admins: { names: ['admin'] }, members: { roles: ['authenticated'] } })),
+			db.collection(colData).then(col =>
+				(col.pouch as any).putSecurity({
+					admins: { names: ['admin'] },
+					members: { roles: ['authenticated'] },
+				}),
+			),
 		),
 	);
 
+	// TODO - block user signups.
+
 	return db;
+}
+
+export async function setupDefaultUsers(pouchApp: any, db: RxDatabase<ICollections>) {
+	// Load in an default admin users
+	if (!Object.keys(pouchApp.couchConfig.getSection('admins')).length) {
+		console.log('Creating default admin user');
+
+		// const usersDb = db.users.pouch as any;
+		const adminDetails = await require('pouchdb-auth').hashAdminPasswords({
+			admin: 'admin', // TODO - better/random password
+		});
+
+		await Promise.all(
+			Object.keys(adminDetails).map(
+				name =>
+					new Promise(resolve => {
+						pouchApp.couchConfig.set('admins', name, adminDetails[name], resolve);
+					}),
+			),
+		);
+	}
+
+	// TODO - create default user
 }

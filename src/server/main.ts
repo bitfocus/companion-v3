@@ -4,7 +4,7 @@ import { apiRouter, socketHandler } from './routes/api-router';
 import { pagesRouter } from './routes/pages-router';
 import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
-import { createDb } from './db';
+import { createDb, setupDefaultUsers } from './db';
 import RxDBServerPlugin from 'rxdb/plugins/server';
 import http from 'http';
 import createSocketIO from 'socket.io';
@@ -33,24 +33,7 @@ export async function startup(configPath: string) {
 
 	const { app: dbApp, pouchApp } = RxDBServerPlugin.spawnServer.bind(db as any)({ startServer: false });
 
-	// Load in an default admin users
-	if (!Object.keys(pouchApp.couchConfig.getSection('admins')).length) {
-		console.log('Creating default admin user');
-
-		// const usersDb = db.users.pouch as any;
-		const adminDetails = await require('pouchdb-auth').hashAdminPasswords({
-			admin: 'admin', // TODO - better/random password
-		});
-
-		await Promise.all(
-			Object.keys(adminDetails).map(
-				name =>
-					new Promise(resolve => {
-						pouchApp.couchConfig.set('admins', name, adminDetails[name], resolve);
-					}),
-			),
-		);
-	}
+	await setupDefaultUsers(pouchApp, db);
 
 	const app2 = express();
 	app2.use('/', dbApp);

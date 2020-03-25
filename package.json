@@ -87,6 +87,7 @@
     "pouchdb-adapter-leveldb": "^7.2.1",
     "pouchdb-adapter-memory": "^7.2.1",
     "pouchdb-all-dbs": "git+https://github.com/julusian/pouchdb-all-dbs.git",
+    "pouchdb-promise": "file:./deps/pouchdb-promise",
     "read-pkg-up": "^7.0.1",
     "rxdb": "^8.8.0",
     "rxjs": "^6.5.4",
@@ -164,6 +165,7 @@
   },
   "resolutions": {
     "pouchdb-promise": "file:./deps/pouchdb-promise",
-    "pouchdb-all-dbs": "git+https://github.com/julusian/pouchdb-all-dbs.git"
+    "pouchdb-all-dbs": "git+https://github.com/julusian/pouchdb-all-dbs.git",
+    "pouchdb-find": "^7.0.0"
   }
 }

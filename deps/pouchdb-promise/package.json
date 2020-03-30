@@ -1,16 +1,6 @@
 {
   "name": "pouchdb-promise",
   "version": "6.99.99",
-  "description": "Promises as used by PouchDB.",
   "main": "./lib/index.js",
-  "keywords": [],
-  "author": "Dale Harvey <dale@arandomurl.com>",
-  "license": "Apache-2.0",
-  "repository": "https://github.com/pouchdb/pouchdb",
-  "files": [
-    "lib",
-    "src"
-  ],
-  "dependencies": {
-  }
+  "license": "MIT"
 }

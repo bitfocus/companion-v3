@@ -66,17 +66,6 @@ class App extends React.Component {
 	constructor(props: any) {
 		super(props);
 
-		// const authy = ((window as any).authMan = new DatabaseManager());
-
-		// console.log(authy.isLoggedIn(), authy.pendingLogin(), authy.pendingLogout());
-		// const loginAttempt = authy.login('admin', 'admin');
-		// if (!loginAttempt) {
-		// 	console.log('login in progress');
-		// } else {
-		// 	loginAttempt.then((a: any) => {
-		// 		console.log('login', a);
-		// 	});
-		// }
 	}
 	render() {
 		return (

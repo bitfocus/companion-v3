@@ -110,7 +110,6 @@ export class DatabaseManager {
 			},
 		});
 		console.log('DatabaseService: created database');
-		(window as any)['db'] = db; // write to window for debugging
 
 		// show leadership in title
 		db.waitForLeadership().then(() => {
@@ -146,7 +145,6 @@ export class DatabaseManager {
 				}),
 			);
 
-		(window as any).db = db;
 		return db;
 	}
 }

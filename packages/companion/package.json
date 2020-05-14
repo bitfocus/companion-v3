@@ -1,5 +1,5 @@
 {
-  "name": "companion3-prototype",
+  "name": "companion3",
   "version": "0.1.0",
   "description": "",
   "engines": {
@@ -162,10 +162,5 @@
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3",
     "webpack-manifest-plugin": "^2.2.0"
-  },
-  "resolutions": {
-    "pouchdb-promise": "file:./deps/pouchdb-promise",
-    "pouchdb-all-dbs": "git+https://github.com/julusian/pouchdb-all-dbs.git",
-    "pouchdb-find": "^7.0.0"
   }
 }

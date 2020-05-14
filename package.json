@@ -1,0 +1,12 @@
+{
+  "name": "companion3-prototype",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "resolutions": {
+    "pouchdb-promise": "file:./deps/pouchdb-promise",
+    "pouchdb-all-dbs": "git+https://github.com/julusian/pouchdb-all-dbs.git",
+    "pouchdb-find": "^7.0.0"
+  }
+}

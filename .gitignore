@@ -6,6 +6,6 @@ node_modules
 electron-output
 *.log
 
-/config.json
-/log.txt
-/userdata
+/companion/config.json
+/companion/log.txt
+/companion/userdata

@@ -1,6 +1,6 @@
 import { RxDatabase, PouchDB, createRxDatabase, addRxPlugin } from 'rxdb';
 import * as RxDBServerPlugin from 'rxdb/plugins/server';
-// import MemoryAdapter from 'pouchdb-adapter-memory';
+import MemoryAdapter from 'pouchdb-adapter-memory';
 import LevelDbAdapter from 'pouchdb-adapter-leveldb';
 import path from 'path';
 import fs from 'fs';
@@ -10,7 +10,7 @@ import { CollectionCreator, ICollections } from '../shared/collections';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 PouchDB.plugin(require('pouchdb-security'));
 addRxPlugin(RxDBServerPlugin);
-// RxDB.plugin(MemoryAdapter);
+PouchDB.plugin(MemoryAdapter);
 PouchDB.plugin(LevelDbAdapter);
 
 export async function createDb(configPath: string): Promise<RxDatabase<ICollections>> {

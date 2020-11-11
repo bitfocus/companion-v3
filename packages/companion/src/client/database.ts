@@ -118,7 +118,16 @@ export class DatabaseManager {
 
 		// create collections
 		console.log('DatabaseService: create collections');
-		await Promise.all(CollectionCreator.map((colData) => db.collection(colData)));
+		await Promise.all(
+			CollectionCreator.map((colData) => {
+				const pouchSettings = colData.pouchSettings as any;
+				if (pouchSettings && pouchSettings.adapter) {
+					// We should always use idb on the client
+					delete pouchSettings.adapter;
+				}
+				return db.collection(colData);
+			}),
+		);
 
 		// // hooks
 		// console.log('DatabaseService: add hooks');

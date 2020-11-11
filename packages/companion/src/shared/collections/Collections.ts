@@ -1,30 +1,43 @@
-import { RundownCollection, RundownSchema, RundownMethods, RundownCollectionMethods } from './Rundown';
-import {
-	RundownItemCollection,
-	RundownItemSchema,
-	RundownItemMethods,
-	RundownItemCollectionMethods,
-} from './RundownItem';
+import { BankSchema, BankMethods, BankCollectionMethods, BankCollection } from './Bank';
+import { WorkspaceCollection, WorkspaceSchema, WorkspaceMethods, WorkspaceCollectionMethods } from './Workspace';
 import { RxCollectionCreator } from 'rxdb';
+import { ModuleSchema, ModuleMethods, ModuleCollectionMethods, ModuleCollection } from './Module';
+import { InstanceSchema, InstanceMethods, InstanceCollectionMethods, InstanceCollection } from './Instance';
 
 export interface ICollections {
-	rundowns: RundownCollection;
-	rundown_items: RundownItemCollection;
+	banks: BankCollection;
+	workspaces: WorkspaceCollection;
+	modules: ModuleCollection;
+	instances: InstanceCollection;
 }
 
 export const CollectionCreator: RxCollectionCreator[] = [
 	{
-		name: 'rundowns',
-		schema: RundownSchema,
-		methods: RundownMethods,
-		statics: RundownCollectionMethods,
-		// sync: true
+		name: 'banks',
+		schema: BankSchema,
+		methods: BankMethods,
+		statics: BankCollectionMethods,
 	},
 	{
-		name: 'rundown_items',
-		schema: RundownItemSchema,
-		methods: RundownItemMethods,
-		statics: RundownItemCollectionMethods,
-		// sync: true
+		name: 'workspaces',
+		schema: WorkspaceSchema,
+		methods: WorkspaceMethods,
+		statics: WorkspaceCollectionMethods,
+	},
+	{
+		name: 'modules',
+		schema: ModuleSchema,
+		methods: ModuleMethods,
+		statics: ModuleCollectionMethods,
+		pouchSettings: {
+			// Store it in memory, so that it gets rebuilt every startup
+			adapter: 'memory',
+		} as any,
+	},
+	{
+		name: 'instances',
+		schema: InstanceSchema,
+		methods: InstanceMethods,
+		statics: InstanceCollectionMethods,
 	},
 ];

@@ -5,7 +5,7 @@ import { pagesRouter } from './routes/pages-router';
 import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
 import { createDb, setupDefaultUsers } from './db';
-import RxDBServerPlugin from 'rxdb/plugins/server';
+import * as RxDBServerPlugin from 'rxdb/plugins/server';
 import http from 'http';
 import createSocketIO from 'socket.io';
 import { ICore } from './core';

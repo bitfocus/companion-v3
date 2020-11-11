@@ -1,14 +1,14 @@
-import RxDB, { RxDatabase, RxCollection } from 'rxdb';
+import { RxDatabase, RxCollection, PouchDB, removeRxDatabase, createRxDatabase } from 'rxdb';
 import { ICollections, CollectionCreator } from '../shared/collections';
 import IdbAdapter from 'pouchdb-adapter-idb';
 import HttpAdapter from 'pouchdb-adapter-http';
 
 // RxDB.QueryChangeDetector.enableDebugging();
 
-RxDB.plugin(IdbAdapter);
-RxDB.plugin(HttpAdapter); //enable syncing over http
+PouchDB.plugin(IdbAdapter);
+PouchDB.plugin(HttpAdapter); //enable syncing over http
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-RxDB.PouchDB.plugin(require('pouchdb-auth'));
+PouchDB.plugin(require('pouchdb-auth'));
 
 const syncURL = `${window.location.protocol}//${window.location.host}/db/`;
 console.log('host: ' + syncURL);
@@ -21,7 +21,7 @@ export class DatabaseManager {
 	private _isLoggedIn: boolean = false;
 
 	constructor() {
-		this.authDb = new RxDB.PouchDB(`${syncURL}_users`, {
+		this.authDb = new PouchDB(`${syncURL}_users`, {
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			skip_setup: true,
 		});
@@ -85,7 +85,7 @@ export class DatabaseManager {
 			this.logoutPromise = this.authDb.logOut().then(async () => {
 				// Cleanup
 				this.logoutPromise = null;
-				await RxDB.removeDatabase('companion3', 'idb');
+				await removeRxDatabase('companion3', 'idb');
 			});
 			return this.logoutPromise;
 		}
@@ -98,10 +98,10 @@ export class DatabaseManager {
 	private async createDatabase() {
 		// cleanup old data on connect, to ensure we dont try to push anything
 		console.log('DatabaseService: purging old');
-		await RxDB.removeDatabase('companion3', 'idb');
+		await removeRxDatabase('companion3', 'idb');
 
 		console.log('DatabaseService: creating database..');
-		const db = await RxDB.create<ICollections>({
+		const db = await createRxDatabase<ICollections>({
 			name: 'companion3',
 			adapter: 'idb',
 			pouchSettings: {
@@ -119,7 +119,7 @@ export class DatabaseManager {
 
 		// create collections
 		console.log('DatabaseService: create collections');
-		await Promise.all(CollectionCreator.map(colData => db.collection(colData)));
+		await Promise.all(CollectionCreator.map((colData) => db.collection(colData)));
 
 		// // hooks
 		// console.log('DatabaseService: add hooks');
@@ -138,8 +138,8 @@ export class DatabaseManager {
 		console.log('DatabaseService: sync');
 		CollectionCreator
 			// .filter(col => col.sync)
-			.map(col => col.name)
-			.map(collectionName =>
+			.map((col) => col.name)
+			.map((collectionName) =>
 				((db as any)[collectionName] as RxCollection).sync({
 					remote: syncURL + collectionName + '/',
 				}),

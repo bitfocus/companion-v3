@@ -35,6 +35,7 @@ export const RundownItemSchema: RxJsonSchema<IRundownItem> = {
 	version: 0,
 	// keyCompression: true,
 	type: 'object',
+	indexes: ['rundownId'],
 	properties: {
 		_id: {
 			type: 'string',
@@ -42,7 +43,6 @@ export const RundownItemSchema: RxJsonSchema<IRundownItem> = {
 		},
 		rundownId: {
 			type: 'string',
-			index: true,
 		},
 		serverId: {
 			type: 'string',

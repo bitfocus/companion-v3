@@ -1,5 +1,5 @@
-import RxDB, { RxDatabase } from 'rxdb';
-import RxDBServerPlugin from 'rxdb/plugins/server';
+import { RxDatabase, PouchDB, createRxDatabase, addRxPlugin } from 'rxdb';
+import * as RxDBServerPlugin from 'rxdb/plugins/server';
 // import MemoryAdapter from 'pouchdb-adapter-memory';
 import LevelDbAdapter from 'pouchdb-adapter-leveldb';
 import path from 'path';
@@ -8,26 +8,26 @@ import fs from 'fs';
 import { CollectionCreator, ICollections } from '../shared/collections';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-RxDB.PouchDB.plugin(require('pouchdb-security'));
-RxDB.plugin(RxDBServerPlugin);
+PouchDB.plugin(require('pouchdb-security'));
+addRxPlugin(RxDBServerPlugin);
 // RxDB.plugin(MemoryAdapter);
-RxDB.plugin(LevelDbAdapter);
+PouchDB.plugin(LevelDbAdapter);
 
-export async function createDb(configPath: string) {
+export async function createDb(configPath: string): Promise<RxDatabase<ICollections>> {
 	fs.mkdirSync(path.join(configPath, 'db'), {
 		recursive: true,
 	});
 
 	const dbPath = path.join(configPath, 'db/companion');
-	const db = await RxDB.create<ICollections>({
+	const db = await createRxDatabase<ICollections>({
 		name: dbPath,
 		adapter: 'leveldb',
 	});
 
 	console.log(`DatabaseService: create collections at ${dbPath}`);
 	await Promise.all(
-		CollectionCreator.map(colData =>
-			db.collection(colData).then(col =>
+		CollectionCreator.map((colData) =>
+			db.collection(colData).then((col) =>
 				(col.pouch as any).putSecurity({
 					admins: { names: ['admin'] },
 					members: { roles: ['authenticated'] },
@@ -41,7 +41,7 @@ export async function createDb(configPath: string) {
 	return db;
 }
 
-export async function setupDefaultUsers(pouchApp: any, db: RxDatabase<ICollections>) {
+export async function setupDefaultUsers(pouchApp: any, db: RxDatabase<ICollections>): Promise<void> {
 	// Load in an default admin users
 	if (!Object.keys(pouchApp.couchConfig.getSection('admins')).length) {
 		console.log('Creating default admin user');
@@ -53,8 +53,8 @@ export async function setupDefaultUsers(pouchApp: any, db: RxDatabase<ICollectio
 
 		await Promise.all(
 			Object.keys(adminDetails).map(
-				name =>
-					new Promise(resolve => {
+				(name) =>
+					new Promise((resolve) => {
 						pouchApp.couchConfig.set('admins', name, adminDetails[name], resolve);
 					}),
 			),

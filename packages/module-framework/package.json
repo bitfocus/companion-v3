@@ -1,6 +1,22 @@
 {
-  "name": "@companion/module-framework",
-  "version": "0.1.0",
-  "main": "index.js",
-  "license": "MIT"
+	"name": "@companion/module-framework",
+	"version": "0.1.0",
+	"main": "dist/index.js",
+	"typings": "dist/index.d.ts",
+	"license": "MIT",
+	"scripts": {
+		"watch": "tsc-watch --onSuccess \"yarn pack -f bundle.tar.gz\"",
+		"bundle": "tsc  && yarn pack -f bundle.tar.gz"
+	},
+	"devDependencies": {
+		"@types/node": "^12.9.0",
+		"asar": "^3.0.2",
+		"rimraf": "^3.0.0",
+		"typescript": "^4.0.3",
+		"tsc-watch": "^4.2.9"
+	},
+	"files": [
+		"README.md",
+		"dist"
+	]
 }

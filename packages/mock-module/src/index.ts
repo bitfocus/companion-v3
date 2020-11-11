@@ -6,8 +6,7 @@ import {
 	LogLevel,
 	CompanionInputField,
 	rgb,
-} from '../../companion/src/shared/module-api';
-// TODO This import path is bad and causes the output to be messed up. It still runs happily thouth
+} from '@companion/module-framework';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface MockConfig {}

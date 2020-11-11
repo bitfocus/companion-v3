@@ -5,7 +5,7 @@ import {
 	CompanionModuleSystem,
 	CompanionInputField,
 	CompanionFeedbackResult,
-} from '../../shared/module-api';
+} from '@companion/module-framework';
 import asar from 'asar-node';
 
 // Inject asar parsing

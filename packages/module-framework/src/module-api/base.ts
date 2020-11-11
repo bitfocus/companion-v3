@@ -66,7 +66,7 @@ export abstract class InstanceBase<TConfig> {
 	 */
 	abstract executeFeedback(event: CompanionFeedbackEvent): CompanionFeedbackResult;
 
-	protected addUpgradeScript(fcn: CompanionUpgradeScript<TConfig>): void {
+	protected addUpgradeScript(_fcn: CompanionUpgradeScript<TConfig>): void {
 		// TODO
 	}
 

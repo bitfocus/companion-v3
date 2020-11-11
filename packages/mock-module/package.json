@@ -1,8 +1,8 @@
 {
-	"name": "companion3-prototype-module2",
+	"name": "mock-module2",
 	"version": "0.1.1",
 	"license": "MIT",
-	"main": "dist/companion3-prototype-module/src/index.js",
+	"main": "dist/index.js",
 	"scripts": {
 		"build": "rimraf dist && yarn build:main",
 		"build:main": "tsc -p tsconfig.build.json",
@@ -10,13 +10,12 @@
 		"package": "./scripts/package.sh"
 	},
 	"dependencies": {
-		"@companion/module-framework": "file:../module-framework"
+		"@companion/module-framework": "file:../module-framework/bundle.tar.gz"
 	},
 	"devDependencies": {
 		"@types/jest": "^25.1.4",
 		"@types/node": "^12.9.0",
-		"asar": "^3.0.2",
 		"rimraf": "^3.0.0",
-		"typescript": "^3.8.3"
+		"typescript": "^4.0.3"
 	}
 }

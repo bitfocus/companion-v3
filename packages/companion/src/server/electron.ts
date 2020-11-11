@@ -3,17 +3,20 @@ import { app, BrowserWindow } from 'electron';
 // Import the main server code
 import { startup } from './main';
 
-startup(app.getPath('userData'));
+const started = startup(app.getPath('userData'));
 
-function createWindow() {
+async function createWindow() {
 	// Create the browser window.
 	const win = new BrowserWindow({
 		width: 800,
 		height: 600,
 	});
 
+	// Lets make sure the server has started
+	await started;
+
 	// and load the index.html of the app.
-	win.loadURL('http://localhost:3000');
+	await win.loadURL('http://localhost:3000');
 
 	// Open the DevTools.
 	win.webContents.openDevTools();
@@ -33,10 +36,11 @@ app.on('window-all-closed', () => {
 	}
 });
 
-app.on('activate', () => {
+app.on('activate', async () => {
 	// On macOS it's common to re-create a window in the app when the
 	// dock icon is clicked and there are no other windows open.
+	await started;
 	if (BrowserWindow.getAllWindows().length === 0) {
-		createWindow();
+		await createWindow();
 	}
 });

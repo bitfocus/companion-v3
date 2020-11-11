@@ -73,7 +73,10 @@ export async function startup(configPath: string): Promise<void> {
 	app.use(staticsRouter());
 	app.use(pagesRouter());
 
-	server.listen(config.SERVER_PORT, () => {
-		console.log(`App listening on port ${config.SERVER_PORT}!`);
+	await new Promise((resolve) => {
+		server.listen(config.SERVER_PORT, () => {
+			console.log(`App listening on port ${config.SERVER_PORT}!`);
+			resolve();
+		});
 	});
 }

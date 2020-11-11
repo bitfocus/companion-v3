@@ -18,7 +18,7 @@
 		"dev": "concurrently --prefix \"[{name}]\" --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"yarn dev-server\" \"yarn dev-client\"",
 		"dev-electron": "concurrently --prefix \"[{name}]\" --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"nodemon -e js,ts,json --ignore src/client --watch src --exec \\\"yarn build-server && electron .\\\"\" \"yarn dev-client\"",
 		"build": "concurrently --prefix \"[{name}]\" --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"yarn build-server\" \"yarn build-client\"",
-		"build-unpacked": "yarn build && electron-builder --dir"
+		"build-unpacked": "yarn build && electron-builder --dir -c.electronVersion $(node -p \"require('electron/package.json').version\")"
 	},
 	"keywords": [
 		"typescript",
@@ -126,7 +126,6 @@
 		"css-loader": "^3.6.0",
 		"electron": "^8.5.3",
 		"electron-builder": "^22.9.1",
-		"electron-rebuild": "^1.11.0",
 		"eslint": "^7.13.0",
 		"eslint-config-prettier": "^6.15.0",
 		"eslint-plugin-prettier": "^3.1.4",

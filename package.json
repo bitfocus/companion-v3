@@ -1,15 +1,19 @@
 {
-  "name": "root",
-  "private": true,
-  "scripts": {
-    "dev": "yarn lerna run --scope=companion3 --stream dev"
-  },
-  "devDependencies": {
-    "lerna": "^3.22.1"
-  },
-  "workspaces": [
-    "packages/*"
-  ],
+	"name": "root",
+	"private": true,
+	"scripts": {
+		"dev": "yarn lerna run --scope=companion3 --stream dev",
+		"dev-electron": "yarn lerna run --scope=companion3 --stream dev-electron",
+		"build": "yarn lerna run --scope=companion3 --stream build",
+		"build-unpacked": "yarn lerna run --scope=companion3 --stream build-unpacked",
+		"clean": "yarn lerna run --scope=companion3 --stream clean"
+	},
+	"devDependencies": {
+		"lerna": "^3.22.1"
+	},
+	"workspaces": [
+		"packages/*"
+	],
 	"resolutions": {
 		"pouchdb-promise": "file:./deps/pouchdb-promise",
 		"pouchdb-all-dbs": "github:julusian/pouchdb-all-dbs",

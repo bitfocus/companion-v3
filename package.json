@@ -9,5 +9,10 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+	"resolutions": {
+		"pouchdb-promise": "file:./deps/pouchdb-promise",
+		"pouchdb-all-dbs": "github:julusian/pouchdb-all-dbs",
+		"pouchdb-find": "^7.0.0"
+	}
 }

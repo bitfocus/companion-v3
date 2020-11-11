@@ -2,9 +2,9 @@ import bodyParser from 'body-parser';
 import { Router } from 'express';
 import { ICore } from '../core';
 import { SocketCommand, ExecuteAction } from '../../shared/api';
-import { IRundownItem, RundownItemType, SomeRundownItemContent } from '../../shared/collections';
+import { IRundownItem } from '../../shared/collections';
 
-export function apiRouter(core: ICore) {
+export function apiRouter(core: ICore): Router {
 	const router = Router();
 	router.use(bodyParser.json());
 
@@ -26,8 +26,8 @@ export function apiRouter(core: ICore) {
 	return router;
 }
 
-export function socketHandler(core: ICore) {
-	core.io.on('connection', function (socket) {
+export function socketHandler(core: ICore): void {
+	core.io.on('connection', (socket) => {
 		console.log('a user connected');
 
 		socket.on(SocketCommand.ExecuteCommand, ({ action, cmd }: { action: ExecuteAction; cmd: IRundownItem }) => {

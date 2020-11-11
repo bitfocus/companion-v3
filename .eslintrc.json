@@ -15,7 +15,8 @@
   },
   "plugins": [
     "react", 
-    "@typescript-eslint/eslint-plugin"
+    "@typescript-eslint/eslint-plugin",
+    "prettier"
   ],
   "settings": {
     "react": {

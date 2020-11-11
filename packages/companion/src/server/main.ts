@@ -20,7 +20,7 @@ console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`config: ${JSON.stringify(config, null, 2)}`);
 console.log(`*******************************************`);
 
-export async function startup(configPath: string) {
+export async function startup(configPath: string): Promise<void> {
 	console.log('loading config from:', configPath);
 
 	// Ensure the config directory exists
@@ -48,9 +48,9 @@ export async function startup(configPath: string) {
 	const moduleFactory = new ModuleFactory(configPath);
 
 	const modules = moduleFactory.listModules();
-	modules.then(modList => {
+	modules.then((modList) => {
 		console.log(`Discovered ${modList.length} modules:`);
-		modList.forEach(m => {
+		modList.forEach((m) => {
 			console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
 		});
 	});

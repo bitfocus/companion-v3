@@ -24,7 +24,9 @@ function readModuleInfo(modulePath: string, filename: string, isSystem: boolean)
 		}
 
 		const asarPath = path.join(modulePath, filename);
-		const modulePackage = require(path.join(asarPath, 'package.json'));
+
+		const modulePackageStr = fs.readFileSync(path.join(asarPath, 'package.json'));
+		const modulePackage = JSON.parse(modulePackageStr.toString());
 
 		return literal<ModuleInfo>({
 			name: modulePackage.name,
@@ -55,10 +57,10 @@ export class ModuleFactory {
 			readdirProm(this.modulePath),
 			readdirProm(systemModulePath),
 		]);
-		const rawUserModules = userModuleFiles.map(filename => readModuleInfo(this.modulePath, filename, false));
-		const rawSystemModules = systemModuleFiles.map(filename => readModuleInfo(systemModulePath, filename, true));
+		const rawUserModules = userModuleFiles.map((filename) => readModuleInfo(this.modulePath, filename, false));
+		const rawSystemModules = systemModuleFiles.map((filename) => readModuleInfo(systemModulePath, filename, true));
 
-		const groupedModules = _.groupBy(_.compact([...rawUserModules, ...rawSystemModules]), mod =>
+		const groupedModules = _.groupBy(_.compact([...rawUserModules, ...rawSystemModules]), (mod) =>
 			mod.name.toLowerCase(),
 		);
 
@@ -76,7 +78,7 @@ export class ModuleFactory {
 					}
 					return 0;
 				}),
-				opt => opt.asarPath,
+				(opt) => opt.asarPath,
 			);
 			res.push(sortedOptions[0]);
 		});
@@ -86,7 +88,8 @@ export class ModuleFactory {
 
 	async initModule(info: ModuleInfo): Promise<Promisify<ModuleProxy>> {
 		try {
-			const modulePackage = require(path.join(info.asarPath, 'package.json'));
+			const modulePackageStr = fs.readFileSync(path.join(info.asarPath, 'package.json'));
+			const modulePackage = JSON.parse(modulePackageStr.toString());
 			const entryPoint = modulePackage.main ? path.join(info.asarPath, modulePackage.main) : info.asarPath;
 
 			// TODO - use the non-hacky bootstrap when not running via ts-node

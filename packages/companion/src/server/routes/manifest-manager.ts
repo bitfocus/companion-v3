@@ -14,7 +14,7 @@ function getManifestFromWebpack(): Promise<any> {
 
 let manifestCache: any;
 
-export async function getManifest() {
+export async function getManifest(): Promise<any> {
 	if (manifestCache) {
 		return manifestCache;
 	}

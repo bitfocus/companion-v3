@@ -3,10 +3,13 @@ import {
 	CompanionActionEvent,
 	CompanionFeedbackEvent,
 	CompanionModuleSystem,
+	CompanionInputField,
+	CompanionFeedbackResult,
 } from '../../shared/module-api';
+import asar from 'asar-node';
 
 // Inject asar parsing
-require('asar-node').register();
+asar.register();
 
 export class ModuleProxy {
 	private readonly base: InstanceBase<any>;
@@ -47,27 +50,27 @@ export class ModuleProxy {
 	 * The same user methods from InstanceBase, exposed for core to call
 	 */
 
-	init(config: any) {
+	init(config: any): Promise<void> | void {
 		return this.base.init(config);
 	}
 
-	destroy() {
+	destroy(): Promise<void> | void {
 		return this.base.destroy();
 	}
 
-	configUpdated(config: any) {
+	configUpdated(config: any): Promise<void> | void {
 		return this.base.configUpdated(config);
 	}
 
-	getConfigFields() {
+	getConfigFields(): CompanionInputField[] {
 		return this.base.getConfigFields();
 	}
 
-	executeAction(event: CompanionActionEvent) {
+	executeAction(event: CompanionActionEvent): void {
 		return this.base.executeAction(event);
 	}
 
-	executeFeedback(event: CompanionFeedbackEvent) {
+	executeFeedback(event: CompanionFeedbackEvent): CompanionFeedbackResult {
 		return this.base.executeFeedback(event);
 	}
 }

@@ -22,7 +22,6 @@ export class DatabaseManager {
 
 	constructor() {
 		this.authDb = new PouchDB(`${syncURL}_users`, {
-			// eslint-disable-next-line @typescript-eslint/camelcase
 			skip_setup: true,
 		});
 
@@ -36,21 +35,22 @@ export class DatabaseManager {
 			});
 	}
 
-	public pendingLogin() {
+	public pendingLogin(): boolean {
 		return !!this.loginPromise;
 	}
-	public pendingLogout() {
+	public pendingLogout(): boolean {
 		return !!this.logoutPromise;
 	}
-	public isLoggedIn() {
+	public isLoggedIn(): boolean {
 		return this._isLoggedIn;
 	}
 
-	public sessionName(): Promise<string | null> {
-		return this.authDb.session().then((res: any) => res.userCtx.name);
+	public async sessionName(): Promise<string | null> {
+		const session = await this.authDb.session();
+		return session.userCtx.name;
 	}
 
-	public login(username: string, password: string) {
+	public login(username: string, password: string): Promise<void> | null {
 		if (this.loginPromise) {
 			// 'fail' in case username/password are different
 			return null;
@@ -105,7 +105,6 @@ export class DatabaseManager {
 			name: 'companion3',
 			adapter: 'idb',
 			pouchSettings: {
-				// eslint-disable-next-line @typescript-eslint/camelcase
 				skip_setup: true,
 			},
 		});

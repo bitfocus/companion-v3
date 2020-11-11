@@ -65,7 +65,6 @@ class TmpInner extends React.Component<{ db: DatabaseManager }, { time: number }
 class App extends React.Component {
 	constructor(props: any) {
 		super(props);
-
 	}
 	render() {
 		return (
@@ -83,7 +82,7 @@ class App extends React.Component {
 							</Nav>
 							<Form inline>
 								{/* {this.renderDeviceSelection()} */}
-								
+
 								<Button variant='outline-info'>Search</Button>
 							</Form>
 						</Navbar>

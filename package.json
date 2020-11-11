@@ -1,12 +1,11 @@
 {
-  "name": "companion3-prototype",
+  "name": "root",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
-  "resolutions": {
-    "pouchdb-promise": "file:./deps/pouchdb-promise",
-    "pouchdb-all-dbs": "git+https://github.com/julusian/pouchdb-all-dbs.git",
-    "pouchdb-find": "^7.0.0"
-  }
+  "scripts": {
+    "dev": "yarn lerna run --scope=companion3 --stream dev"
+  },
+  "devDependencies": {
+    "lerna": "^3.21.0"
+  },
+  "workspaces": ["packages/*"]
 }

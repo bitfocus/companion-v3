@@ -5,7 +5,9 @@
     "dev": "yarn lerna run --scope=companion3 --stream dev"
   },
   "devDependencies": {
-    "lerna": "^3.21.0"
+    "lerna": "^3.22.1"
   },
-  "workspaces": ["packages/*"]
+  "workspaces": [
+    "packages/*"
+  ]
 }

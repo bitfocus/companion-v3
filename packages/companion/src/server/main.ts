@@ -48,11 +48,26 @@ export async function startup(configPath: string): Promise<void> {
 	const moduleFactory = new ModuleFactory(configPath);
 
 	const modules = moduleFactory.listModules();
-	modules.then((modList) => {
+	modules.then(async (modList) => {
 		console.log(`Discovered ${modList.length} modules:`);
-		modList.forEach((m) => {
-			console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
-		});
+
+		await db.modules.find().remove();
+
+		await Promise.all(
+			modList.map(async (m) => {
+				console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
+				await db.modules.insert({
+					_id: m.name,
+					name: m.name,
+					version: m.version,
+					asarPath: m.asarPath,
+					isSystem: false, // TODO
+				});
+			}),
+		);
+
+		const docs = await db.modules.find().exec();
+		console.dir(docs.map((d) => d.toJSON()));
 	});
 
 	const core: ICore = {

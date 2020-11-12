@@ -1,29 +1,44 @@
-import { RxDatabase, RxCollection, PouchDB, removeRxDatabase, createRxDatabase } from 'rxdb';
+import { RxDatabase, RxCollection, PouchDB, removeRxDatabase, createRxDatabase, addRxPlugin } from 'rxdb';
 import { ICollections, CollectionCreator } from '../shared/collections';
 import IdbAdapter from 'pouchdb-adapter-idb';
 import HttpAdapter from 'pouchdb-adapter-http';
+import React from 'react';
+import { AuthStatusContext, BackendLinkContext } from './BackendContext';
 
 // RxDB.QueryChangeDetector.enableDebugging();
 
-PouchDB.plugin(IdbAdapter);
-PouchDB.plugin(HttpAdapter); //enable syncing over http
+addRxPlugin(IdbAdapter);
+addRxPlugin(HttpAdapter); //enable syncing over http
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 PouchDB.plugin(require('pouchdb-auth'));
 
-const syncURL = `${window.location.protocol}//${window.location.host}/db/`;
+export const syncURL = `${window.location.protocol}//${window.location.host}/db/`;
 console.log('host: ' + syncURL);
 
-export class DatabaseManager {
-	private authDb: any | null;
-	private mainDb: RxDatabase<ICollections> | null = null;
-	private loginPromise: Promise<void> | null = null;
-	private logoutPromise: Promise<void> | null = null;
-	private _isLoggedIn: boolean = false;
+interface AuthComponentProps {
+	socket: SocketIOClient.Socket;
+}
+interface AuthComponentState {
+	loginPromise: Promise<void> | null;
+	logoutPromise: Promise<void> | null;
+	isLoggedIn: boolean;
+	database: RxDatabase<ICollections> | null;
+}
 
-	constructor() {
-		this.authDb = new PouchDB(`${syncURL}_users`, {
-			skip_setup: true,
-		});
+export class AuthComponentWrapper extends React.Component<AuthComponentProps, AuthComponentState> {
+	private readonly authDb = new PouchDB(`${syncURL}_users`, {
+		skip_setup: true,
+	});
+
+	constructor(props: AuthComponentProps) {
+		super(props);
+
+		this.state = {
+			loginPromise: null,
+			logoutPromise: null,
+			isLoggedIn: false,
+			database: null,
+		};
 
 		this.authDb
 			.useAsAuthenticationDB({
@@ -33,77 +48,77 @@ export class DatabaseManager {
 			.catch((e: any) => {
 				console.error(`Failed to setup authdb: ${e}`);
 			});
-	}
 
-	public pendingLogin(): boolean {
-		return !!this.loginPromise;
-	}
-	public pendingLogout(): boolean {
-		return !!this.logoutPromise;
-	}
-	public isLoggedIn(): boolean {
-		return this._isLoggedIn;
-	}
+		(window as any).db = this; // TODO - temporary
 
-	public async sessionName(): Promise<string | null> {
-		const session = await this.authDb.session();
-		return session.userCtx.name;
+		this.login = this.login.bind(this);
+		this.logout = this.logout.bind(this);
 	}
 
 	public login(username: string, password: string): Promise<void> | null {
-		if (this.loginPromise) {
+		if (this.state.loginPromise) {
 			// 'fail' in case username/password are different
 			return null;
-		} else if (this.logoutPromise) {
+		} else if (this.state.logoutPromise) {
 			return null;
 		} else {
-			this.mainDb = null;
-			this.loginPromise = this.authDb.logIn(username, password).then(async (v: any) => {
+			const prom = this.authDb.logIn(username, password).then(async (v: any) => {
 				// Cleanup
-				this.loginPromise = null;
-				this._isLoggedIn = true;
+
 				const name: string = v.name;
-				const db = (this.mainDb = await this.createDatabase());
+				const db = await this.createDatabase();
+				this.setState({
+					loginPromise: null,
+					isLoggedIn: true,
+					database: db,
+				});
 
 				return {
 					name,
 					db,
 				};
 			});
-			return this.loginPromise;
+			this.setState({
+				loginPromise: prom,
+				database: null,
+			});
+			return prom;
 		}
 	}
 
 	public logout(): Promise<void> | null {
-		if (this.logoutPromise) {
-			return this.logoutPromise;
-		} else if (this.loginPromise) {
+		if (this.state.logoutPromise) {
+			return this.state.logoutPromise;
+		} else if (this.state.loginPromise) {
 			return null;
 		} else {
-			this.mainDb = null;
-			this._isLoggedIn = false;
-			this.logoutPromise = this.authDb.logOut().then(async () => {
+			const prom = this.authDb.logOut().then(async () => {
 				// Cleanup
-				this.logoutPromise = null;
+				this.setState({
+					logoutPromise: null,
+				});
 				await removeRxDatabase('companion3', 'idb');
 			});
-			return this.logoutPromise;
+			this.setState({
+				logoutPromise: prom,
+				isLoggedIn: false,
+				database: null,
+			});
+			return prom;
 		}
-	}
-
-	public getDatabase(): RxDatabase<ICollections> | null {
-		return this.mainDb;
 	}
 
 	private async createDatabase() {
 		// cleanup old data on connect, to ensure we dont try to push anything
 		console.log('DatabaseService: purging old');
-		await removeRxDatabase('companion3', 'idb');
+		// await removeRxDatabase('companion3', 'idb');
+		// TODO - fix this, but only if not another tab open/causing the sync
 
 		console.log('DatabaseService: creating database..');
 		const db = await createRxDatabase<ICollections>({
 			name: 'companion3',
 			adapter: 'idb',
+			multiInstance: true,
 			pouchSettings: {
 				skip_setup: true,
 			},
@@ -154,5 +169,23 @@ export class DatabaseManager {
 			);
 
 		return db;
+	}
+
+	render(): React.ReactElement {
+		return (
+			<BackendLinkContext.Provider value={{ socket: this.props.socket, db: this.state.database }}>
+				<AuthStatusContext.Provider
+					value={{
+						pendingLogin: !!this.state.loginPromise,
+						pendingLogout: !!this.state.logoutPromise,
+						isLoggedIn: this.state.isLoggedIn,
+						doLogin: this.login,
+						doLogout: this.logout,
+					}}
+				>
+					{this.props.children}
+				</AuthStatusContext.Provider>
+			</BackendLinkContext.Provider>
+		);
 	}
 }

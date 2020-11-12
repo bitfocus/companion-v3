@@ -31,7 +31,7 @@ export const CollectionCreator: RxCollectionCreator[] = [
 		statics: ModuleCollectionMethods,
 		pouchSettings: {
 			// Store it in memory, so that it gets rebuilt every startup
-			adapter: 'memory',
+			// adapter: 'memory', // TODO - this doesnt seem to sync, so bypassing for now..
 		} as any,
 	},
 	{

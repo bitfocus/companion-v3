@@ -10,7 +10,7 @@
 		"package": "./scripts/package.sh"
 	},
 	"dependencies": {
-		"@companion/module-framework": "file:../module-framework/bundle.tar.gz"
+		"@companion/module-framework": "file:../module-framework/"
 	},
 	"devDependencies": {
 		"@types/jest": "^25.1.4",

@@ -7,7 +7,7 @@ mkdir staging
 cp -R package.json staging/
 cp -R dist staging
 
-sed -i "s#file:../module-framework/#file:../../module-framework/#g" staging/package.json
+sed -i "s#file:../module-framework/#file:../../module-framework/bundle.tar.gz#g" staging/package.json
 
 cd staging
 yarn --prod

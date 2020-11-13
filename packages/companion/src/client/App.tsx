@@ -41,7 +41,7 @@ class TmpPage extends React.Component {
 class ModuleList extends React.Component<{ db: RxDatabase<ICollections> }, { modules: Array<RxDocument<IModule>> }> {
 	private readonly subs: Subscription[] = [];
 
-	constructor(props: any) {
+	constructor(props: ModuleList['props']) {
 		super(props);
 
 		this.state = {
@@ -49,14 +49,10 @@ class ModuleList extends React.Component<{ db: RxDatabase<ICollections> }, { mod
 		};
 	}
 	async componentDidMount() {
-		this.props.db.modules
-			.find()
-			.exec()
-			.then((d) => console.dir(d));
 		this.subs.push(
 			this.props.db.modules
 				.find()
-				// .sort({ name: 'asc' })
+				.sort({ name: 'asc' })
 				.$.subscribe((modules) => {
 					this.setState({
 						modules: modules,

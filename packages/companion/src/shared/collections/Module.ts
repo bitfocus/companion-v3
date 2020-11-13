@@ -14,6 +14,7 @@ export const ModuleSchema: RxJsonSchema<IModule> = {
 	version: 0,
 	// keyCompression: true,
 	type: 'object',
+	indexes: ['name'],
 	properties: {
 		_id: {
 			type: 'string',

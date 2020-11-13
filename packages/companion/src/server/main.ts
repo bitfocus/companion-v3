@@ -51,6 +51,7 @@ export async function startup(configPath: string): Promise<void> {
 	modules.then(async (modList) => {
 		console.log(`Discovered ${modList.length} modules:`);
 
+		// Remove all known modules, as we are repopulating
 		await db.modules.find().remove();
 
 		await Promise.all(
@@ -65,9 +66,6 @@ export async function startup(configPath: string): Promise<void> {
 				});
 			}),
 		);
-
-		const docs = await db.modules.find().exec();
-		console.dir(docs.map((d) => d.toJSON()));
 	});
 
 	const core: ICore = {

@@ -6,7 +6,7 @@
 	"license": "MIT",
 	"scripts": {
 		"watch": "tsc-watch --onSuccess \"yarn pack -f bundle.tar.gz\"",
-		"bundle": "tsc  && yarn pack -f bundle.tar.gz"
+		"bundle": "tsc && yarn pack -f bundle.tar.gz"
 	},
 	"devDependencies": {
 		"@types/node": "^12.9.0",

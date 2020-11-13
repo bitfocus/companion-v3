@@ -11,6 +11,7 @@ import createSocketIO from 'socket.io';
 import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
+import { MongoClient } from 'mongodb';
 
 // Inject asar parsing
 require('asar-node').register();
@@ -25,6 +26,16 @@ export async function startup(configPath: string): Promise<void> {
 
 	// Ensure the config directory exists
 	fs.mkdirSync(configPath, { recursive: true });
+
+	const mongoUrl = process.env.MONGO_URL;
+	if (!mongoUrl) {
+		// TODO - host the mongo server here..
+		console.error('Embedded mongo not yet supported');
+		process.exit(9);
+	}
+
+	const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
+	await client.connect();
 
 	// Note: rxdb uses pouchdb-all-dbs which creates a folder in the working directory. This forces that to be done where we want it
 	process.chdir(configPath);

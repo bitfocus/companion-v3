@@ -2,8 +2,8 @@
 	"name": "root",
 	"private": true,
 	"scripts": {
-		"dev": "yarn lerna run --scope=companion3 --stream dev",
-		"dev-electron": "yarn lerna run --scope=companion3 --stream dev-electron",
+		"dev": "node ./scripts/start.js",
+		"dev-electron": "cross-env ELECTRON=1 node ./scripts/start.js",
 		"build": "yarn lerna run --scope=companion3 --stream build",
 		"build-unpacked": "yarn lerna run --scope=companion3 --stream build-unpacked",
 		"clean": "yarn lerna run --scope=companion3 --stream clean"

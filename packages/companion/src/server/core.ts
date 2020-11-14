@@ -1,9 +1,8 @@
-import { ICollections } from '../shared/collections';
-import { RxDatabase } from 'rxdb';
 import { ModuleFactory } from './module/module-host';
+import { Db as MongoDb } from 'mongodb';
 
 export interface ICore {
-	db: RxDatabase<ICollections>;
+	db: MongoDb;
 	io: SocketIO.Server;
 	moduleFactory: ModuleFactory;
 }

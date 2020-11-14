@@ -4,14 +4,19 @@ import { apiRouter, socketHandler } from './routes/api-router';
 import { pagesRouter } from './routes/pages-router';
 import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
-import { createDb, setupDefaultUsers } from './db';
-import * as RxDBServerPlugin from 'rxdb/plugins/server';
 import http from 'http';
 import createSocketIO from 'socket.io';
 import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
+import { graphqlSchema } from '../shared/schema';
+import { IModule } from '../shared/collections';
+import { PubSub } from 'graphql-subscriptions';
+import { execute, subscribe } from 'graphql';
+import { createServer } from 'graphql-ws';
+import { graphqlHTTP } from 'express-graphql';
+import { withFirstValue } from './util/asynciterator';
 
 // Inject asar parsing
 require('asar-node').register();
@@ -37,59 +42,85 @@ export async function startup(configPath: string): Promise<void> {
 	const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
 	await client.connect();
 
+	const database = client.db(process.env.MONGO_DB ?? 'companion3');
+
 	// Note: rxdb uses pouchdb-all-dbs which creates a folder in the working directory. This forces that to be done where we want it
-	process.chdir(configPath);
-
-	const db = await createDb(configPath);
-
-	const { app: dbApp, pouchApp } = RxDBServerPlugin.spawnServer.bind(db as any)({ startServer: false });
-
-	await setupDefaultUsers(pouchApp, db);
-
-	const app2 = express();
-	app2.use('/', dbApp);
-	app2.listen(Number(config.SERVER_PORT) + 1, () => {
-		console.log(`Fauxton listening on port ${Number(config.SERVER_PORT) + 1}!`);
-	});
+	// process.chdir(configPath);
 
 	const app = express();
 	const server = http.createServer(app);
 	const io = createSocketIO(server);
 
 	const moduleFactory = new ModuleFactory(configPath);
+	const knownModules: IModule[] = [];
 
 	const modules = moduleFactory.listModules();
-	modules.then(async (modList) => {
+	modules.then((modList) => {
 		console.log(`Discovered ${modList.length} modules:`);
 
-		// Remove all known modules, as we are repopulating
-		await db.modules.find().remove();
-
-		await Promise.all(
-			modList.map(async (m) => {
-				console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
-				await db.modules.insert({
-					_id: m.name,
-					name: m.name,
-					version: m.version,
-					asarPath: m.asarPath,
-					isSystem: false, // TODO
-				});
-			}),
-		);
+		modList.forEach((m) => {
+			console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
+			knownModules.push({
+				id: m.name,
+				name: m.name,
+				version: m.version,
+				asarPath: m.asarPath,
+				isSystem: false, // TODO
+			});
+		});
 	});
 
 	const core: ICore = {
-		db,
+		db: database,
 		io,
 		moduleFactory,
 	};
+
+	// Future: This PubSub could be an external db
+	const pubsub = new PubSub();
+
+	// setInterval(() => {
+	// 	pubsub.publish('instances', {
+	// 			type: 'add',
+	// 			data: [{ id: Date.now(), name: 'no' + Date.now(), version: 'ob' }],
+	// 	});
+	// }, 1000);
+
+	const resolvers = {
+		query: {
+			modules: () => knownModules,
+		},
+		subscription: {
+			instances: () =>
+				withFirstValue(pubsub.asyncIterator('instances'), 'instances', {
+					type: 'init',
+					data: [
+						{ id: '1', name: 'no' + Date.now(), version: '1' },
+						{ id: '2', name: 'no' + Date.now(), version: '2' },
+					],
+				}),
+		},
+	};
+
+	// Set up the WebSocket for handling GraphQL subscriptions
+	app.use('/graphql', graphqlHTTP({ schema: graphqlSchema }));
+	createServer(
+		{
+			schema: graphqlSchema,
+			roots: resolvers,
+			execute,
+			subscribe,
+		},
+		{
+			server,
+			path: '/graphql', // you can use the same path too, just use the `ws` schema
+		},
+	);
 
 	app.set('view engine', 'ejs');
 	app.set('views', path.join(__dirname, '../../views'));
 
 	app.use('/assets', express.static(path.join(__dirname, '../../assets')));
-	app.use('/db', dbApp);
 
 	app.use(apiRouter(core));
 	socketHandler(core);
@@ -100,6 +131,7 @@ export async function startup(configPath: string): Promise<void> {
 	await new Promise((resolve) => {
 		server.listen(config.SERVER_PORT, () => {
 			console.log(`App listening on port ${config.SERVER_PORT}!`);
+
 			resolve();
 		});
 	});

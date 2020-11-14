@@ -1,12 +1,10 @@
 import React from 'react';
-import { RxDatabase } from 'rxdb';
 
 import io from 'socket.io-client';
-import { ICollections } from '../shared/collections';
 
 export interface BackendLink {
 	socket: SocketIOClient.Socket;
-	db: RxDatabase<ICollections> | null;
+	db: /*RxDatabase<ICollections> |*/ null;
 }
 export interface AuthStatusLink {
 	pendingLogin: boolean;

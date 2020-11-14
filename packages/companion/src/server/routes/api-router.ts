@@ -8,13 +8,13 @@ export function apiRouter(core: ICore): Router {
 	router.use(bodyParser.json());
 
 	router.get('/api/users', async (req, res) => {
-		const items = await core.db.workspaces.find().exec();
+		const items = await core.db.collection('workspaces').find().toArray();
 		res.json(items);
 	});
 
 	router.get('/api/user/:userId', async (req, res) => {
 		const userId = req.params.userId;
-		const item = await core.db.workspaces.findOne({ selector: { _id: userId } }).exec();
+		const item = await core.db.collection('workspaces').findOne({ _id: userId });
 		res.json(item);
 	});
 

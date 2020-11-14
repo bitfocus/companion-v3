@@ -6,9 +6,8 @@ import { LinkContainer, IndexLinkContainer } from 'react-router-bootstrap';
 import io from 'socket.io-client';
 import { AuthStatusContext, AuthStatusLink, BackendLinkContext } from './BackendContext';
 import { AuthComponentWrapper } from './database';
-import { RxDatabase, RxDocument } from 'rxdb';
-import { Subscription } from 'rxjs';
-import { ICollections, IModule } from '../shared/collections';
+import { IModule } from '../shared/collections';
+import { gqlSubscribeArray } from './graphql-pubsub';
 
 const socket = io();
 socket.on('connect', () => {
@@ -26,11 +25,15 @@ class TmpPage extends React.Component {
 	render() {
 		return (
 			<div>
-				<p>Temporary2</p>
+				<p>Temporary</p>
 				<AuthStatusContext.Consumer>{(p) => <TmpInner {...p} />}</AuthStatusContext.Consumer>
 				<BackendLinkContext.Consumer>
-					{({ db }) => {
-						return <div>{db ? <ModuleList db={db} /> : ''}</div>;
+					{({}) => {
+						return (
+							<div>
+								<ModuleList />
+							</div>
+						);
 					}}
 				</BackendLinkContext.Consumer>
 			</div>
@@ -38,8 +41,8 @@ class TmpPage extends React.Component {
 	}
 }
 
-class ModuleList extends React.Component<{ db: RxDatabase<ICollections> }, { modules: Array<RxDocument<IModule>> }> {
-	private readonly subs: Subscription[] = [];
+class ModuleList extends React.Component<{}, { modules: Array<IModule> }> {
+	private readonly subs: Array<() => void> = [];
 
 	constructor(props: ModuleList['props']) {
 		super(props);
@@ -49,27 +52,28 @@ class ModuleList extends React.Component<{ db: RxDatabase<ICollections> }, { mod
 		};
 	}
 	async componentDidMount() {
-		this.subs.push(
-			this.props.db.modules
-				.find()
-				.sort({ name: 'asc' })
-				.$.subscribe((modules) => {
-					this.setState({
-						modules: modules,
-						// 	// loading: !rundown
-					});
-				}),
+		const [sub, unsub] = gqlSubscribeArray<IModule>(
+			{
+				query: 'subscription { instances { type data { id name version} } }',
+			},
+			'instances',
 		);
+		this.subs.push(unsub);
+		sub.subscribe((v) => {
+			this.setState({
+				modules: v,
+			});
+		});
 	}
 	componentWillUnmount() {
-		this.subs.forEach((sub) => sub.unsubscribe());
+		this.subs.forEach((sub) => sub());
 	}
 	render() {
 		return (
 			<div>
 				<h3>Modules:</h3>
 				{this.state.modules.map((mod) => (
-					<p key={mod._id}>
+					<p key={mod.id}>
 						{mod.name} @ {mod.version}
 					</p>
 				))}

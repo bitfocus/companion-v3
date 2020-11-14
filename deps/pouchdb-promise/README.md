@@ -1,1 +1,0 @@
-A simple pouchdb-promise, as Promise is defined anywhere sensible by now, and not only did this pull in quite a stale dependency tree, it was also broken for anything using the es6 implementation

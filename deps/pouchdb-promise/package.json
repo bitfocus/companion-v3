@@ -1,6 +1,0 @@
-{
-  "name": "pouchdb-promise",
-  "version": "6.99.99",
-  "main": "./lib/index.js",
-  "license": "MIT"
-}

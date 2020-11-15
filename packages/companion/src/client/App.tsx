@@ -7,7 +7,11 @@ import io from 'socket.io-client';
 import { AuthStatusContext, AuthStatusLink, BackendLinkContext } from './BackendContext';
 import { AuthComponentWrapper } from './database';
 import { IModule } from '../shared/collections';
-import { gqlSubscribeArray } from './graphql-pubsub';
+import { Observable, Subject } from 'rxjs';
+import shortid from 'shortid';
+import { SubscriptionEvent } from '../shared/subscription';
+import { SocketCommand, SubscribeMessage } from '../shared/api';
+import { literal } from '../shared/util';
 
 const socket = io();
 socket.on('connect', () => {
@@ -17,6 +21,60 @@ socket.on('disconnect', () => {
 	console.log('socket.io disconnected');
 });
 // const database = new DatabaseManager();
+
+export type unsub = () => void;
+
+// TODO - how can the query be typed?
+export interface SubscribeQuery {
+	doc: string;
+	query?: never;
+}
+function subscribe<T extends { _id: string }>(doc: string, query?: never): [Observable<T[]>, unsub] {
+	const subId = shortid();
+	socket.emit(
+		SocketCommand.Subscribe,
+		literal<SubscribeMessage>({
+			id: subId,
+			doc,
+			query,
+		}),
+	);
+
+	const sub = new Subject<T[]>();
+	const fullData = new Map<string, T>();
+	sub.next(Array.from(fullData.values()));
+
+	socket.on(subId, (msg: SubscriptionEvent<T>) => {
+		switch (msg.event) {
+			case 'init':
+				fullData.clear();
+				for (const d of msg.docs) {
+					fullData.set(d._id, d);
+				}
+				break;
+			case 'change':
+				fullData.set(msg.doc._id, msg.doc);
+				break;
+			case 'remove':
+				fullData.delete(msg.docId);
+				break;
+			case 'error':
+				// TODO
+				break;
+		}
+		sub.next(Array.from(fullData.values()));
+	});
+
+	return [
+		sub,
+		() => {
+			socket.off(subId);
+			socket.emit(SocketCommand.Unsubscribe, {
+				id: subId,
+			});
+		},
+	];
+}
 
 (window as any).socket = socket; // TODO - temporary
 // (window as any).db = database; // TODO - temporary
@@ -41,7 +99,7 @@ class TmpPage extends React.Component {
 	}
 }
 
-class ModuleList extends React.Component<{}, { modules: Array<IModule> }> {
+class ModuleList extends React.Component<unknown, { modules: Array<IModule> }> {
 	private readonly subs: Array<() => void> = [];
 
 	constructor(props: ModuleList['props']) {
@@ -52,12 +110,13 @@ class ModuleList extends React.Component<{}, { modules: Array<IModule> }> {
 		};
 	}
 	async componentDidMount() {
-		const [sub, unsub] = gqlSubscribeArray<IModule>(
-			{
-				query: 'subscription { instances { type data { id name version} } }',
-			},
-			'instances',
-		);
+		const [sub, unsub] = subscribe<IModule>('modules');
+		// const [sub, unsub] = gqlSubscribeArray<IModule>(
+		// 	{
+		// 		query: 'subscription { instances { type data { id name version} } }',
+		// 	},
+		// 	'instances',
+		// );
 		this.subs.push(unsub);
 		sub.subscribe((v) => {
 			this.setState({
@@ -73,7 +132,7 @@ class ModuleList extends React.Component<{}, { modules: Array<IModule> }> {
 			<div>
 				<h3>Modules:</h3>
 				{this.state.modules.map((mod) => (
-					<p key={mod.id}>
+					<p key={mod._id}>
 						{mod.name} @ {mod.version}
 					</p>
 				))}

@@ -1,5 +1,5 @@
 export interface IModule {
-	id: string;
+	_id: string;
 	name: string;
 	version: string;
 	asarPath: string;

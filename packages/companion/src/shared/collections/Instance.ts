@@ -1,5 +1,5 @@
 export interface IInstance {
-	id: string;
+	_id: string;
 	name: string;
 	version: string;
 	asarPath: string;

@@ -10,13 +10,7 @@ import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
-import { graphqlSchema } from '../shared/schema';
 import { IModule } from '../shared/collections';
-import { PubSub } from 'graphql-subscriptions';
-import { execute, subscribe } from 'graphql';
-import { createServer } from 'graphql-ws';
-import { graphqlHTTP } from 'express-graphql';
-import { withFirstValue } from './util/asynciterator';
 
 // Inject asar parsing
 require('asar-node').register();
@@ -61,7 +55,7 @@ export async function startup(configPath: string): Promise<void> {
 		modList.forEach((m) => {
 			console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
 			knownModules.push({
-				id: m.name,
+				_id: m.name,
 				name: m.name,
 				version: m.version,
 				asarPath: m.asarPath,
@@ -76,46 +70,12 @@ export async function startup(configPath: string): Promise<void> {
 		moduleFactory,
 	};
 
-	// Future: This PubSub could be an external db
-	const pubsub = new PubSub();
-
 	// setInterval(() => {
 	// 	pubsub.publish('instances', {
 	// 			type: 'add',
 	// 			data: [{ id: Date.now(), name: 'no' + Date.now(), version: 'ob' }],
 	// 	});
 	// }, 1000);
-
-	const resolvers = {
-		query: {
-			modules: () => knownModules,
-		},
-		subscription: {
-			instances: () =>
-				withFirstValue(pubsub.asyncIterator('instances'), 'instances', {
-					type: 'init',
-					data: [
-						{ id: '1', name: 'no' + Date.now(), version: '1' },
-						{ id: '2', name: 'no' + Date.now(), version: '2' },
-					],
-				}),
-		},
-	};
-
-	// Set up the WebSocket for handling GraphQL subscriptions
-	app.use('/graphql', graphqlHTTP({ schema: graphqlSchema }));
-	createServer(
-		{
-			schema: graphqlSchema,
-			roots: resolvers,
-			execute,
-			subscribe,
-		},
-		{
-			server,
-			path: '/graphql', // you can use the same path too, just use the `ws` schema
-		},
-	);
 
 	app.set('view engine', 'ejs');
 	app.set('views', path.join(__dirname, '../../views'));

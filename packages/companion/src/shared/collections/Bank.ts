@@ -6,7 +6,7 @@ export enum ButtonType {
 }
 
 export interface IBank {
-	id: string;
+	_id: string;
 	x: number;
 	y: number;
 	latch?: boolean;

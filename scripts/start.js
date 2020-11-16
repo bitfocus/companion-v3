@@ -1,44 +1,20 @@
 const concurrently = require('concurrently');
 const path = require('path');
-const fs = require('fs');
-const { spawn } = require('child_process');
 
-/** Startup mongo */
-const mongoDir = path.join(__dirname, '../tools/mongodb/', `${process.platform}-${process.arch}`, 'bin');
-let mongoPath = path.join(mongoDir, 'mongod');
-let mongoClientPath = path.join(mongoDir, 'mongo');
-if (process.platform === 'win32') {
-	mongoPath += '.exe';
-	mongoClientPath += '.exe';
-}
-
-if (!fs.existsSync(mongoPath)) {
-	throw `Could not find mongod at: ${mongoPath}`;
-}
-console.log('found mongod executable:', mongoPath);
-
-const dataPath = path.join(__dirname, '../packages/companion/userdata/mongodb');
-console.log('Using mongod data directory: ' + dataPath);
-fs.mkdirSync(dataPath, { recursive: true });
-
-const mongoProcess = spawn(mongoPath, ['--dbpath', dataPath, '--bind_ip', '127.0.0.1', '--replSet', 'rs0']);
-mongoProcess.stdout.on('data', (data) => {
-	console.log('[MONGOD-STDOUT]', data.toString());
-});
-mongoProcess.stderr.on('data', (data) => {
-	console.error('[MONGOD-STDERR]', data.toString());
-});
-mongoProcess.on('exit', (code) => {
-	console.log('[MONGOD-EXIT]', code.toString());
-	process.exit(code);
-});
-process.on('exit', () => {
-	mongoProcess.kill();
+require('ts-node').register({
+	project: './packages/companion/src/server/tsconfig.json',
 });
 
-/** The rest */
+const { startMongo } = require('../packages/companion/src/server/mongo');
+
 (async () => {
 	try {
+		/** Startup mongo */
+		const dataPath = path.join(__dirname, '../packages/companion/userdata/');
+		const mongoUrl = await startMongo(dataPath, path.join(__dirname, '..'), '127.0.0.1', 27017);
+
+		/** The rest */
+
 		console.log('Running preparation steps');
 		await concurrently(
 			[
@@ -51,22 +27,6 @@ process.on('exit', () => {
 				prefix: 'name',
 				killOthers: ['failure', 'success'],
 				restartTries: 3,
-			},
-		);
-
-		console.log('Configure mongo');
-		await concurrently(
-			[
-				{
-					command: `${mongoClientPath} --eval "rs.initiate()"`,
-					name: 'MONGO-INIT',
-				},
-			],
-			{
-				prefix: 'name',
-				killOthers: ['failure', 'success'],
-				restartTries: 5,
-				restartDelay: 1000,
 			},
 		);
 
@@ -83,7 +43,7 @@ process.on('exit', () => {
 					name: 'SERVER',
 					prefixColor: 'bgBlue.bold',
 					env: {
-						MONGO_URL: `mongodb://127.0.0.1:27017?retryWrites=true&w=majority`,
+						MONGO_URL: mongoUrl,
 						DEVELOPER: 1,
 					},
 				},

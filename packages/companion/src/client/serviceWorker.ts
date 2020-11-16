@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // This optional code is used to register a service worker.
 // register() is not called by default.
 
@@ -24,8 +25,10 @@ type Config = {
 };
 
 export function register(config?: Config) {
+	// @ts-expect-error
 	if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
 		// The URL constructor is available in all browsers that support SW.
+		// @ts-expect-error
 		const publicUrl = new URL(process.env.PUBLIC_URL || '', window.location.href);
 		if (publicUrl.origin !== window.location.origin) {
 			// Our service worker won't work if PUBLIC_URL is on a different origin
@@ -35,6 +38,7 @@ export function register(config?: Config) {
 		}
 
 		window.addEventListener('load', () => {
+			// @ts-expect-error
 			const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
 
 			if (isLocalhost) {

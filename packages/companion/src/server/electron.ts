@@ -3,7 +3,7 @@ import { app, BrowserWindow } from 'electron';
 // Import the main server code
 import { startup } from './main';
 
-const started = startup(app.getPath('userData'));
+const started = startup(app.getPath('userData'), app.getAppPath());
 
 async function createWindow() {
 	// Create the browser window.

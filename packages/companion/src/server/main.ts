@@ -11,6 +11,8 @@ import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
 import { IBank, IInstance, IModule, IWorkspace } from '../shared/collections';
+import getPort from 'get-port';
+import { startMongo } from './mongo';
 
 // Inject asar parsing
 require('asar-node').register();
@@ -20,17 +22,18 @@ console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`config: ${JSON.stringify(config, null, 2)}`);
 console.log(`*******************************************`);
 
-export async function startup(configPath: string): Promise<void> {
+export async function startup(configPath: string, appPath: string): Promise<void> {
 	console.log('loading config from:', configPath);
 
 	// Ensure the config directory exists
 	fs.mkdirSync(configPath, { recursive: true });
 
-	const mongoUrl = process.env.MONGO_URL;
+	let mongoUrl = process.env.MONGO_URL;
 	if (!mongoUrl) {
-		// TODO - host the mongo server here..
-		console.error('Embedded mongo not yet supported');
-		process.exit(9);
+		console.log('Starting embedded mongo server');
+
+		const mongoPort = await getPort({ port: getPort.makeRange(27017, 28000) });
+		mongoUrl = await startMongo(configPath, path.join(appPath, '../..'), '127.0.0.1', mongoPort);
 	}
 
 	const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
@@ -56,6 +59,12 @@ export async function startup(configPath: string): Promise<void> {
 		moduleFactory,
 	};
 
+	// Delete all documents from 'temporary' collections
+	await Promise.all([
+		core.models.modules.deleteMany({}),
+		// TODO add more here
+	]);
+
 	const modules = moduleFactory.listModules();
 	modules.then(async (modList) => {
 		console.log(`Discovered ${modList.length} modules:`);
@@ -74,13 +83,6 @@ export async function startup(configPath: string): Promise<void> {
 
 		await core.models.modules.insertMany(knownModules);
 	});
-
-	// setInterval(() => {
-	// 	pubsub.publish('instances', {
-	// 			type: 'add',
-	// 			data: [{ id: Date.now(), name: 'no' + Date.now(), version: 'ob' }],
-	// 	});
-	// }, 1000);
 
 	app.set('view engine', 'ejs');
 	app.set('views', path.join(__dirname, '../../views'));

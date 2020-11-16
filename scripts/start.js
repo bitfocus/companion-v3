@@ -4,9 +4,12 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 
 /** Startup mongo */
-let mongoPath = path.join(__dirname, '../tools/mongodb/', `${process.platform}-${process.arch}`, 'bin', 'mongod');
+const mongoDir = path.join(__dirname, '../tools/mongodb/', `${process.platform}-${process.arch}`, 'bin');
+let mongoPath = path.join(mongoDir, 'mongod');
+let mongoClientPath = path.join(mongoDir, 'mongo');
 if (process.platform === 'win32') {
 	mongoPath += '.exe';
+	mongoClientPath += '.exe';
 }
 
 if (!fs.existsSync(mongoPath)) {
@@ -18,7 +21,7 @@ const dataPath = path.join(__dirname, '../packages/companion/userdata/mongodb');
 console.log('Using mongod data directory: ' + dataPath);
 fs.mkdirSync(dataPath, { recursive: true });
 
-const mongoProcess = spawn(mongoPath, ['--dbpath', dataPath, '--bind_ip', '127.0.0.1']);
+const mongoProcess = spawn(mongoPath, ['--dbpath', dataPath, '--bind_ip', '127.0.0.1', '--replSet', 'rs0']);
 mongoProcess.stdout.on('data', (data) => {
 	console.log('[MONGOD-STDOUT]', data.toString());
 });
@@ -28,6 +31,9 @@ mongoProcess.stderr.on('data', (data) => {
 mongoProcess.on('exit', (code) => {
 	console.log('[MONGOD-EXIT]', code.toString());
 	process.exit(code);
+});
+process.on('exit', () => {
+	mongoProcess.kill();
 });
 
 /** The rest */
@@ -45,6 +51,22 @@ mongoProcess.on('exit', (code) => {
 				prefix: 'name',
 				killOthers: ['failure', 'success'],
 				restartTries: 3,
+			},
+		);
+
+		console.log('Configure mongo');
+		await concurrently(
+			[
+				{
+					command: `${mongoClientPath} --eval "rs.initiate()"`,
+					name: 'MONGO-INIT',
+				},
+			],
+			{
+				prefix: 'name',
+				killOthers: ['failure', 'success'],
+				restartTries: 5,
+				restartDelay: 1000,
 			},
 		);
 

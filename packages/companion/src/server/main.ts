@@ -10,7 +10,7 @@ import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
-import { IModule } from '../shared/collections';
+import { IBank, IInstance, IModule, IWorkspace } from '../shared/collections';
 
 // Inject asar parsing
 require('asar-node').register();
@@ -38,20 +38,29 @@ export async function startup(configPath: string): Promise<void> {
 
 	const database = client.db(process.env.MONGO_DB ?? 'companion3');
 
-	// Note: rxdb uses pouchdb-all-dbs which creates a folder in the working directory. This forces that to be done where we want it
-	// process.chdir(configPath);
-
 	const app = express();
 	const server = http.createServer(app);
 	const io = createSocketIO(server);
 
 	const moduleFactory = new ModuleFactory(configPath);
-	const knownModules: IModule[] = [];
+
+	const core: ICore = {
+		db: database,
+		models: {
+			banks: database.collection<IBank>('banks'),
+			instances: database.collection<IInstance>('instances'),
+			modules: database.collection<IModule>('modules'),
+			workspaces: database.collection<IWorkspace>('workspaces'),
+		},
+		io,
+		moduleFactory,
+	};
 
 	const modules = moduleFactory.listModules();
-	modules.then((modList) => {
+	modules.then(async (modList) => {
 		console.log(`Discovered ${modList.length} modules:`);
 
+		const knownModules: IModule[] = [];
 		modList.forEach((m) => {
 			console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
 			knownModules.push({
@@ -62,13 +71,9 @@ export async function startup(configPath: string): Promise<void> {
 				isSystem: false, // TODO
 			});
 		});
-	});
 
-	const core: ICore = {
-		db: database,
-		io,
-		moduleFactory,
-	};
+		await core.models.modules.insertMany(knownModules);
+	});
 
 	// setInterval(() => {
 	// 	pubsub.publish('instances', {

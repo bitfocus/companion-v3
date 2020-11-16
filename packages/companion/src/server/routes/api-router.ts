@@ -137,11 +137,6 @@ function createSubscription(core: ICore, msg: SubscribeMessage): SubscriptionDat
 }
 
 export function socketHandler(core: ICore): void {
-	const int = core.db.collection('instances');
-	int.watch({
-		fullDocument: 'updateLookup',
-	});
-
 	core.io.on('connection', (socket) => {
 		console.log('a user connected');
 

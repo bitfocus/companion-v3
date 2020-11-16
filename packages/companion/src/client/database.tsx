@@ -15,10 +15,6 @@ interface AuthComponentState {
 }
 
 export class AuthComponentWrapper extends React.Component<AuthComponentProps, AuthComponentState> {
-	// private readonly authDb = new PouchDB(`${syncURL}_users`, {
-	// 	skip_setup: true,
-	// });
-
 	constructor(props: AuthComponentProps) {
 		super(props);
 

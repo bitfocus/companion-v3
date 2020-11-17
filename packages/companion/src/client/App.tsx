@@ -5,7 +5,7 @@ import { Form, Nav, Navbar, Button } from 'react-bootstrap';
 import { LinkContainer, IndexLinkContainer } from 'react-router-bootstrap';
 import io from 'socket.io-client';
 import { AuthStatusContext, AuthStatusLink, BackendLinkContext } from './BackendContext';
-import { AuthComponentWrapper } from './database';
+import { AuthComponentWrapper } from './AuthWrapper';
 import { IModule } from '../shared/collections';
 import { Observable, Subject } from 'rxjs';
 import shortid from 'shortid';
@@ -60,6 +60,7 @@ function subscribe<T extends { _id: string }>(doc: string, query?: never): [Obse
 				break;
 			case 'error':
 				// TODO
+				console.error('got error', msg.message);
 				break;
 		}
 		sub.next(Array.from(fullData.values()));
@@ -84,16 +85,26 @@ class TmpPage extends React.Component {
 		return (
 			<div>
 				<p>Temporary</p>
-				<AuthStatusContext.Consumer>{(p) => <TmpInner {...p} />}</AuthStatusContext.Consumer>
-				<BackendLinkContext.Consumer>
-					{({}) => {
-						return (
-							<div>
-								<ModuleList />
-							</div>
-						);
-					}}
-				</BackendLinkContext.Consumer>
+				<AuthStatusContext.Consumer>
+					{(p) => (
+						<div>
+							<TmpInner {...p} />
+							{p.userInfo ? (
+								<BackendLinkContext.Consumer>
+									{({}) => {
+										return (
+											<div>
+												<ModuleList />
+											</div>
+										);
+									}}
+								</BackendLinkContext.Consumer>
+							) : (
+								''
+							)}
+						</div>
+					)}
+				</AuthStatusContext.Consumer>
 			</div>
 		);
 	}
@@ -161,9 +172,9 @@ class TmpInner extends React.Component<AuthStatusLink, { time: number }> {
 	render() {
 		return (
 			<div>
-				<p>Abc - {this.props.isLoggedIn ? 'Y' : 'N'}</p>
+				<p>Abc - {this.props.userInfo?.name ?? '---'}</p>
 				<p>
-					<button onClick={() => this.props.doLogin('admin', 'admin')}>Login</button>
+					<button onClick={() => this.props.doLogin('admin', 'password')}>Login</button>
 				</p>
 				<p>
 					<button onClick={() => this.props.doLogout()}>Logout</button>

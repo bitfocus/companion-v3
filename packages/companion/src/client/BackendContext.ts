@@ -4,25 +4,21 @@ import io from 'socket.io-client';
 
 export interface BackendLink {
 	socket: SocketIOClient.Socket;
-	db: /*RxDatabase<ICollections> |*/ null;
 }
 export interface AuthStatusLink {
-	pendingLogin: boolean;
-	pendingLogout: boolean;
-	isLoggedIn: boolean;
-	doLogin(username: string, password: string): Promise<void> | null;
-	doLogout(): Promise<void> | null;
+	userInfo: { name: string } | undefined;
+	authError: string | undefined;
+	doLogin(username: string, password: string): void;
+	doLogout(): void;
 }
 
 export const AuthStatusContext = React.createContext<AuthStatusLink>({
-	pendingLogin: false,
-	pendingLogout: false,
-	isLoggedIn: false,
+	userInfo: undefined,
+	authError: undefined,
 	doLogin: () => null,
 	doLogout: () => null,
 });
 
 export const BackendLinkContext = React.createContext<BackendLink>({
 	socket: io({ autoConnect: false }),
-	db: null,
 });

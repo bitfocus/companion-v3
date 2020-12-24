@@ -2,6 +2,11 @@
 
 Warning: An early prototype that doesn't do much. Only tested on linux so far.
 
+### Manual Steps
+
+MongoDB is required and for now must be downloaded manually to the correct folder.
+It is expected for there to be a folder `tools/mongodb/${process.platform}-${process.arch` (eg `tools/mongodb/linux-x64` or `tools/mongodb/win32-x64`) containing the contents of the mongodb 4.4 download from https://www.mongodb.com/try/download/community
+
 ### Useful commands
 
 -   `yarn dev` - Start development version in headless mode

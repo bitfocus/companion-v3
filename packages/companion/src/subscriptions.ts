@@ -47,7 +47,7 @@ export function socketSubscribe(core: ICore, socket: SocketIO.Socket, msg: Subsc
 	sub.init(entry);
 }
 
-export function socketUnsubscribe(core: ICore, socket: SocketIO.Socket, msg: UnsubscribeMessage): void {
+export function socketUnsubscribe(_core: ICore, socket: SocketIO.Socket, msg: UnsubscribeMessage): void {
 	for (const [subId, data] of dbSubscriptions) {
 		data.clients = data.clients.filter((c) => c.socket !== socket || c.messageName !== msg.id);
 		if (data.clients.length === 0) {
@@ -128,6 +128,8 @@ export function createSubscription(core: ICore, msg: SubscribeMessage): Subscrip
 							event: 'error',
 							message: 'Collection dropped',
 						});
+						data.destroy();
+						break;
 					case 'invalidate':
 						data.destroy();
 						break;

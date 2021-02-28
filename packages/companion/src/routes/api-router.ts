@@ -9,18 +9,16 @@ import {
 	UnsubscribeMessage,
 	UserInfoMessage,
 } from '@shared/dist/api';
-import { IModule } from '@shared/dist/collections';
 import { literal } from '@shared/dist/util';
 import { SubscriptionEvent } from '@shared/dist/subscription';
 import { socketSubscribe, socketUnsubscribe, unsubscribeAllForSocket } from '../subscriptions';
 import { getUserInfo, login, logout } from '../auth';
-import shortid from 'shortid';
 
 export function apiRouter(core: ICore): Router {
 	const router = Router();
 	router.use(bodyParser.json());
 
-	router.get('/api/users', async (req, res) => {
+	router.get('/api/users', async (_req, res) => {
 		const items = await core.db.collection('workspaces').find().toArray();
 		res.json(items);
 	});
@@ -31,14 +29,14 @@ export function apiRouter(core: ICore): Router {
 		res.json(item);
 	});
 
-	router.post('/api/set-user', (req, res) => {
+	router.post('/api/set-user', (_req, res) => {
 		res.send(`ok`);
 	});
 
 	return router;
 }
 
-function assertNever(val: never): void {}
+// function assertNever(val: never): void {}
 
 export function socketHandler(core: ICore): void {
 	core.io.on('connection', (socket) => {
@@ -56,7 +54,7 @@ export function socketHandler(core: ICore): void {
 					}),
 				);
 			})
-			.catch((e) => {
+			.catch((_e) => {
 				// TODO
 			});
 
@@ -107,7 +105,7 @@ export function socketHandler(core: ICore): void {
 				}
 			}
 		});
-		socket.on(SocketCommand.Logout, async (msg: LogoutMessage) => {
+		socket.on(SocketCommand.Logout, async (_msg: LogoutMessage) => {
 			if (authSession) {
 				// Clear the value
 				const oldAuthSession = authSession;

@@ -2,10 +2,10 @@ const concurrently = require('concurrently');
 const path = require('path');
 
 require('ts-node').register({
-	project: './packages/companion/src/server/tsconfig.json',
+	project: './packages/companion/tsconfig.json',
 });
 
-const { startMongo } = require('../packages/companion/src/server/mongo');
+const { startMongo } = require('../packages/companion/src/mongo');
 
 (async () => {
 	try {

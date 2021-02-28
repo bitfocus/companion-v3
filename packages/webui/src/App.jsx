@@ -271,3 +271,45 @@ function AppContent({ buttonGridHotPress }) {
 		</CContainer>
 	);
 }
+
+// class ModuleList extends React.Component<unknown, { modules: Array<IModule> }> {
+// 	private readonly subs: Array<() => void> = [];
+
+// 	constructor(props: ModuleList['props']) {
+// 		super(props);
+
+// 		this.state = {
+// 			modules: [],
+// 		};
+// 	}
+// 	async componentDidMount() {
+// 		const [sub, unsub] = subscribeToCollection<IModule>(this.context.socket, 'modules');
+// 		// const [sub, unsub] = gqlSubscribeArray<IModule>(
+// 		// 	{
+// 		// 		query: 'subscription { instances { type data { id name version} } }',
+// 		// 	},
+// 		// 	'instances',
+// 		// );
+// 		this.subs.push(unsub);
+// 		sub.subscribe((v) => {
+// 			this.setState({
+// 				modules: v,
+// 			});
+// 		});
+// 	}
+// 	componentWillUnmount() {
+// 		this.subs.forEach((sub) => sub());
+// 	}
+// 	render() {
+// 		return (
+// 			<div>
+// 				<h3>Modules:</h3>
+// 				{this.state.modules.map((mod) => (
+// 					<p key={mod._id}>
+// 						{mod.name} @ {mod.version}
+// 					</p>
+// 				))}
+// 			</div>
+// 		);
+// 	}
+// }

@@ -88,11 +88,6 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		await core.models.modules.insertMany(knownModules);
 	});
 
-	app.set('view engine', 'ejs');
-	app.set('views', path.join(__dirname, '../../views'));
-
-	app.use('/assets', express.static(path.join(__dirname, '../../assets')));
-
 	app.use(apiRouter(core));
 	socketHandler(core);
 

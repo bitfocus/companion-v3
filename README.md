@@ -20,13 +20,12 @@ It is expected for there to be a folder `tools/mongodb/${process.platform}-${pro
 ### Structure
 
 -   /packages - Various projects (companion + system modules)
--   /packages/companion - Companion source code
-    -   assets - static assets served over http
-    -   src/shared - code shared between client and server. eg database types
-    -   src/client - react based client code
-    -   src/server - server/backend code
+-   /packages/companion - Companion server/backend source code
     -   bundled-modules - any modules to be distributed with companion should be built into an asar file in here. the expectation is that not everything will be bundled, many will be distributed via a 'module store'
     -   userdata - database docs etc generated at runtime. Located here in development, gets placed elsewhere when running a full electron build
+-   /packages/webui - Companion webui source code
+    -   assets - static assets served over http
+-   /packages/shared - Companion shared code between webui and backend
 -   /packages/mock-module - Example module
 -   /packages/module-framework - shared code (api typings etc) to be used by modules
 -   /scripts - Scripts for various tasks

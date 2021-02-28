@@ -50,8 +50,8 @@ export class ModuleFactory {
 
 	async listModules(): Promise<Array<ModuleInfo>> {
 		const systemModulePath = IS_PACKAGED
-			? path.join(__dirname, '../../../../../bundled-modules')
-			: path.join(__dirname, '../../../bundled-modules');
+			? path.join(__dirname, '../../../../bundled-modules')
+			: path.join(__dirname, '../../bundled-modules');
 
 		const [userModuleFiles, systemModuleFiles] = await Promise.all([
 			readdirProm(this.modulePath),
@@ -66,7 +66,7 @@ export class ModuleFactory {
 
 		const res: ModuleInfo[] = [];
 
-		_.each(groupedModules, (options, id) => {
+		_.each(groupedModules, (options, _id) => {
 			// Sort by version, then asarPath (just to be safe)
 			const sortedOptions = _.sortBy(
 				options.sort((a, b) => {

@@ -1,12 +1,13 @@
 import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react';
-import { CompanionContext } from '../util';
+import { CompanionContext, socketEmit2 } from '../util';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 
 import { InstanceVariablesModal } from './InstanceVariablesModal';
 import { InstanceStatus } from '@companion/module-framework';
 import { IDeviceConnection } from '@companion/core-shared/dist/collections';
+import { SocketCommand } from '@companion/core-shared/dist/api';
 
 export function InstancesList({
 	showHelp,
@@ -60,7 +61,7 @@ export function InstancesList({
 							<InstancesTableRow
 								key={connecion._id}
 								id={connecion._id}
-								instance={connecion}
+								connection={connecion}
 								instanceStatus={instanceStatus[connecion._id]}
 								showHelp={showHelp}
 								showVariables={doShowVariables}
@@ -77,7 +78,7 @@ export function InstancesList({
 
 interface InstanceTableRowProps {
 	id: string;
-	instance: IDeviceConnection;
+	connection: IDeviceConnection;
 	instanceStatus: [InstanceStatus, string];
 	showVariables: (connectionId: string) => void;
 	showHelp: (moduleId: string) => void;
@@ -86,7 +87,7 @@ interface InstanceTableRowProps {
 }
 function InstancesTableRow({
 	id,
-	instance,
+	connection,
 	instanceStatus,
 	showHelp,
 	showVariables,
@@ -95,23 +96,29 @@ function InstancesTableRow({
 }: InstanceTableRowProps) {
 	const context = useContext(CompanionContext);
 
-	const moduleInfo = context.modules[instance.moduleId];
+	const moduleInfo = context.modules[connection.moduleId];
 
 	const status = processModuleStatus(instanceStatus);
 
 	const doDelete = useCallback(() => {
-		deleteModalRef.current?.show(id, instance.label);
-	}, [deleteModalRef, id, instance.label]);
+		deleteModalRef.current?.show(id, connection.label);
+	}, [deleteModalRef, id, connection.label]);
 
 	const doToggleEnabled = useCallback(() => {
-		context.socket.emit('instance_enable', id, !instance.enabled);
-	}, [context.socket, id, instance.enabled]);
+		socketEmit2(context.socket, SocketCommand.ConnectionEnabled, {
+			connectionId: id,
+			enabled: !connection.enabled,
+		}).catch((e) => {
+			context.notifier.current.show(`Failed to enable/disable connection`, e);
+			console.error('Failed to  enable/disable connection:', e);
+		});
+	}, [context.socket, context.notifier, id, connection.enabled]);
 
-	const doShowHelp = useCallback(() => showHelp(instance.moduleId), [showHelp, instance.moduleId]);
+	const doShowHelp = useCallback(() => showHelp(connection.moduleId), [showHelp, connection.moduleId]);
 
-	const doShowVariables = useCallback(() => showVariables(instance.label), [showVariables, instance.label]);
+	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label]);
 
-	const instanceVariables = (context.variableDefinitions ?? {})[instance.label];
+	const instanceVariables = (context.variableDefinitions ?? {})[connection.label];
 
 	return (
 		<tr>
@@ -130,7 +137,7 @@ function InstancesTableRow({
 						{moduleInfo?.manufacturer ?? ''}
 					</>
 				) : (
-					instance.moduleId
+					connection.moduleId
 				)}
 			</td>
 			<td>
@@ -141,7 +148,7 @@ function InstancesTableRow({
 				) : (
 					''
 				)}
-				{instance.label}
+				{connection.label}
 			</td>
 			<td className={status.className} title={status.title}>
 				{status.text}
@@ -150,7 +157,7 @@ function InstancesTableRow({
 				<CButton onClick={doDelete} variant='ghost' color='danger' size='sm'>
 					delete
 				</CButton>
-				{instance.enabled ? (
+				{connection.enabled ? (
 					<CButton onClick={doToggleEnabled} variant='ghost' color='warning' size='sm' disabled={!moduleInfo}>
 						disable
 					</CButton>
@@ -163,7 +170,7 @@ function InstancesTableRow({
 					onClick={() => configureInstance(id)}
 					color='primary'
 					size='sm'
-					disabled={!moduleInfo || !instance.enabled}
+					disabled={!moduleInfo || !connection.enabled}
 				>
 					edit
 				</CButton>
@@ -233,9 +240,14 @@ const ConfirmDeleteModal = forwardRef<ConfirmDeleteModalHandle>(function Confirm
 		setData(null);
 		setShow(false);
 
-		// Perform the delete
-		context.socket.emit('instance_delete', data?.[0]);
-	}, [data, context.socket]);
+		if (data) {
+			// Perform the delete
+			socketEmit2(context.socket, SocketCommand.ConnectionDelete, { connectionId: data[0] }).catch((e) => {
+				context.notifier.current.show(`Failed to delete connection`, e);
+				console.error('Failed to delete connection:', e);
+			});
+		}
+	}, [data, context.socket, context.notifier]);
 
 	useImperativeHandle(
 		ref,

@@ -2,7 +2,8 @@ import React, { memo, useContext, useState } from 'react';
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { CompanionContext, socketEmit } from '../util';
+import { CompanionContext, socketEmit2 } from '../util';
+import { ConnectionCreateMessageReply, SocketCommand } from '@companion/core-shared/dist/api';
 
 export function AddInstancesPanel({
 	showHelp,
@@ -28,17 +29,20 @@ const AddInstancesInner = memo(function AddInstancesInner({
 	const context = useContext(CompanionContext);
 	const [filter, setFilter] = useState('');
 
-	const addInstance = (type: string, product: string) => {
-		// socketEmit(context.socket, 'instance_add', [{ type: type, product: product }])
-		// 	.then(([id]) => {
-		// 		setFilter('');
-		// 		console.log('NEW INSTANCE', id);
-		// 		configureInstance(id);
-		// 	})
-		// 	.catch((e) => {
-		// 		context.notifier.current.show(`Failed to create connection`, e);
-		// 		console.error('Failed to create connection:', e);
-		// 	});
+	const addInstance = (moduleId: string, product: string) => {
+		socketEmit2(context.socket, SocketCommand.ConnectionCreate, {
+			moduleId,
+			product,
+		})
+			.then((res: ConnectionCreateMessageReply) => {
+				setFilter('');
+				console.log('NEW INSTANCE', res.connectionId);
+				configureInstance(res.connectionId);
+			})
+			.catch((e) => {
+				context.notifier.current.show(`Failed to create connection`, e);
+				console.error('Failed to create connection:', e);
+			});
 	};
 
 	const candidates = [];

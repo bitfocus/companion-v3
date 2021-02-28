@@ -6,6 +6,7 @@ import { PRIMARY_COLOR } from './Constants';
 import { BarLoader } from 'react-spinners';
 import SocketIOClient from 'socket.io-client';
 import { IDeviceConnection, IModule } from '@companion/core-shared/dist/collections';
+import { CommandReplyTypeMap, CommandTypeMap, SocketCommand } from '@companion/core-shared/dist/api';
 
 export interface ICompanionContext {
 	socket: SocketIOClient.Socket;
@@ -29,6 +30,31 @@ export const CompanionContext = React.createContext<ICompanionContext>({
 	actions: undefined,
 	feedbacks: undefined,
 });
+
+export function socketEmit2(
+	socket: SocketIOClient.Socket,
+	name: SocketCommand,
+	msg: any,
+	timeout?: number,
+	timeoutMessage?: string,
+): Promise<any> {
+	const p = new Promise<unknown>((resolve, reject) => {
+		console.log('send', name, msg);
+
+		socket.emit(name, msg, (err: Error | null, res: unknown | null) => {
+			if (err) {
+				reject(err);
+			} else if (res) {
+				resolve(res);
+			} else {
+				reject('No response');
+			}
+		});
+	});
+
+	timeout = timeout ?? 5000;
+	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`);
+}
 
 export function socketEmit<T>(
 	socket: SocketIOClient.Socket,

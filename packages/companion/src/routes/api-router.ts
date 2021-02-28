@@ -1,18 +1,14 @@
 import bodyParser from 'body-parser';
 import { Router } from 'express';
 import { ICore } from '../core';
-import {
-	LoginMessage,
-	LogoutMessage,
-	SocketCommand,
-	SubscribeMessage,
-	UnsubscribeMessage,
-	UserInfoMessage,
-} from '@companion/core-shared/dist/api';
+import { SocketCommand, SubscribeMessage, UnsubscribeMessage, UserInfoMessage } from '@companion/core-shared/dist/api';
 import { literal } from '@companion/core-shared/dist/util';
 import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { socketSubscribe, socketUnsubscribe, unsubscribeAllForSocket } from '../subscriptions';
-import { getUserInfo, login, logout } from '../auth';
+import { getUserInfo } from '../auth';
+import SocketIO from 'socket.io';
+import { socketAuthHandler, SocketAuthSessionWrapper } from './auth';
+import { socketDeviceConnectionHandler } from './connections';
 
 export function apiRouter(core: ICore): Router {
 	const router = Router();
@@ -39,13 +35,13 @@ export function apiRouter(core: ICore): Router {
 // function assertNever(val: never): void {}
 
 export function socketHandler(core: ICore): void {
-	core.io.on('connection', (socket) => {
+	core.io.on('connection', (socket: SocketIO.Socket) => {
 		console.log('a user connected');
 
-		let authSession: string | null = null;
+		let authSession: SocketAuthSessionWrapper = { authSessionId: null };
 
 		// Send userInfo, to ensure the ui is in sync
-		getUserInfo(authSession)
+		getUserInfo(authSession.authSessionId)
 			.then((info) => {
 				socket.emit(
 					SocketCommand.UserInfo,
@@ -62,66 +58,11 @@ export function socketHandler(core: ICore): void {
 			unsubscribeAllForSocket(socket);
 		});
 
-		socket.on(SocketCommand.Login, async (msg: LoginMessage) => {
-			if (!authSession) {
-				try {
-					// TODO - race condition around authSession?
-					authSession = await login(msg.username, msg.password);
-					if (authSession) {
-						const userInfo = await getUserInfo(authSession);
-						if (userInfo) {
-							socket.emit(
-								SocketCommand.UserInfo,
-								literal<UserInfoMessage>({
-									info: userInfo,
-								}),
-							);
-						} else {
-							socket.emit(
-								SocketCommand.UserInfo,
-								literal<UserInfoMessage>({
-									info: {
-										name: 'Unknown',
-									},
-								}),
-							);
-						}
-					} else {
-						socket.emit(
-							SocketCommand.UserInfo,
-							literal<UserInfoMessage>({
-								error: 'Login failed',
-							}),
-						);
-					}
-				} catch (e) {
-					console.log('auth failed');
-					socket.emit(
-						SocketCommand.UserInfo,
-						literal<UserInfoMessage>({
-							error: 'Login failed',
-						}),
-					);
-				}
-			}
-		});
-		socket.on(SocketCommand.Logout, async (_msg: LogoutMessage) => {
-			if (authSession) {
-				// Clear the value
-				const oldAuthSession = authSession;
-				authSession = null;
-				// Then do the logout
-				await logout(oldAuthSession);
-			}
-
-			socket.emit(SocketCommand.UserInfo, literal<UserInfoMessage>({}));
-
-			// Remove subscriptions
-			unsubscribeAllForSocket(socket);
-		});
+		socketAuthHandler(socket, authSession);
+		socketDeviceConnectionHandler(core, socket, authSession);
 
 		socket.on(SocketCommand.Subscribe, async (msg: SubscribeMessage) => {
-			const userInfo = await getUserInfo(authSession);
+			const userInfo = await getUserInfo(authSession.authSessionId);
 
 			if (userInfo) {
 				socketSubscribe(core, socket, msg);

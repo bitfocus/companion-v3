@@ -5,7 +5,14 @@ export enum SocketCommand {
 	Subscribe = 'SUBSCRIBE',
 	Unsubscribe = 'UNSUBSCRIBE',
 	ExecuteCommand = 'EXEC_COMMAND',
+	ConnectionCreate = 'CONECTION.CREATE',
+	ConnectionDelete = 'CONECTION.DELETE',
+	ConnectionEnabled = 'CONECTION.ENABLED',
 }
+
+// export type CommandTypes =
+// 	| [SocketCommand.Subscribe, SubscribeMessage, void]
+// 	| [SocketCommand.Unsubscribe, UnsubscribeMessage, void];
 
 export interface CommandTypeMap {
 	[SocketCommand.Subscribe]: SubscribeMessage;
@@ -13,6 +20,17 @@ export interface CommandTypeMap {
 	[SocketCommand.Login]: LoginMessage;
 	[SocketCommand.Logout]: LogoutMessage;
 	[SocketCommand.UserInfo]: UserInfoMessage;
+	[SocketCommand.ExecuteCommand]: null;
+	[SocketCommand.ConnectionCreate]: ConnectionCreateMessage;
+}
+export interface CommandReplyTypeMap {
+	[SocketCommand.Subscribe]: void;
+	[SocketCommand.Unsubscribe]: void;
+	[SocketCommand.Login]: void;
+	[SocketCommand.Logout]: void;
+	[SocketCommand.UserInfo]: void;
+	[SocketCommand.ExecuteCommand]: void;
+	[SocketCommand.ConnectionCreate]: ConnectionCreateMessageReply;
 }
 
 export interface SubscribeMessage {
@@ -37,4 +55,21 @@ export interface UserInfoMessage {
 	info?: {
 		name: string;
 	};
+}
+
+export interface ConnectionCreateMessage {
+	moduleId: string;
+	product: string;
+}
+export interface ConnectionCreateMessageReply {
+	connectionId: string;
+}
+
+export interface ConnectionDeleteMessage {
+	connectionId: string;
+}
+
+export interface ConnectionEnabledMessage {
+	connectionId: string;
+	enabled: boolean;
 }

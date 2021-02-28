@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { apiRouter, socketHandler } from './routes/api-router';
-import { staticsRouter } from './routes/statics-router';
+import { staticsRouter } from './statics-router';
 import * as config from './config';
 import http from 'http';
 import SocketIO from 'socket.io';

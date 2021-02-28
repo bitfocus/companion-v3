@@ -5,7 +5,7 @@ import {
 	CompanionFeedbackResult,
 	LogLevel,
 	CompanionInputField,
-	rgb,
+	combineRgb,
 } from '@companion/module-framework';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -37,15 +37,15 @@ export default class MockModule extends InstanceBase<MockConfig> {
 					style: 'text',
 					text: `$(fake99:fake)`,
 					size: '7',
-					color: rgb(255, 255, 255),
-					bgcolor: rgb(0, 0, 0),
+					color: combineRgb(255, 255, 255),
+					bgcolor: combineRgb(0, 0, 0),
 				},
 				feedbacks: [
 					{
 						type: 'fake',
 						options: {
-							bg: rgb(0, 255, 0),
-							fg: rgb(255, 255, 255),
+							bg: combineRgb(0, 255, 0),
+							fg: combineRgb(255, 255, 255),
 							opt1: 9,
 						},
 					},

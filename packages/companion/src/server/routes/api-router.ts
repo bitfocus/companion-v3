@@ -46,6 +46,20 @@ export function socketHandler(core: ICore): void {
 
 		let authSession: string | null = null;
 
+		// Send userInfo, to ensure the ui is in sync
+		getUserInfo(authSession)
+			.then((info) => {
+				socket.emit(
+					SocketCommand.UserInfo,
+					literal<UserInfoMessage>({
+						info: info ?? undefined,
+					}),
+				);
+			})
+			.catch((e) => {
+				// TODO
+			});
+
 		socket.on('close', () => {
 			unsubscribeAllForSocket(socket);
 		});

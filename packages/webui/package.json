@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"dependencies": {
-		"@companion/core-shared": "file:../shared",
+		"@companion/core-shared": "*",
 		"@coreui/coreui": "^3.4.0",
 		"@coreui/react": "^3.4.5",
 		"@fontsource/roboto": "^4.2.1",

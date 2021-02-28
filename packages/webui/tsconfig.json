@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		// TODO - unify with the base tsconfig in the repo
-		"target": "es5",
+		"target": "esnext",
 		"lib": ["dom", "dom.iterable", "esnext"],
 		"allowJs": true,
 		"skipLibCheck": true,

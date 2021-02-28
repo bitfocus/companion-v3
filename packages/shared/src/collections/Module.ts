@@ -4,4 +4,10 @@ export interface IModule {
 	version: string;
 	asarPath: string;
 	isSystem: boolean;
+
+	manufacturer: string;
+	products: string[];
+
+	keywords: string[];
+	hasHelp: boolean;
 }

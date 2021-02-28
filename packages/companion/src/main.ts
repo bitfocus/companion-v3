@@ -82,6 +82,12 @@ export async function startup(configPath: string, appPath: string): Promise<void
 				version: m.version,
 				asarPath: m.asarPath,
 				isSystem: false, // TODO
+
+				products: [m.name],
+				manufacturer: m.name,
+
+				hasHelp: true,
+				keywords: [],
 			});
 		});
 

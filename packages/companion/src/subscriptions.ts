@@ -1,9 +1,9 @@
 import { SubscribeMessage, UnsubscribeMessage } from '@companion/core-shared/dist/api';
-import { IModule } from '@companion/core-shared/dist/collections';
 import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { literal } from '@companion/core-shared/dist/util';
 import { ICore } from './core';
 import SocketIO from 'socket.io';
+import { Collection } from 'mongodb';
 
 interface SubscriptionEntry {
 	socket: SocketIO.Socket;
@@ -60,89 +60,96 @@ export function socketUnsubscribe(_core: ICore, socket: SocketIO.Socket, msg: Un
 export function createSubscription(core: ICore, msg: SubscribeMessage): SubscriptionData {
 	switch (msg.doc) {
 		case 'modules': {
-			if (msg.query !== undefined) {
-				// TODO better
-				throw new Error(`Can't have query`);
-			}
-
-			const stream = core.models.modules.watch({
-				fullDocument: 'updateLookup',
-			});
-
-			const data: SubscriptionData = {
-				clients: [],
-				destroy: () => {
-					stream.close();
-					sendToAll({
-						event: 'error',
-						message: 'Stream closed',
-					});
-				},
-				init: (client: SubscriptionEntry) => {
-					core.models.modules
-						.find()
-						.toArray()
-						.then((docs) => {
-							client.socket.emit(
-								client.messageName,
-								literal<SubscriptionEvent<IModule>>({
-									event: 'init',
-									docs: docs,
-								}),
-							);
-						});
-				},
-			};
-
-			function sendToAll(msg: SubscriptionEvent<IModule>): void {
-				for (const client of data.clients) {
-					client.socket.emit(client.messageName, msg);
-				}
-			}
-
-			stream.on('end', () => {
-				data.destroy();
-			});
-
-			stream.on('change', (doc) => {
-				switch (doc.operationType) {
-					case 'insert':
-					case 'replace':
-					case 'update':
-						sendToAll({
-							event: 'change',
-							// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-							doc: doc.fullDocument!,
-						});
-						break;
-					case 'delete':
-						sendToAll({
-							event: 'remove',
-							docId: doc.documentKey._id,
-						});
-						break;
-					case 'drop':
-					case 'dropDatabase':
-					case 'rename':
-						sendToAll({
-							event: 'error',
-							message: 'Collection dropped',
-						});
-						data.destroy();
-						break;
-					case 'invalidate':
-						data.destroy();
-						break;
-					// TODO
-					// default:
-					// 	assertNever(doc.operationType);
-				}
-			});
-
-			return data;
+			return createBasicSubscription(core.models.modules, msg);
+		}
+		case 'connections': {
+			return createBasicSubscription(core.models.deviceConnections, msg);
 		}
 		default:
 			throw new Error(`Unknown doc: "${msg.doc}"`);
 	}
 	// TODO
+}
+
+function createBasicSubscription<T extends { _id: string }>(collection: Collection<T>, msg: SubscribeMessage) {
+	if (msg.query !== undefined) {
+		// TODO better
+		throw new Error(`Can't have query`);
+	}
+
+	const stream = collection.watch({
+		fullDocument: 'updateLookup',
+	});
+
+	const data: SubscriptionData = {
+		clients: [],
+		destroy: () => {
+			stream.close();
+			sendToAll({
+				event: 'error',
+				message: 'Stream closed',
+			});
+		},
+		init: (client: SubscriptionEntry) => {
+			collection
+				.find()
+				.toArray()
+				.then((docs) => {
+					client.socket.emit(
+						client.messageName,
+						literal<SubscriptionEvent<T>>({
+							event: 'init',
+							docs: docs,
+						}),
+					);
+				});
+		},
+	};
+
+	function sendToAll(msg: SubscriptionEvent<T>): void {
+		for (const client of data.clients) {
+			client.socket.emit(client.messageName, msg);
+		}
+	}
+
+	stream.on('end', () => {
+		data.destroy();
+	});
+
+	stream.on('change', (doc) => {
+		switch (doc.operationType) {
+			case 'insert':
+			case 'replace':
+			case 'update':
+				sendToAll({
+					event: 'change',
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					doc: doc.fullDocument!,
+				});
+				break;
+			case 'delete':
+				sendToAll({
+					event: 'remove',
+					docId: doc.documentKey._id,
+				});
+				break;
+			case 'drop':
+			case 'dropDatabase':
+			case 'rename':
+				sendToAll({
+					event: 'error',
+					message: 'Collection dropped',
+				});
+				data.destroy();
+				break;
+			case 'invalidate':
+				data.destroy();
+				break;
+			// TODO
+			// default:
+			// 	assertNever(doc.operationType);
+		}
+	});
+
+	return data;
 }

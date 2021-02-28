@@ -77,8 +77,8 @@
 		}
 	},
 	"dependencies": {
-		"@companion/core-shared": "file:../shared",
-		"@companion/module-framework": "file:../module-framework",
+		"@companion/core-shared": "*",
+		"@companion/module-framework": "*",
 		"asar-node": "^2.1.3",
 		"axios": "^0.21.1",
 		"body-parser": "^1.19.0",

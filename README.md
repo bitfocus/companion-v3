@@ -2,6 +2,8 @@
 
 Warning: An early prototype that doesn't do much. Only tested on linux so far.
 
+Notes: UI based on https://github.com/bitfocus/companion/commit/32c742977882bd2afb2317b1cf4e792aa94b7612
+
 ### Manual Steps
 
 MongoDB is required and for now must be downloaded manually to the correct folder.

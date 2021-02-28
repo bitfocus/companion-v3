@@ -5,7 +5,7 @@ import { pagesRouter } from './routes/pages-router';
 import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
 import http from 'http';
-import createSocketIO from 'socket.io';
+import SocketIO from 'socket.io';
 import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
@@ -43,7 +43,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 
 	const app = express();
 	const server = http.createServer(app);
-	const io = createSocketIO(server);
+	const io = new SocketIO.Server(server);
 
 	const moduleFactory = new ModuleFactory(configPath);
 
@@ -95,7 +95,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	app.use(staticsRouter());
 	app.use(pagesRouter());
 
-	await new Promise((resolve) => {
+	await new Promise<void>((resolve) => {
 		server.listen(config.SERVER_PORT, () => {
 			console.log(`App listening on port ${config.SERVER_PORT}!`);
 

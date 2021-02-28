@@ -1,6 +1,7 @@
 import { ModuleFactory } from './module/module-host';
 import { Collection, Db as MongoDb } from 'mongodb';
 import { IBank, IInstance, IModule, IWorkspace } from '../shared/collections';
+import SocketIO from 'socket.io';
 
 export interface ICore {
 	db: MongoDb;

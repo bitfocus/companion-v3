@@ -93,7 +93,7 @@ export class ModuleFactory {
 			const entryPoint = modulePackage.main ? path.join(info.asarPath, modulePackage.main) : info.asarPath;
 
 			// TODO - use the non-hacky bootstrap when not running via ts-node
-			const mocked = await threadedClass<ModuleProxy, typeof ModuleProxy>('./bootstrap-ts', ModuleProxy, [
+			const mocked = await threadedClass<ModuleProxy, typeof ModuleProxy>('./bootstrap-ts', 'ModuleProxy', [
 				entryPoint,
 				'abc',
 				() => Promise.resolve(),

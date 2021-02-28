@@ -1,6 +1,5 @@
 import React from 'react';
-
-import io from 'socket.io-client';
+import SocketIOClient from 'socket.io-client';
 
 export interface BackendLink {
 	socket: SocketIOClient.Socket;
@@ -20,5 +19,5 @@ export const AuthStatusContext = React.createContext<AuthStatusLink>({
 });
 
 export const BackendLinkContext = React.createContext<BackendLink>({
-	socket: io({ autoConnect: false }),
+	socket: SocketIOClient.io({ autoConnect: false }),
 });

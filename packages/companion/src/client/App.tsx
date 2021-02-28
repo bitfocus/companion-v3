@@ -3,7 +3,7 @@ import './App.scss';
 import { Switch, BrowserRouter as Router, Route } from 'react-router-dom';
 import { Form, Nav, Navbar, Button } from 'react-bootstrap';
 import { LinkContainer, IndexLinkContainer } from 'react-router-bootstrap';
-import io from 'socket.io-client';
+import SocketIOClient from 'socket.io-client';
 import { AuthStatusContext, AuthStatusLink, BackendLinkContext } from './BackendContext';
 import { AuthComponentWrapper } from './AuthWrapper';
 import { IModule } from '../shared/collections';
@@ -13,7 +13,7 @@ import { SubscriptionEvent } from '../shared/subscription';
 import { SocketCommand, SubscribeMessage } from '../shared/api';
 import { literal } from '../shared/util';
 
-const socket = io();
+const socket = SocketIOClient.io();
 socket.on('connect', () => {
 	console.log('socket.io connected');
 });

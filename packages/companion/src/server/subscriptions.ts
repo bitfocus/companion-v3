@@ -3,6 +3,7 @@ import { IModule } from '../shared/collections';
 import { SubscriptionEvent } from '../shared/subscription';
 import { literal } from '../shared/util';
 import { ICore } from './core';
+import SocketIO from 'socket.io';
 
 interface SubscriptionEntry {
 	socket: SocketIO.Socket;

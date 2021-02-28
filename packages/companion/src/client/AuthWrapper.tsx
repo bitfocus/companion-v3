@@ -2,6 +2,7 @@ import React from 'react';
 import { LoginMessage, LogoutMessage, SocketCommand, UserInfoMessage } from '../shared/api';
 import { literal } from '../shared/util';
 import { AuthStatusContext, AuthStatusLink, BackendLinkContext } from './BackendContext';
+import SocketIOClient from 'socket.io-client';
 
 interface AuthComponentProps {
 	socket: SocketIOClient.Socket;

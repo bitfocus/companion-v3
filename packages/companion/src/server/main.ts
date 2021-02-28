@@ -9,7 +9,7 @@ import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
-import { IBank, IInstance, IModule, IWorkspace } from '../shared/collections';
+import { IBank, IInstance, IModule, IWorkspace } from '@shared/dist/collections';
 import getPort from 'get-port';
 import { startMongo } from './mongo';
 

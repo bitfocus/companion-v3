@@ -1,8 +1,8 @@
 import { Observable, Subject } from 'rxjs';
 import shortid from 'shortid';
-import { SocketCommand, SubscribeMessage } from '../../shared/api';
-import { SubscriptionEvent } from '../../shared/subscription';
-import { literal } from '../../shared/util';
+import { SocketCommand, SubscribeMessage } from '@shared/dist/api';
+import { SubscriptionEvent } from '@shared/dist/subscription';
+import { literal } from '@shared/dist/util';
 import SocketIOClient from 'socket.io-client';
 
 export type unsub = () => void;

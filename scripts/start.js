@@ -22,6 +22,10 @@ const { startMongo } = require('../packages/companion/src/server/mongo');
 					command: 'yarn workspace @companion/module-framework bundle',
 					name: 'FRAMEWORK',
 				},
+				{
+					command: 'yarn workspace @companion/core-shared build',
+					name: 'CORE-SHARED',
+				},
 			],
 			{
 				prefix: 'name',
@@ -37,6 +41,10 @@ const { startMongo } = require('../packages/companion/src/server/mongo');
 				{
 					command: 'yarn workspace @companion/module-framework watch',
 					name: 'FRAMEWORK',
+				},
+				{
+					command: 'yarn workspace @companion/core-shared watch',
+					name: 'CORE-SHARED',
 				},
 				{
 					command: `yarn workspace companion3 ${process.env.ELECTRON ? 'dev-electron' : 'dev-server'}`,

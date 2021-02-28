@@ -1,0 +1,18 @@
+{
+	"extends": "../../tsconfig-base.json",
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
+	"compilerOptions": {
+		"outDir": "./dist",
+		"baseUrl": "./",
+		// "importHelpers": false,
+		"paths": {
+			"*": ["./node_modules/*"],
+			"@companion/core-shared": ["./src/index.ts"]
+		},
+		"types": ["node"],
+		"declaration": true,
+		"declarationMap": true
+		// "module": "ES2020"
+	}
+}

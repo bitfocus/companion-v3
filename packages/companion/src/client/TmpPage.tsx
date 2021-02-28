@@ -1,5 +1,5 @@
 import React from 'react';
-import { IModule } from '../shared/collections';
+import { IModule } from '@shared/dist/collections';
 import { AuthStatusContext, BackendLinkContext, AuthStatusLink } from './BackendContext';
 import { subscribeToCollection } from './lib/subscription';
 import SocketIOClient from 'socket.io-client';

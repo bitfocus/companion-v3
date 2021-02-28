@@ -1,4 +1,4 @@
-import "@fontsource/roboto"
+import '@fontsource/roboto';
 import './App.scss';
 
 import React from 'react';
@@ -11,27 +11,25 @@ import Backend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 
-i18n
-	.use(Backend)
+i18n.use(Backend)
 	.use(LanguageDetector)
 	.use(initReactI18next) // passes i18n down to react-i18next
 	.init({
-		lng: "en",
-		fallbackLng: "en",
+		lng: 'en',
+		fallbackLng: 'en',
 
 		// debug: true, // TODO disable
 
 		interpolation: {
-			escapeValue: false
-		}
+			escapeValue: false,
+		},
 	});
-
 
 ReactDOM.render(
 	<React.StrictMode>
 		<App />
 	</React.StrictMode>,
-	document.getElementById('root')
+	document.getElementById('root'),
 );
 
 // If you want to start measuring performance in your app, pass a function

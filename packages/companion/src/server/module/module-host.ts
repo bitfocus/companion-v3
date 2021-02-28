@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { ModuleProxy } from './bootstrap';
 import { promisify } from 'util';
-import { literal } from '../../shared/util';
+import { literal } from '@shared/dist/util';
 import _ from 'underscore';
 import semver from 'semver';
 import { IS_PACKAGED } from '../config';

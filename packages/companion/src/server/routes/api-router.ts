@@ -8,10 +8,10 @@ import {
 	SubscribeMessage,
 	UnsubscribeMessage,
 	UserInfoMessage,
-} from '../../shared/api';
-import { IModule } from '../../shared/collections';
-import { literal } from '../../shared/util';
-import { SubscriptionEvent } from '../../shared/subscription';
+} from '@shared/dist/api';
+import { IModule } from '@shared/dist/collections';
+import { literal } from '@shared/dist/util';
+import { SubscriptionEvent } from '@shared/dist/subscription';
 import { socketSubscribe, socketUnsubscribe, unsubscribeAllForSocket } from '../subscriptions';
 import { getUserInfo, login, logout } from '../auth';
 import shortid from 'shortid';

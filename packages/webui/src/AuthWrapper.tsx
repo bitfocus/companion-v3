@@ -1,6 +1,6 @@
 import React from 'react';
-import { LoginMessage, LogoutMessage, SocketCommand, UserInfoMessage } from '@shared/dist/api';
-import { literal } from '@shared/dist/util';
+import { LoginMessage, LogoutMessage, SocketCommand, UserInfoMessage } from '@companion/core-shared/dist/api';
+import { literal } from '@companion/core-shared/dist/util';
 import { AuthStatusContext, AuthStatusLink } from './BackendContext';
 import SocketIOClient from 'socket.io-client';
 import { CompanionContext, ICompanionContext } from './util';

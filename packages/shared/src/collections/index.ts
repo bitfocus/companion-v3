@@ -1,4 +1,4 @@
 export * from './Bank';
-export * from './Instance';
+export * from './DeviceConnection';
 export * from './Module';
 export * from './Workspace';

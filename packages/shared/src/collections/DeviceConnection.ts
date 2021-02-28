@@ -1,4 +1,4 @@
-export interface IInstance {
+export interface IDeviceConnection {
 	_id: string;
 	name: string;
 	version: string;

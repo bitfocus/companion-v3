@@ -8,13 +8,6 @@
 		"watch": "tsc-watch --onSuccess \"yarn pack -f bundle.tar.gz\"",
 		"bundle": "tsc && yarn pack -f bundle.tar.gz"
 	},
-	"devDependencies": {
-		"@types/node": "^14.14.31",
-		"asar": "^3.0.2",
-		"rimraf": "^3.0.0",
-		"tsc-watch": "^4.2.9",
-		"typescript": "~4.1"
-	},
 	"files": [
 		"README.md",
 		"dist"

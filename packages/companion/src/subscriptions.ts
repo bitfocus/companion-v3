@@ -1,7 +1,7 @@
-import { SubscribeMessage, UnsubscribeMessage } from '@shared/dist/api';
-import { IModule } from '@shared/dist/collections';
-import { SubscriptionEvent } from '@shared/dist/subscription';
-import { literal } from '@shared/dist/util';
+import { SubscribeMessage, UnsubscribeMessage } from '@companion/core-shared/dist/api';
+import { IModule } from '@companion/core-shared/dist/collections';
+import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
+import { literal } from '@companion/core-shared/dist/util';
 import { ICore } from './core';
 import SocketIO from 'socket.io';
 

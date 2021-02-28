@@ -8,9 +8,9 @@ import {
 	SubscribeMessage,
 	UnsubscribeMessage,
 	UserInfoMessage,
-} from '@shared/dist/api';
-import { literal } from '@shared/dist/util';
-import { SubscriptionEvent } from '@shared/dist/subscription';
+} from '@companion/core-shared/dist/api';
+import { literal } from '@companion/core-shared/dist/util';
+import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { socketSubscribe, socketUnsubscribe, unsubscribeAllForSocket } from '../subscriptions';
 import { getUserInfo, login, logout } from '../auth';
 

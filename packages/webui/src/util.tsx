@@ -5,22 +5,23 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { PRIMARY_COLOR } from './Constants';
 import { BarLoader } from 'react-spinners';
 import SocketIOClient from 'socket.io-client';
+import { IModule } from '@companion/core-shared/dist/collections';
 
 export interface ICompanionContext {
-	socket: SocketIOClient.Socket | undefined;
-	notifier: unknown | undefined;
+	socket: SocketIOClient.Socket;
+	notifier: any | undefined;
 	instances: unknown | undefined;
-	modules: unknown | undefined;
+	modules: IModule[] | null;
 	variableDefinitions: unknown | undefined;
 	variableValues: unknown | undefined;
 	actions: unknown | undefined;
 	feedbacks: unknown | undefined;
 }
 export const CompanionContext = React.createContext<ICompanionContext>({
-	socket: undefined,
+	socket: SocketIOClient.io({ autoConnect: false }),
 	notifier: undefined,
 	instances: undefined,
-	modules: undefined,
+	modules: null,
 	variableDefinitions: undefined,
 	variableValues: undefined,
 	actions: undefined,

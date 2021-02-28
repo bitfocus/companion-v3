@@ -1178,7 +1178,7 @@
 "@companion/webui@file:packages/webui":
   version "0.1.0"
   dependencies:
-    "@companion/core-shared" "file:../../.cache/yarn/v6/npm-@companion-webui-0.1.0-988a4fed-7023-4be5-8321-2758180b61ef-1614531545054/node_modules/@companion/shared"
+    "@companion/core-shared" "file:../../.cache/yarn/v6/npm-@companion-webui-0.1.0-cdfae3a1-19a7-46a9-9ead-43153f13bf62-1614532147349/node_modules/@companion/shared"
     "@coreui/coreui" "^3.4.0"
     "@coreui/react" "^3.4.5"
     "@fontsource/roboto" "^4.2.1"
@@ -3008,6 +3008,11 @@
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
   integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
 
+"@types/marked@^1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@types/marked/-/marked-1.2.2.tgz#1f858a0e690247ecf3b2eef576f98f86e8d960d4"
+  integrity sha512-wLfw1hnuuDYrFz97IzJja0pdVsC0oedtS4QsKH1/inyW9qkLQbXgMUqEQT0MVtUBx3twjWeInUfjQbhBVLECXw==
+
 "@types/mime@^1":
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.2.tgz#93e25bf9ee75fe0fd80b594bc4feb0e862111b5a"
@@ -3031,7 +3036,7 @@
     "@types/bson" "*"
     "@types/node" "*"
 
-"@types/node@*", "@types/node@>= 8", "@types/node@>=10.0.0", "@types/node@^14.14.20":
+"@types/node@*", "@types/node@>= 8", "@types/node@>=10.0.0", "@types/node@^14.14.31":
   version "14.14.31"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.31.tgz#72286bd33d137aa0d152d47ec7c1762563d34055"
   integrity sha512-vFHy/ezP5qI0rFgJ7aQnjDXwAMrG0KqqIH7tQG5PPv3BWBayOPIQNBjVc/P6hhdZfMx51REc6tfDNXHUio893g==
@@ -3097,6 +3102,13 @@
   integrity sha512-auApPaJf3NPfe18hSoJkp8EbZzer2ISk7o8mCC3M9he/a04+gbMF97NkpD2S8riMGvm4BMRI59/SZQSaLTKpsQ==
   dependencies:
     "@types/node" "*"
+
+"@types/sanitize-html@^1.27.1":
+  version "1.27.1"
+  resolved "https://registry.yarnpkg.com/@types/sanitize-html/-/sanitize-html-1.27.1.tgz#1fc4b67edd6296eeb366960d13cd01f5d6bffdcd"
+  integrity sha512-TW5gfZYplKQYO8003WrxaDgwyJsEG74920S+Ei7zB9mbUFgm7l2NvFAumXzxL+1fOwM2I9A+G/1rgiEebQOxcQ==
+  dependencies:
+    htmlparser2 "^4.1.0"
 
 "@types/semver@^7.3.4":
   version "7.3.4"
@@ -5156,8 +5168,8 @@ commondir@^1.0.1:
 "companion3@file:packages/companion":
   version "0.1.0"
   dependencies:
-    "@companion/core-shared" "file:../../.cache/yarn/v6/npm-companion3-0.1.0-7014cf66-2448-4cf1-b806-0488522fb268-1614531545734/node_modules/shared"
-    "@companion/module-framework" "file:../../.cache/yarn/v6/npm-companion3-0.1.0-7014cf66-2448-4cf1-b806-0488522fb268-1614531545734/node_modules/module-framework"
+    "@companion/core-shared" "file:../../.cache/yarn/v6/npm-companion3-0.1.0-df6f3a57-0f41-4ba7-9669-e5804b7b9307-1614532147773/node_modules/shared"
+    "@companion/module-framework" "file:../../.cache/yarn/v6/npm-companion3-0.1.0-df6f3a57-0f41-4ba7-9669-e5804b7b9307-1614532147773/node_modules/module-framework"
     asar-node "^2.1.3"
     axios "^0.21.1"
     body-parser "^1.19.0"
@@ -6291,6 +6303,13 @@ domhandler@^2.3.0:
   dependencies:
     domelementtype "1"
 
+domhandler@^3.0.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/domhandler/-/domhandler-3.3.0.tgz#6db7ea46e4617eb15cf875df68b2b8524ce0037a"
+  integrity sha512-J1C5rIANUbuYK+FuFL98650rihynUOEzRLxW+90bKZRWB6A1X1Tf82GxR1qAWLyfNPRvjqfip3Q5tdYlmAa9lA==
+  dependencies:
+    domelementtype "^2.0.1"
+
 domhandler@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/domhandler/-/domhandler-4.0.0.tgz#01ea7821de996d85f69029e81fa873c21833098e"
@@ -6306,7 +6325,7 @@ domutils@^1.5.1, domutils@^1.7.0:
     dom-serializer "0"
     domelementtype "1"
 
-domutils@^2.4.4:
+domutils@^2.0.0, domutils@^2.4.4:
   version "2.4.4"
   resolved "https://registry.yarnpkg.com/domutils/-/domutils-2.4.4.tgz#282739c4b150d022d34699797369aad8d19bbbd3"
   integrity sha512-jBC0vOsECI4OMdD0GC9mGn7NXPLb+Qt6KW1YDQzeQYRUFKmNG8lh7mO5HiELfr+lLQE7loDVI4QcAxV80HS+RA==
@@ -8201,6 +8220,16 @@ htmlparser2@^3.10.1:
     entities "^1.1.1"
     inherits "^2.0.1"
     readable-stream "^3.1.1"
+
+htmlparser2@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/htmlparser2/-/htmlparser2-4.1.0.tgz#9a4ef161f2e4625ebf7dfbe6c0a2f52d18a59e78"
+  integrity sha512-4zDq1a1zhE4gQso/c5LP1OtrhYTncXNSpvJYtWJBtXAETPlMfi3IFNjGuQbYLuVY4ZR0QMqRVvo4Pdy9KLyP8Q==
+  dependencies:
+    domelementtype "^2.0.1"
+    domhandler "^3.0.0"
+    domutils "^2.0.0"
+    entities "^2.0.0"
 
 htmlparser2@^6.0.0:
   version "6.0.0"
@@ -10501,7 +10530,7 @@ mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@^0.5.3, mkdirp@^0.5.4, mkdirp@^0.5.5, mkdir
 "mock-module2@file:packages/mock-module":
   version "0.1.1"
   dependencies:
-    "@companion/module-framework" "file:../../.cache/yarn/v6/npm-mock-module2-0.1.1-afcc0728-5eb6-460f-9f5c-4040b16b999a-1614531545748/node_modules/module-framework"
+    "@companion/module-framework" "file:../../.cache/yarn/v6/npm-mock-module2-0.1.1-5b8e1dc6-2559-417a-bea5-f4596761b5be-1614532147785/node_modules/module-framework"
 
 modify-values@^1.0.0:
   version "1.0.1"
@@ -15320,10 +15349,10 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typescript@~4.1.3:
-  version "4.1.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.1.5.tgz#123a3b214aaff3be32926f0d8f1f6e704eb89a72"
-  integrity sha512-6OSu9PTIzmn9TCDiovULTnET6BgXtDYL4Gg4szY+cGsc3JP1dQL8qvE8kShTRx1NIw4Q9IBHlwODjkjWEtMUyA==
+typescript@^4.2.2:
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.2.2.tgz#1450f020618f872db0ea17317d16d8da8ddb8c4c"
+  integrity sha512-tbb+NVrLfnsJy3M59lsDgrzWIflR4d4TIUjz+heUnHZwdF7YsrMTKoRERiIvI2lvBG95dfpLxB21WZhys1bgaQ==
 
 uglify-js@^3.1.4:
   version "3.12.8"

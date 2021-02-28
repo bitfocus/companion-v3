@@ -48,9 +48,14 @@ const { startMongo } = require('../packages/companion/src/server/mongo');
 					},
 				},
 				{
-					command: 'yarn workspace companion3 dev-client',
+					command: 'yarn workspace @companion/webui start',
 					name: 'CLIENT',
 					prefixColor: 'bgGreen.bold',
+					env: {
+						BROWSER: 'none',
+						PORT: 8085,
+						// REACT_APP_SERVER_URL: 'http://localhost:3001',
+					},
 				},
 			],
 			{

@@ -1,7 +1,6 @@
 import express from 'express';
 import path from 'path';
 import { apiRouter, socketHandler } from './routes/api-router';
-import { pagesRouter } from './routes/pages-router';
 import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
 import http from 'http';
@@ -43,7 +42,12 @@ export async function startup(configPath: string, appPath: string): Promise<void
 
 	const app = express();
 	const server = http.createServer(app);
-	const io = new SocketIO.Server(server);
+	const io = new SocketIO.Server(server, {
+		cors: {
+			origin: 'http://localhost:3000',
+			methods: ['GET', 'POST'],
+		},
+	});
 
 	const moduleFactory = new ModuleFactory(configPath);
 
@@ -93,7 +97,6 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	socketHandler(core);
 
 	app.use(staticsRouter());
-	app.use(pagesRouter());
 
 	await new Promise<void>((resolve) => {
 		server.listen(config.SERVER_PORT, () => {

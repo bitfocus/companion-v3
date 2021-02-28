@@ -11,7 +11,7 @@ export function staticsRouter(): Router {
 		const { createProxyMiddleware } = require('http-proxy-middleware');
 		// All the assets are hosted by Webpack on localhost:${config.WEBPACK_PORT} (Webpack-dev-server)
 		router.use(
-			'/statics',
+			'/',
 			createProxyMiddleware({
 				target: `http://localhost:${WEBPACK_PORT}/`,
 			}),

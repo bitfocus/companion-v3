@@ -2,7 +2,7 @@ import React, { Suspense, useCallback, useState } from 'react'
 import { CContainer, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink, CRow, CCol, CFormGroup, CProgress } from '@coreui/react'
 import { faCalendarAlt, faClipboardList, faClock, faGamepad, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import io from 'socket.io-client'
+import SocketIOClient from 'socket.io-client';
 
 import { MyErrorBoundary } from './util'
 import { SurfacesPage } from './Surfaces'
@@ -33,7 +33,7 @@ export default class App extends React.Component {
 			showSidebar: true,
 		}
 
-		this.socket = new io(serverUrl);
+		this.socket = new SocketIOClient.io(serverUrl);
 		this.socket.on('connect', () => {
 			if (this.state.was_connected) {
 				window.location.reload(true);

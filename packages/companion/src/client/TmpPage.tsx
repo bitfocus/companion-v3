@@ -14,15 +14,9 @@ export class TmpPage extends React.Component {
 						<div>
 							<TmpInner {...p} />
 							{p.userInfo ? (
-								<BackendLinkContext.Consumer>
-									{({ socket }) => {
-										return (
-											<div>
-												<ModuleList socket={socket} />
-											</div>
-										);
-									}}
-								</BackendLinkContext.Consumer>
+								<div>
+									<ModuleList />
+								</div>
 							) : (
 								''
 							)}
@@ -34,7 +28,7 @@ export class TmpPage extends React.Component {
 	}
 }
 
-class ModuleList extends React.Component<{ socket: SocketIOClient.Socket }, { modules: Array<IModule> }> {
+class ModuleList extends React.Component<unknown, { modules: Array<IModule> }> {
 	private readonly subs: Array<() => void> = [];
 
 	constructor(props: ModuleList['props']) {
@@ -45,7 +39,7 @@ class ModuleList extends React.Component<{ socket: SocketIOClient.Socket }, { mo
 		};
 	}
 	async componentDidMount() {
-		const [sub, unsub] = subscribeToCollection<IModule>(this.props.socket, 'modules');
+		const [sub, unsub] = subscribeToCollection<IModule>(this.context.socket, 'modules');
 		// const [sub, unsub] = gqlSubscribeArray<IModule>(
 		// 	{
 		// 		query: 'subscription { instances { type data { id name version} } }',

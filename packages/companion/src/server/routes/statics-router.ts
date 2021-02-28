@@ -14,6 +14,7 @@ export function staticsRouter(): Router {
 			'/',
 			createProxyMiddleware({
 				target: `http://localhost:${WEBPACK_PORT}/`,
+				ws: true,
 			}),
 		);
 	} else {

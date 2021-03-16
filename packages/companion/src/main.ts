@@ -9,7 +9,13 @@ import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
-import { IBank, IDeviceConnection, IModule, IWorkspace } from '@companion/core-shared/dist/collections';
+import {
+	IBank,
+	IControlDefinition,
+	IDeviceConnection,
+	IModule,
+	IWorkspace,
+} from '@companion/core-shared/dist/collections';
 import getPort from 'get-port';
 import { startMongo } from './mongo';
 
@@ -55,6 +61,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		db: database,
 		models: {
 			banks: database.collection<IBank>('banks'),
+			controlDefinitions: database.collection<IControlDefinition>('controlDefinitions'),
 			deviceConnections: database.collection<IDeviceConnection>('connections'),
 			modules: database.collection<IModule>('modules'),
 			workspaces: database.collection<IWorkspace>('workspaces'),

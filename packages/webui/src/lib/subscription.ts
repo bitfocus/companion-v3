@@ -1,6 +1,6 @@
 import { Observable, Subject } from 'rxjs';
 import shortid from 'shortid';
-import { SocketCommand, SubscribeMessage } from '@companion/core-shared/dist/api';
+import { SocketCommand, CollectionSubscribeMessage } from '@companion/core-shared/dist/api';
 import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { literal } from '@companion/core-shared/dist/util';
 import SocketIOClient from 'socket.io-client';
@@ -19,8 +19,8 @@ export function subscribeToCollection<T extends { _id: string }>(
 ): [Observable<T[]>, unsub] {
 	const subId = shortid();
 	socket.emit(
-		SocketCommand.Subscribe,
-		literal<SubscribeMessage>({
+		SocketCommand.CollectionSubscribe,
+		literal<CollectionSubscribeMessage>({
 			id: subId,
 			doc,
 			query,
@@ -57,7 +57,7 @@ export function subscribeToCollection<T extends { _id: string }>(
 		sub,
 		() => {
 			socket.off(subId);
-			socket.emit(SocketCommand.Unsubscribe, {
+			socket.emit(SocketCommand.CollectionUnsubscribe, {
 				id: subId,
 			});
 		},

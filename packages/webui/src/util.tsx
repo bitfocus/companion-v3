@@ -6,7 +6,7 @@ import { PRIMARY_COLOR } from './Constants';
 import { BarLoader } from 'react-spinners';
 import SocketIOClient from 'socket.io-client';
 import { IDeviceConnection, IModule } from '@companion/core-shared/dist/collections';
-import { CommandReplyTypeMap, CommandTypeMap, SocketCommand } from '@companion/core-shared/dist/api';
+import { SocketCommand } from '@companion/core-shared/dist/api';
 
 export interface ICompanionContext {
 	socket: SocketIOClient.Socket;

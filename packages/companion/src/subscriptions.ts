@@ -1,4 +1,4 @@
-import { SubscribeMessage, UnsubscribeMessage } from '@companion/core-shared/dist/api';
+import { CollectionSubscribeMessage, CollectionUnsubscribeMessage } from '@companion/core-shared/dist/api';
 import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { literal } from '@companion/core-shared/dist/util';
 import { ICore } from './core';
@@ -18,7 +18,7 @@ interface SubscriptionData {
 
 const dbSubscriptions = new Map<string, SubscriptionData>();
 
-function getSubscriptionId(msg: SubscribeMessage): string {
+function getSubscriptionId(msg: CollectionSubscribeMessage): string {
 	return msg.doc + '_' + JSON.stringify(msg.query ?? {});
 }
 
@@ -32,7 +32,7 @@ export function unsubscribeAllForSocket(socket: SocketIO.Socket): void {
 	}
 }
 
-export function socketSubscribe(core: ICore, socket: SocketIO.Socket, msg: SubscribeMessage): void {
+export function socketSubscribe(core: ICore, socket: SocketIO.Socket, msg: CollectionSubscribeMessage): void {
 	const subId = getSubscriptionId(msg);
 	let sub = dbSubscriptions.get(subId);
 	if (!sub) {
@@ -47,7 +47,7 @@ export function socketSubscribe(core: ICore, socket: SocketIO.Socket, msg: Subsc
 	sub.init(entry);
 }
 
-export function socketUnsubscribe(_core: ICore, socket: SocketIO.Socket, msg: UnsubscribeMessage): void {
+export function socketUnsubscribe(_core: ICore, socket: SocketIO.Socket, msg: CollectionUnsubscribeMessage): void {
 	for (const [subId, data] of dbSubscriptions) {
 		data.clients = data.clients.filter((c) => c.socket !== socket || c.messageName !== msg.id);
 		if (data.clients.length === 0) {
@@ -57,7 +57,7 @@ export function socketUnsubscribe(_core: ICore, socket: SocketIO.Socket, msg: Un
 	}
 }
 
-export function createSubscription(core: ICore, msg: SubscribeMessage): SubscriptionData {
+export function createSubscription(core: ICore, msg: CollectionSubscribeMessage): SubscriptionData {
 	switch (msg.doc) {
 		case 'modules': {
 			return createBasicSubscription(core.models.modules, msg);
@@ -71,7 +71,10 @@ export function createSubscription(core: ICore, msg: SubscribeMessage): Subscrip
 	// TODO
 }
 
-function createBasicSubscription<T extends { _id: string }>(collection: Collection<T>, msg: SubscribeMessage) {
+function createBasicSubscription<T extends { _id: string }>(
+	collection: Collection<T>,
+	msg: CollectionSubscribeMessage,
+) {
 	if (msg.query !== undefined) {
 		// TODO better
 		throw new Error(`Can't have query`);

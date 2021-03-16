@@ -1,7 +1,12 @@
 import bodyParser from 'body-parser';
 import { Router } from 'express';
 import { ICore } from '../core';
-import { SocketCommand, SubscribeMessage, UnsubscribeMessage, UserInfoMessage } from '@companion/core-shared/dist/api';
+import {
+	SocketCommand,
+	CollectionSubscribeMessage,
+	CollectionUnsubscribeMessage,
+	UserInfoMessage,
+} from '@companion/core-shared/dist/api';
 import { literal } from '@companion/core-shared/dist/util';
 import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { socketSubscribe, socketUnsubscribe, unsubscribeAllForSocket } from '../subscriptions';
@@ -61,7 +66,7 @@ export function socketHandler(core: ICore): void {
 		socketAuthHandler(socket, authSession);
 		socketDeviceConnectionHandler(core, socket, authSession);
 
-		socket.on(SocketCommand.Subscribe, async (msg: SubscribeMessage) => {
+		socket.on(SocketCommand.CollectionSubscribe, async (msg: CollectionSubscribeMessage) => {
 			const userInfo = await getUserInfo(authSession.authSessionId);
 
 			if (userInfo) {
@@ -76,7 +81,7 @@ export function socketHandler(core: ICore): void {
 				);
 			}
 		});
-		socket.on(SocketCommand.Unsubscribe, (msg: UnsubscribeMessage) => {
+		socket.on(SocketCommand.CollectionUnsubscribe, (msg: CollectionUnsubscribeMessage) => {
 			socketUnsubscribe(core, socket, msg);
 		});
 	});

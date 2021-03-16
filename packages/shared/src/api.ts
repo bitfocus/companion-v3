@@ -2,45 +2,42 @@ export enum SocketCommand {
 	Login = 'LOGIN',
 	Logout = 'LOGOUT',
 	UserInfo = 'USER_INFO',
-	Subscribe = 'SUBSCRIBE',
-	Unsubscribe = 'UNSUBSCRIBE',
-	ExecuteCommand = 'EXEC_COMMAND',
-	ConnectionCreate = 'CONECTION.CREATE',
-	ConnectionDelete = 'CONECTION.DELETE',
-	ConnectionEnabled = 'CONECTION.ENABLED',
+	CollectionSubscribe = 'COLLECTION.SUBSCRIBE',
+	CollectionUnsubscribe = 'COLLECTION.UNSUBSCRIBE',
+	ConnectionCreate = 'CONNECTION.CREATE',
+	ConnectionDelete = 'CONNECTION.DELETE',
+	ConnectionEnabled = 'CONNECTION.ENABLED',
 }
 
 // export type CommandTypes =
 // 	| [SocketCommand.Subscribe, SubscribeMessage, void]
 // 	| [SocketCommand.Unsubscribe, UnsubscribeMessage, void];
 
-export interface CommandTypeMap {
-	[SocketCommand.Subscribe]: SubscribeMessage;
-	[SocketCommand.Unsubscribe]: UnsubscribeMessage;
-	[SocketCommand.Login]: LoginMessage;
-	[SocketCommand.Logout]: LogoutMessage;
-	[SocketCommand.UserInfo]: UserInfoMessage;
-	[SocketCommand.ExecuteCommand]: null;
-	[SocketCommand.ConnectionCreate]: ConnectionCreateMessage;
-}
-export interface CommandReplyTypeMap {
-	[SocketCommand.Subscribe]: void;
-	[SocketCommand.Unsubscribe]: void;
-	[SocketCommand.Login]: void;
-	[SocketCommand.Logout]: void;
-	[SocketCommand.UserInfo]: void;
-	[SocketCommand.ExecuteCommand]: void;
-	[SocketCommand.ConnectionCreate]: ConnectionCreateMessageReply;
-}
+// export interface CommandTypeMap {
+// 	[SocketCommand.CollectionSubscribe]: SubscribeMessage;
+// 	[SocketCommand.CollectionUnsubscribe]: UnsubscribeMessage;
+// 	[SocketCommand.Login]: LoginMessage;
+// 	[SocketCommand.Logout]: LogoutMessage;
+// 	[SocketCommand.UserInfo]: UserInfoMessage;
+// 	[SocketCommand.ConnectionCreate]: ConnectionCreateMessage;
+// }
+// export interface CommandReplyTypeMap {
+// 	[SocketCommand.CollectionSubscribe]: void;
+// 	[SocketCommand.CollectionUnsubscribe]: void;
+// 	[SocketCommand.Login]: void;
+// 	[SocketCommand.Logout]: void;
+// 	[SocketCommand.UserInfo]: void;
+// 	[SocketCommand.ConnectionCreate]: ConnectionCreateMessageReply;
+// }
 
-export interface SubscribeMessage {
+export interface CollectionSubscribeMessage {
 	id: string;
 
 	doc: string;
 	query?: never;
 }
 
-export interface UnsubscribeMessage {
+export interface CollectionUnsubscribeMessage {
 	id: string;
 }
 

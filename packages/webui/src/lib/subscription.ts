@@ -4,6 +4,7 @@ import { SocketCommand, CollectionSubscribeMessage } from '@companion/core-share
 import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { literal } from '@companion/core-shared/dist/util';
 import SocketIOClient from 'socket.io-client';
+import { useEffect, useMemo, useState } from 'react';
 
 export type unsub = () => void;
 
@@ -62,4 +63,34 @@ export function subscribeToCollection<T extends { _id: string }>(
 			});
 		},
 	];
+}
+
+export function useCollection<T extends { _id: string }>(
+	socket: SocketIOClient.Socket,
+	doc: string,
+	query?: undefined,
+	enable?: boolean,
+): Record<string, T> {
+	const [docs, setDocs] = useState({});
+
+	// TODO - does query need memoizing?
+	useEffect(() => {
+		if (enable) {
+			const [sub, unsub] = subscribeToCollection<T>(socket, doc, query);
+
+			sub.subscribe((docs) => {
+				const obj: Record<string, T> = {};
+				for (const m of docs) {
+					obj[m._id] = m;
+				}
+				setDocs(obj);
+			});
+			return () => {
+				unsub();
+				setDocs({});
+			};
+		}
+	}, [socket, doc, query, enable]);
+
+	return docs;
 }

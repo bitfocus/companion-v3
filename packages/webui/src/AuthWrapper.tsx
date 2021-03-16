@@ -5,7 +5,7 @@ import { AuthStatusContext, AuthStatusLink } from './BackendContext';
 import SocketIOClient from 'socket.io-client';
 import { CompanionContext, ICompanionContext } from './util';
 import { IDeviceConnection, IModule } from '@companion/core-shared/dist/collections';
-import { subscribeToCollection } from './lib/subscription';
+import { useCollection } from './lib/subscription';
 
 interface AuthComponentProps {
 	socket: SocketIOClient.Socket;
@@ -55,42 +55,8 @@ export function AuthComponentWrapper(props: React.PropsWithChildren<AuthComponen
 		};
 	}, [userInfo, authError, doLogin, doLogout]);
 
-	const [modules, setModules] = useState<Record<string, IModule>>({});
-	const [connections, setConnections] = useState<Record<string, IDeviceConnection>>({});
-
-	useEffect(() => {
-		if (userInfo) {
-			const [sub, unsub] = subscribeToCollection<IModule>(props.socket, 'modules');
-			sub.subscribe((modules) => {
-				const obj: Record<string, IModule> = {};
-				for (const m of modules) {
-					obj[m._id] = m;
-				}
-				setModules(obj);
-			});
-			return () => {
-				unsub();
-				setModules({});
-			};
-		}
-	}, [props.socket, userInfo]);
-
-	useEffect(() => {
-		if (userInfo) {
-			const [sub, unsub] = subscribeToCollection<IDeviceConnection>(props.socket, 'connections');
-			sub.subscribe((connections) => {
-				const obj: Record<string, IDeviceConnection> = {};
-				for (const c of connections) {
-					obj[c._id] = c;
-				}
-				setConnections(obj);
-			});
-			return () => {
-				unsub();
-				setConnections({});
-			};
-		}
-	}, [props.socket, userInfo]);
+	const modules = useCollection<IModule>(props.socket, 'modules', undefined, !!userInfo);
+	const connections = useCollection<IDeviceConnection>(props.socket, 'connections', undefined, !!userInfo);
 
 	const contextValue: ICompanionContext = {
 		socket: props.socket,

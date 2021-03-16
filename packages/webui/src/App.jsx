@@ -18,6 +18,7 @@ import {
 	faClock,
 	faGamepad,
 	faPlug,
+	faSlidersH,
 	faUserNinja,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -37,6 +38,7 @@ import { InstancesPage } from './Instances';
 import { ButtonsPage } from './Buttons';
 import { AuthComponentWrapper } from './AuthWrapper';
 import { AuthStatusContext } from './BackendContext';
+import { ControlsPage } from './Controls';
 
 const serverUrl = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL;
 
@@ -210,6 +212,11 @@ function AppContent({ buttonGridHotPress }) {
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
+						<CNavLink data-tab='controls'>
+							<FontAwesomeIcon icon={faSlidersH} /> Controls
+						</CNavLink>
+					</CNavItem>
+					<CNavItem>
 						<CNavLink data-tab='buttons'>
 							<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 						</CNavLink>
@@ -239,6 +246,11 @@ function AppContent({ buttonGridHotPress }) {
 					<CTabPane data-tab='instances'>
 						<MyErrorBoundary>
 							<InstancesPage />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab='controls'>
+						<MyErrorBoundary>
+							<ControlsPage />
 						</MyErrorBoundary>
 					</CTabPane>
 					<CTabPane data-tab='buttons'>

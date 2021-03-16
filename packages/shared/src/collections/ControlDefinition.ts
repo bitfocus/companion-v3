@@ -4,8 +4,9 @@ export enum ControlType {
 
 export interface IControlDefinition {
 	_id: string;
-	x: number;
-	y: number;
+	description: string;
+	// x: number;
+	// y: number;
 	latch?: boolean;
 	relativeDelays?: boolean;
 	controlType: ControlType;
@@ -13,3 +14,5 @@ export interface IControlDefinition {
 	// TODO - actions
 	// TODO - feedbacks
 }
+
+// TODO - presets should be inserted here when referenced. Ideally they should remain linked to the preset, so that duplicates get combined, and they get updated by the module author

@@ -69,7 +69,7 @@ export function useCollection<T extends { _id: string }>(
 	socket: SocketIOClient.Socket,
 	doc: string,
 	query?: undefined,
-	enable?: boolean,
+	enable: boolean = true,
 ): Record<string, T> {
 	const [docs, setDocs] = useState({});
 

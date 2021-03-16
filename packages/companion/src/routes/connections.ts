@@ -5,24 +5,7 @@ import { ConnectionCreateMessage, ConnectionCreateMessageReply } from '@companio
 import { getUserInfo } from '../auth';
 import { ICore } from '../core';
 import shortid from 'shortid';
-
-function registerCommand<T, T2 = void>(
-	socket: SocketIO.Socket,
-	cmd: SocketCommand,
-	execCb: (msg: T) => Promise<T2>,
-): void {
-	socket.on(cmd, (msg, cb) => {
-		if (!msg || !cb) return; // Ignore messages without correct structure
-
-		try {
-			const res = execCb(msg);
-			cb(null, res);
-		} catch (e) {
-			console.error(`Command "${cmd}" errored: ${e}`);
-			cb(e, null);
-		}
-	});
-}
+import { registerCommand } from './lib';
 
 export function socketDeviceConnectionHandler(
 	core: ICore,
@@ -48,10 +31,10 @@ export function socketDeviceConnectionHandler(
 						connectionId: conn.insertedId,
 					};
 				} else {
-					throw (new Error('Bad moduleId'), null);
+					throw new Error('Bad moduleId');
 				}
 			} else {
-				throw (new Error('Not authorised'), null);
+				throw new Error('Not authorised');
 			}
 		},
 	);
@@ -68,10 +51,10 @@ export function socketDeviceConnectionHandler(
 						connectionId: msg.connectionId,
 					};
 				} else {
-					throw (new Error('Not found'), null);
+					throw new Error('Not found');
 				}
 			} else {
-				throw (new Error('Not authorised'), null);
+				throw new Error('Not authorised');
 			}
 		},
 	);
@@ -92,7 +75,7 @@ export function socketDeviceConnectionHandler(
 				// Assume it was ok
 				return msg;
 			} else {
-				throw (new Error('Not authorised'), null);
+				throw new Error('Not authorised');
 			}
 		},
 	);

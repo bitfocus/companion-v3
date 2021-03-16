@@ -1,3 +1,5 @@
+import { ControlType, IControlDefinition } from './collections';
+
 export enum SocketCommand {
 	Login = 'LOGIN',
 	Logout = 'LOGOUT',
@@ -7,6 +9,8 @@ export enum SocketCommand {
 	ConnectionCreate = 'CONNECTION.CREATE',
 	ConnectionDelete = 'CONNECTION.DELETE',
 	ConnectionEnabled = 'CONNECTION.ENABLED',
+	ControlDefinitionCreate = 'CONTROLDEFINITION.CREATE',
+	ControlDefinitionDelete = 'CONTROLDEFINITION.DELETE',
 }
 
 // export type CommandTypes =
@@ -69,4 +73,15 @@ export interface ConnectionDeleteMessage {
 export interface ConnectionEnabledMessage {
 	connectionId: string;
 	enabled: boolean;
+}
+
+export interface ControlDefinitionCreateMessage {
+	type: ControlType;
+}
+export interface ControlDefinitionCreateMessageReply {
+	// control: IControlDefinition;
+	id: string;
+}
+export interface ControlDefinitionDeleteMessage {
+	id: string;
 }

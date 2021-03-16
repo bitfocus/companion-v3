@@ -65,6 +65,9 @@ export function createSubscription(core: ICore, msg: CollectionSubscribeMessage)
 		case 'connections': {
 			return createBasicSubscription(core.models.deviceConnections, msg);
 		}
+		case 'controlDefinitions': {
+			return createBasicSubscription(core.models.controlDefinitions, msg);
+		}
 		default:
 			throw new Error(`Unknown doc: "${msg.doc}"`);
 	}

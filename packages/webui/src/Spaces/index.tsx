@@ -1,5 +1,13 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react';
-import { faCalculator, faDollarSign, faFileImport, faGift, faList } from '@fortawesome/free-solid-svg-icons';
+import {
+	faCalculator,
+	faCalendar,
+	faDollarSign,
+	faFileImport,
+	faGamepad,
+	faGift,
+	faList,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import shortid from 'shortid';
 // import { InstancePresets } from "./Presets";
@@ -10,7 +18,13 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
 import { SpacesList } from './List';
 import { useCollection } from '../lib/subscription';
-import { CollectionId, IControlDefinition, ISurfaceSpace } from '@companion/core-shared/dist/collections';
+import {
+	CollectionId,
+	IControlDefinition,
+	ISurfaceSpace,
+	ISurfaceSpacePage,
+} from '@companion/core-shared/dist/collections';
+import { SpacePages } from './Pages';
 // import { InstanceVariables } from "./Variables";
 
 export function SpacesPage() {
@@ -20,16 +34,27 @@ export function SpacesPage() {
 
 	const [tabResetToken, setTabResetToken] = useState(shortid());
 	const [activeTab, setActiveTab] = useState('list');
-	const [selectedControlId, setSelectedControlId] = useState<string | null>(null);
 
 	const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null);
 	const allSpaces = useCollection<ISurfaceSpace>(context.socket, CollectionId.SurfaceSpaces, true);
+	const spacePagesRaw = useCollection<ISurfaceSpacePage>(
+		context.socket,
+		CollectionId.SurfaceSpacePages,
+		!!currentSpaceId,
+	); // TODO - filter properly...
+	const spacePages: Record<string, ISurfaceSpacePage> = {};
+	for (const [k, v] of Object.entries(spacePagesRaw)) {
+		if (v.spaceId === currentSpaceId) {
+			spacePages[k] = v;
+		}
+	}
 
 	useEffect(() => {
 		// Ensure the current space is a valid id
 		const knownSpaces = Object.keys(allSpaces);
 		if (!currentSpaceId || !knownSpaces.includes(currentSpaceId)) {
 			setCurrentSpaceId(knownSpaces[0] ?? null);
+			setActiveTab('list');
 		}
 	}, [allSpaces, currentSpaceId]);
 
@@ -38,7 +63,7 @@ export function SpacesPage() {
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
 			if (oldTab !== newTab) {
-				setSelectedControlId(null);
+				// setSelectedControlId(null);
 				setTabResetToken(shortid());
 			}
 			return newTab;
@@ -53,6 +78,15 @@ export function SpacesPage() {
 			}
 		},
 		[allSpaces],
+	);
+	const selectPage = useCallback(
+		(id) => {
+			// const knownSpaces = Object.keys(allSpaces);
+			// if (id === null || knownSpaces.includes(id)) {
+			// 	setCurrentSpaceId(id);
+			// }
+		},
+		[spacePages],
 	);
 
 	return (
@@ -76,18 +110,16 @@ export function SpacesPage() {
 									<FontAwesomeIcon icon={faList} /> All Spaces
 								</CNavLink>
 							</CNavItem>
-							<CNavItem hidden={!selectedControlId}>
-								<CNavLink data-tab='edit'>
-									<FontAwesomeIcon icon={faCalculator} /> Edit Control{' '}
-									{/* {selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'} */}
+							<CNavItem>
+								<CNavLink data-tab='pages' disabled={!currentSpace}>
+									<FontAwesomeIcon icon={faCalendar} /> Pages
 								</CNavLink>
 							</CNavItem>
-							{/* 
 							<CNavItem>
-								<CNavLink data-tab='variables'>
-									<FontAwesomeIcon icon={faDollarSign} /> Variables
+								<CNavLink data-tab='devices' disabled={!currentSpace}>
+									<FontAwesomeIcon icon={faGamepad} /> Attached Devices
 								</CNavLink>
-							</CNavItem> */}
+							</CNavItem>
 						</CNav>
 						<CTabContent fade={false}>
 							<CTabPane data-tab='list'>
@@ -95,26 +127,19 @@ export function SpacesPage() {
 									<SpacesList spaces={allSpaces} selectSpace={selectSpace} />
 								</MyErrorBoundary>
 							</CTabPane>
-							<CTabPane data-tab='edit'>
+							<CTabPane data-tab='pages'>
 								<MyErrorBoundary>
-									{/* {selectedControlId ? (
-										<EditControl
-											controlId={selectedControlId}
-											// 	key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
-											// 	page={selectedButton[0]}
-											// 	bank={selectedButton[1]}
-											// 	onKeyUp={handleKeyUpInButtons}
-										/>
+									{currentSpace ? (
+										<SpacePages space={currentSpace} pages={spacePages} selectPage={selectPage} />
 									) : (
-										''
-									)} */}
-									<p>Edit</p>
+										<p>No space selected</p>
+									)}
 								</MyErrorBoundary>
 							</CTabPane>
-							<CTabPane data-tab='variables'>
+							<CTabPane data-tab='devices'>
 								<MyErrorBoundary>
 									{/* <InstanceVariables resetToken={tabResetToken} /> */}
-									<p>Veriables</p>
+									<p>Devices</p>
 								</MyErrorBoundary>
 							</CTabPane>
 						</CTabContent>

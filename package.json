@@ -44,12 +44,5 @@
 	},
 	"workspaces": [
 		"packages/*"
-	],
-	"dependencies": {
-		"@companion/core-shared": "file:packages/shared",
-		"@companion/module-framework": "file:packages/module-framework",
-		"@companion/webui": "file:packages/webui",
-		"companion3": "file:packages/companion",
-		"mock-module2": "file:packages/mock-module"
-	}
+	]
 }

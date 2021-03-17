@@ -15,6 +15,8 @@ export enum SocketCommand {
 	ControlDefinitionNameUpdate = 'CONTROLDEFINITION.NAME.UPDATE',
 	SurfaceSpaceCreate = 'SURFACESPACE.CREATE',
 	SurfaceSpaceDelete = 'SURFACESPACE.DELETE',
+	SurfaceSpacePageCreate = 'SURFACESPACEPAGE.CREATE',
+	SurfaceSpacePageDelete = 'SURFACESPACEPAGE.DELETE',
 }
 
 // export type CommandTypes =
@@ -112,4 +114,17 @@ export interface SurfaceSpaceCreateMessageReply {
 
 export interface SurfaceSpaceDeleteMessage {
 	id: string;
+}
+
+export interface SurfaceSpacePageCreateMessage {
+	spaceId: string;
+	afterId: string | null;
+}
+export interface SurfaceSpacePageCreateMessageReply {
+	id: string;
+}
+
+export interface SurfaceSpacePageDeleteMessage {
+	id: string;
+	spaceId: string;
 }

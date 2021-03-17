@@ -11,7 +11,6 @@ import { ICore } from '../core';
 import { registerCommand } from './lib';
 import { ObjectID } from 'bson';
 import { SurfaceType } from '@companion/core-shared/dist/collections';
-import { TransactionOptions } from 'mongodb';
 
 export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, authSession: SocketAuthSessionWrapper) {
 	registerCommand(
@@ -25,12 +24,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 
 				const session = core.client.startSession();
 				try {
-					const transactionOptions: TransactionOptions = {
-						readPreference: 'primary',
-						readConcern: { level: 'local' },
-						writeConcern: { w: 'majority' },
-					};
-					const commitResult = await session.withTransaction(async () => {
+					const commitResult: any = await session.withTransaction(async () => {
 						const page = await core.models.surfaceSpacePages.insertOne(
 							{
 								_id: pageId,
@@ -64,7 +58,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 							await session.abortTransaction();
 							return;
 						}
-					}, transactionOptions);
+					});
 
 					if (commitResult) {
 						return {
@@ -88,17 +82,44 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 		async (msg: SurfaceSpaceDeleteMessage): Promise<SurfaceSpaceDeleteMessage> => {
 			const userSession = await getUserInfo(authSession.authSessionId);
 			if (userSession) {
-				// TODO - transaction
-				const res = await core.models.surfaceSpaces.deleteOne({ _id: msg.id });
-				if (res.deletedCount !== undefined && res.deletedCount > 0) {
-					// TODO - transaction?
-					// TODO - remove from assignments too
+				const session = core.client.startSession();
+				try {
+					const commitResult: any = await session.withTransaction(async () => {
+						const delPages = core.models.surfaceSpacePages.deleteMany(
+							{
+								spaceId: msg.id,
+							},
+							{ session },
+						);
 
-					return {
-						id: msg.id,
-					};
-				} else {
-					throw new Error('Not found');
+						const delSpace = await core.models.surfaceSpaces.deleteOne(
+							{
+								_id: msg.id,
+							},
+							{ session },
+						);
+
+						if (!delSpace.deletedCount || delSpace.deletedCount === 0) {
+							// Nothing deleted
+							await session.abortTransaction();
+							return;
+						}
+
+						await Promise.all([
+							delPages,
+							// TODO - more
+						]);
+					});
+
+					if (commitResult) {
+						return {
+							id: msg.id,
+						};
+					} else {
+						throw new Error('Deletion failed');
+					}
+				} finally {
+					await session.endSession();
 				}
 			} else {
 				throw new Error('Not authorised');

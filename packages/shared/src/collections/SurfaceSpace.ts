@@ -34,5 +34,7 @@ export interface ISurfaceSpace {
 export interface ISurfaceSpacePage {
 	_id: string;
 	spaceId: string;
+
+	name: string;
 	controls: never[];
 }

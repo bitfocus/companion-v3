@@ -23,7 +23,7 @@ export function SpacesList({
 
 	const confirmModalRef = useRef<any>(null);
 
-	const addControl = useCallback(() => {
+	const addSpace = useCallback(() => {
 		socketEmit2(
 			context.socket,
 			SocketCommand.SurfaceSpaceCreate,
@@ -44,7 +44,7 @@ export function SpacesList({
 			</p>
 
 			<p>
-				<CButton color='primary' onClick={addControl}>
+				<CButton color='primary' onClick={addSpace}>
 					add
 				</CButton>
 			</p>

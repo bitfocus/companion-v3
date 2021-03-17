@@ -1,10 +1,10 @@
-import { Observable, Subject } from 'rxjs';
 import shortid from 'shortid';
 import { SocketCommand, CollectionSubscribeMessage } from '@companion/core-shared/dist/api';
 import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { literal } from '@companion/core-shared/dist/util';
 import SocketIOClient from 'socket.io-client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { CollectionId } from '@companion/core-shared/dist/collections';
 
 export type unsub = () => void;
 
@@ -13,25 +13,25 @@ export interface SubscribeQuery {
 	doc: string;
 	query?: never;
 }
-export function subscribeToCollection<T extends { _id: string }>(
+function subscribeToCollection<T extends { _id: string }>(
 	socket: SocketIOClient.Socket,
-	doc: string,
-	query?: never,
-): [Observable<T[]>, unsub] {
+	collection: CollectionId,
+	query: any,
+	options: any, // TODO - type
+	onChange: (docs: T[]) => void,
+): unsub {
 	const subId = shortid();
 	socket.emit(
 		SocketCommand.CollectionSubscribe,
 		literal<CollectionSubscribeMessage>({
 			id: subId,
-			doc,
+			doc: collection,
 			query,
+			// TODO - forward options
 		}),
 	);
 
-	const sub = new Subject<T[]>();
 	const fullData = new Map<string, T>();
-	sub.next(Array.from(fullData.values()));
-
 	socket.on(subId, (msg: SubscriptionEvent<T>) => {
 		switch (msg.event) {
 			case 'init':
@@ -51,46 +51,89 @@ export function subscribeToCollection<T extends { _id: string }>(
 				console.error('got error', msg.message);
 				break;
 		}
-		sub.next(Array.from(fullData.values()));
+		onChange(Array.from(fullData.values()));
 	});
 
-	return [
-		sub,
-		() => {
-			socket.off(subId);
-			socket.emit(SocketCommand.CollectionUnsubscribe, {
-				id: subId,
-			});
-		},
-	];
+	return () => {
+		socket.off(subId);
+		socket.emit(SocketCommand.CollectionUnsubscribe, {
+			id: subId,
+		});
+	};
 }
 
 export function useCollection<T extends { _id: string }>(
 	socket: SocketIOClient.Socket,
-	doc: string,
+	collection: CollectionId,
+	enable: boolean,
 	query?: undefined,
-	enable: boolean = true,
+	options?: any, // TODO - type this
 ): Record<string, T> {
 	const [docs, setDocs] = useState({});
 
 	// TODO - does query need memoizing?
 	useEffect(() => {
-		if (enable) {
-			const [sub, unsub] = subscribeToCollection<T>(socket, doc, query);
+		setDocs({});
 
-			sub.subscribe((docs) => {
+		if (enable) {
+			const unsub = subscribeToCollection<T>(socket, collection, query, options, (docs) => {
 				const obj: Record<string, T> = {};
 				for (const m of docs) {
 					obj[m._id] = m;
 				}
 				setDocs(obj);
 			});
+
 			return () => {
 				unsub();
 				setDocs({});
 			};
 		}
-	}, [socket, doc, query, enable]);
+	}, [socket, collection, query, options, enable]);
 
 	return docs;
+}
+
+export function useCollectionOne<T extends { _id: string }>(
+	socket: SocketIOClient.Socket,
+	collection: CollectionId,
+	docId: string | null,
+	timeout: number = 0,
+): [T | null, boolean] {
+	const [doc, setDoc] = useState<T | null>(null);
+	const [failed, setFailed] = useState(false);
+
+	useEffect(() => {
+		setDoc(null);
+		setFailed(false);
+
+		if (docId !== null) {
+			let timeoutHandle = timeout > 0 ? setTimeout(() => setFailed(true), timeout) : null;
+
+			const clearTimeoutHandle = () => {
+				if (timeoutHandle) {
+					clearTimeout(timeoutHandle);
+					timeoutHandle = null;
+				}
+			};
+
+			// TODO - limit to one?
+			const unsub = subscribeToCollection<T>(socket, collection, docId, undefined, (docs) => {
+				const newDoc = docs.find((d) => d._id === docId) ?? null;
+				console.log(newDoc, docs.length);
+				setDoc(newDoc);
+				clearTimeoutHandle();
+				setFailed(!newDoc);
+			});
+
+			return () => {
+				unsub();
+				setDoc(null);
+				clearTimeoutHandle();
+				setFailed(false);
+			};
+		}
+	}, [socket, collection, docId, timeout]);
+
+	return [doc, failed];
 }

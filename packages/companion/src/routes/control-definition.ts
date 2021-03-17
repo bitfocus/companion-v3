@@ -8,8 +8,8 @@ import { SocketAuthSessionWrapper } from './auth';
 import SocketIO from 'socket.io';
 import { getUserInfo } from '../auth';
 import { ICore } from '../core';
-import shortid from 'shortid';
 import { registerCommand } from './lib';
+import { ObjectID } from 'bson';
 
 export function socketControlDefinitionHandler(
 	core: ICore,
@@ -25,9 +25,14 @@ export function socketControlDefinitionHandler(
 				// TODO - validate type
 
 				const conn = await core.models.controlDefinitions.insertOne({
-					_id: shortid(),
+					_id: new ObjectID().toHexString(),
 					description: 'New control',
 					controlType: msg.type,
+					defaultLayer: {
+						text: '',
+						textSize: 'auto',
+						textAlignment: ['c', 'c'],
+					},
 				});
 				return {
 					id: conn.insertedId,

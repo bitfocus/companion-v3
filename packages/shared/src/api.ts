@@ -1,4 +1,4 @@
-import { ControlType, IControlDefinition } from './collections';
+import { CollectionId, ControlType, IControlDefinition } from './collections';
 
 export enum SocketCommand {
 	Login = 'LOGIN',
@@ -37,7 +37,7 @@ export enum SocketCommand {
 export interface CollectionSubscribeMessage {
 	id: string;
 
-	doc: string;
+	doc: CollectionId;
 	query?: never;
 }
 

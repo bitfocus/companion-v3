@@ -7,7 +7,7 @@ import {
 import { ControlType, IControlDefinition } from '@companion/core-shared/dist/collections';
 import { literal } from '@companion/core-shared/dist/util';
 import { CButton } from '@coreui/react';
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import { useCallback, useContext, useRef } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
 import { CompanionContext, socketEmit2 } from '../util';
 
@@ -22,8 +22,6 @@ export function ControlsList({
 
 	const confirmModalRef = useRef<any>(null);
 
-	const [editingId, setEditingId] = useState<string | null>(null);
-
 	const addControl = useCallback(() => {
 		socketEmit2(
 			context.socket,
@@ -32,9 +30,9 @@ export function ControlsList({
 				type: ControlType.Button,
 			}),
 		).then((msg: ControlDefinitionCreateMessageReply) => {
-			setEditingId(msg.id);
+			editControl(msg.id);
 		});
-	}, [context.socket]);
+	}, [context.socket, editControl]);
 
 	return (
 		<div>

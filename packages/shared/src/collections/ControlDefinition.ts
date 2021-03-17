@@ -7,12 +7,22 @@ export interface IControlDefinition {
 	description: string;
 	// x: number;
 	// y: number;
-	latch?: boolean;
-	relativeDelays?: boolean;
+	// latch?: boolean;
+	// relativeDelays?: boolean;
 	controlType: ControlType;
-	// renderProperties: { [key: string]: InputValue };
+
+	// Rendering
+	defaultLayer: IButtonControlRenderLayer;
+
+	// Interaction
 	// TODO - actions
 	// TODO - feedbacks
+}
+
+export interface IButtonControlRenderLayer {
+	text: string;
+	textSize: number | 'auto';
+	textAlignment: ['l' | 'c' | 'r', 't' | 'c' | 'b'];
 }
 
 // TODO - presets should be inserted here when referenced. Ideally they should remain linked to the preset, so that duplicates get combined, and they get updated by the module author

@@ -5,13 +5,13 @@ import shortid from 'shortid';
 // import { InstancePresets } from "./Presets";
 import { CompanionContext, MyErrorBoundary } from '../util';
 // import { ButtonsGridPanel } from "./ButtonGrid";
-// import { EditButton } from "./EditButton";
+import { EditControl } from './EditControl';
 // import { ImportExport } from "./ImportExport";
 import { useCallback, useContext, useRef, useState } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
 import { ControlsList } from './List';
 import { useCollection } from '../lib/subscription';
-import { IControlDefinition } from '@companion/core-shared/dist/collections';
+import { CollectionId, IControlDefinition } from '@companion/core-shared/dist/collections';
 // import { InstanceVariables } from "./Variables";
 
 export function ControlsPage() {
@@ -21,16 +21,14 @@ export function ControlsPage() {
 
 	const [tabResetToken, setTabResetToken] = useState(shortid());
 	const [activeTab, setActiveTab] = useState('presets');
-	const [selectedButton, setSelectedButton] = useState(null);
-	const [pageNumber, setPageNumber] = useState(1);
-	const [copyFromButton, setCopyFromButton] = useState(null);
+	const [selectedControlId, setSelectedControlId] = useState<string | null>(null);
 
-	const controls = useCollection<IControlDefinition>(context.socket, 'controlDefinitions');
+	const controls = useCollection<IControlDefinition>(context.socket, CollectionId.ControlDefinitions, true);
 
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
 			if (oldTab !== newTab) {
-				setSelectedButton(null);
+				setSelectedControlId(null);
 				setTabResetToken(shortid());
 			}
 			return newTab;
@@ -38,7 +36,9 @@ export function ControlsPage() {
 	}, []);
 
 	const editControl = useCallback((id) => {
-		// TODO
+		setActiveTab('edit');
+		setSelectedControlId(id);
+		setTabResetToken(shortid());
 	}, []);
 
 	// const doButtonGridClick = useCallback((page, bank, isDown) => {
@@ -103,7 +103,7 @@ export function ControlsPage() {
 				<div className='secondary-panel-inner'>
 					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
 						<CNav variant='tabs'>
-							<CNavItem hidden={!selectedButton}>
+							<CNavItem hidden={!selectedControlId}>
 								<CNavLink data-tab='edit'>
 									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
 									{/* {selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'} */}
@@ -123,15 +123,17 @@ export function ControlsPage() {
 						<CTabContent fade={false}>
 							<CTabPane data-tab='edit'>
 								<MyErrorBoundary>
-									{selectedButton
-										? 'Edit'
-										: // ? <EditButton
-										  // 	key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
-										  // 	page={selectedButton[0]}
-										  // 	bank={selectedButton[1]}
-										  // 	onKeyUp={handleKeyUpInButtons}
-										  // />
-										  ''}
+									{selectedControlId ? (
+										<EditControl
+											controlId={selectedControlId}
+											// 	key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
+											// 	page={selectedButton[0]}
+											// 	bank={selectedButton[1]}
+											// 	onKeyUp={handleKeyUpInButtons}
+										/>
+									) : (
+										''
+									)}
 								</MyErrorBoundary>
 							</CTabPane>
 							<CTabPane data-tab='presets'>

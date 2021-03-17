@@ -78,6 +78,8 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 
 	return (
 		<CCol sm={12} className='p-0 mt-5'>
+			<h4>Button style</h4>
+
 			{pngError ? (
 				<CAlert color='warning' closeButton>
 					{pngError}

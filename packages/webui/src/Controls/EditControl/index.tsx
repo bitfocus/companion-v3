@@ -169,7 +169,7 @@ export function EditControl({ controlId }: EditControlProps) {
 					<div>
 						<CRow form>
 							<CCol className='fieldtype-textinput' sm={6}>
-								<label>Button text</label>
+								<label>Control name</label>
 								<TextInputField
 									definition={{ default: '', tooltip: 'Control description' }}
 									setValue={setName}
@@ -216,6 +216,8 @@ export function EditControl({ controlId }: EditControlProps) {
 							Test actions
 						</CButton> */}
 					</div>
+
+					<hr />
 
 					<ButtonStyleConfig controlId={controlId} layerId={'default'} layer={control.defaultLayer} />
 

@@ -10,11 +10,13 @@ import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
 import {
+	CollectionId,
 	IBank,
 	IControlDefinition,
 	IDeviceConnection,
 	IModule,
-	IWorkspace,
+	ISurfaceSpace,
+	ISurfaceSpacePage,
 } from '@companion/core-shared/dist/collections';
 import getPort from 'get-port';
 import { startMongo } from './mongo';
@@ -59,12 +61,14 @@ export async function startup(configPath: string, appPath: string): Promise<void
 
 	const core: ICore = {
 		db: database,
+		client: client,
 		models: {
 			banks: database.collection<IBank>('banks'),
-			controlDefinitions: database.collection<IControlDefinition>('controlDefinitions'),
-			deviceConnections: database.collection<IDeviceConnection>('connections'),
-			modules: database.collection<IModule>('modules'),
-			workspaces: database.collection<IWorkspace>('workspaces'),
+			controlDefinitions: database.collection<IControlDefinition>(CollectionId.ControlDefinitions),
+			deviceConnections: database.collection<IDeviceConnection>(CollectionId.Connections),
+			modules: database.collection<IModule>(CollectionId.Modules),
+			surfaceSpaces: database.collection<ISurfaceSpace>(CollectionId.SurfaceSpaces),
+			surfaceSpacePages: database.collection<ISurfaceSpacePage>(CollectionId.SurfaceSpacePages),
 		},
 		io,
 		moduleFactory,

@@ -105,11 +105,11 @@ export function ControlsPage() {
 						<CNav variant='tabs'>
 							<CNavItem hidden={!selectedControlId}>
 								<CNavLink data-tab='edit'>
-									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
+									<FontAwesomeIcon icon={faCalculator} /> Edit Control{' '}
 									{/* {selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'} */}
 								</CNavLink>
 							</CNavItem>
-							<CNavItem>
+							{/* <CNavItem>
 								<CNavLink data-tab='presets'>
 									<FontAwesomeIcon icon={faGift} /> Presets
 								</CNavLink>
@@ -118,7 +118,7 @@ export function ControlsPage() {
 								<CNavLink data-tab='variables'>
 									<FontAwesomeIcon icon={faDollarSign} /> Variables
 								</CNavLink>
-							</CNavItem>
+							</CNavItem> */}
 						</CNav>
 						<CTabContent fade={false}>
 							<CTabPane data-tab='edit'>

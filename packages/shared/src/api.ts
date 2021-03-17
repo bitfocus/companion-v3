@@ -1,4 +1,4 @@
-import { CollectionId, ControlType, IButtonControlRenderLayer } from './collections';
+import { CollectionId, ControlType, IButtonControlRenderLayer, SurfaceType } from './collections';
 
 export enum SocketCommand {
 	Login = 'LOGIN',
@@ -13,6 +13,8 @@ export enum SocketCommand {
 	ControlDefinitionDelete = 'CONTROLDEFINITION.DELETE',
 	ControlDefinitionRenderLayerUpdate = 'CONTROLDEFINITION.RENDERLAYER.UPDATE',
 	ControlDefinitionNameUpdate = 'CONTROLDEFINITION.NAME.UPDATE',
+	SurfaceSpaceCreate = 'SURFACESPACE.CREATE',
+	SurfaceSpaceDelete = 'SURFACESPACE.DELETE',
 }
 
 // export type CommandTypes =
@@ -95,8 +97,19 @@ export interface ControlDefinitionRenderLayerUpdateMessage<T extends keyof IButt
 	value: IButtonControlRenderLayer[T];
 }
 
-
 export interface ControlDefinitionNameUpdateMessage {
 	controlId: string;
-	name: string
+	name: string;
+}
+
+export interface SurfaceSpaceCreateMessage {
+	// TODO - make this much more complex..
+	type: SurfaceType;
+}
+export interface SurfaceSpaceCreateMessageReply {
+	id: string;
+}
+
+export interface SurfaceSpaceDeleteMessage {
+	id: string;
 }

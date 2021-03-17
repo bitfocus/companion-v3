@@ -15,6 +15,7 @@ import SocketIO from 'socket.io';
 import { socketAuthHandler, SocketAuthSessionWrapper } from './auth';
 import { socketDeviceConnectionHandler } from './connections';
 import { socketControlDefinitionHandler } from './control-definition';
+import { socketSurfaceSpaceHandler } from './surface-space';
 
 export function apiRouter(core: ICore): Router {
 	const router = Router();
@@ -67,6 +68,7 @@ export function socketHandler(core: ICore): void {
 		socketAuthHandler(socket, authSession);
 		socketDeviceConnectionHandler(core, socket, authSession);
 		socketControlDefinitionHandler(core, socket, authSession);
+		socketSurfaceSpaceHandler(core, socket, authSession);
 
 		socket.on(SocketCommand.CollectionSubscribe, async (msg: CollectionSubscribeMessage) => {
 			const userInfo = await getUserInfo(authSession.authSessionId);

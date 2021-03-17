@@ -16,6 +16,7 @@ import {
 	faCalendarAlt,
 	faClipboardList,
 	faClock,
+	faCloud,
 	faGamepad,
 	faPlug,
 	faSlidersH,
@@ -39,6 +40,7 @@ import { ButtonsPage } from './Buttons';
 import { AuthComponentWrapper } from './AuthWrapper';
 import { AuthStatusContext } from './BackendContext';
 import { ControlsPage } from './Controls';
+import { SpacesPage } from './Spaces';
 
 const serverUrl = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL;
 
@@ -217,6 +219,11 @@ function AppContent({ buttonGridHotPress }) {
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
+						<CNavLink data-tab='spaces'>
+							<FontAwesomeIcon icon={faCloud} /> Spaces
+						</CNavLink>
+					</CNavItem>
+					<CNavItem>
 						<CNavLink data-tab='buttons'>
 							<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 						</CNavLink>
@@ -251,6 +258,11 @@ function AppContent({ buttonGridHotPress }) {
 					<CTabPane data-tab='controls'>
 						<MyErrorBoundary>
 							<ControlsPage />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab='spaces'>
+						<MyErrorBoundary>
+							<SpacesPage />
 						</MyErrorBoundary>
 					</CTabPane>
 					<CTabPane data-tab='buttons'>

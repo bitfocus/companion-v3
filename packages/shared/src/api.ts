@@ -1,4 +1,4 @@
-import { CollectionId, ControlType, IControlDefinition } from './collections';
+import { CollectionId, ControlType, IButtonControlRenderLayer } from './collections';
 
 export enum SocketCommand {
 	Login = 'LOGIN',
@@ -11,6 +11,8 @@ export enum SocketCommand {
 	ConnectionEnabled = 'CONNECTION.ENABLED',
 	ControlDefinitionCreate = 'CONTROLDEFINITION.CREATE',
 	ControlDefinitionDelete = 'CONTROLDEFINITION.DELETE',
+	ControlDefinitionRenderLayerUpdate = 'CONTROLDEFINITION.RENDERLAYER.UPDATE',
+	ControlDefinitionNameUpdate = 'CONTROLDEFINITION.NAME.UPDATE',
 }
 
 // export type CommandTypes =
@@ -84,4 +86,17 @@ export interface ControlDefinitionCreateMessageReply {
 }
 export interface ControlDefinitionDeleteMessage {
 	id: string;
+}
+
+export interface ControlDefinitionRenderLayerUpdateMessage<T extends keyof IButtonControlRenderLayer> {
+	controlId: string;
+	layerId: 'default' | number;
+	key: T;
+	value: IButtonControlRenderLayer[T];
+}
+
+
+export interface ControlDefinitionNameUpdateMessage {
+	controlId: string;
+	name: string
 }

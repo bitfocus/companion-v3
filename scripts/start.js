@@ -39,11 +39,11 @@ const { startMongo } = require('../packages/companion/src/mongo');
 		await concurrently(
 			[
 				{
-					command: 'yarn workspace @companion/module-framework watch',
+					command: 'yarn workspace @companion/module-framework watch --preserveWatchOutput',
 					name: 'FRAMEWORK',
 				},
 				{
-					command: 'yarn workspace @companion/core-shared watch',
+					command: 'yarn workspace @companion/core-shared watch --preserveWatchOutput',
 					name: 'CORE-SHARED',
 				},
 				{

@@ -1,11 +1,24 @@
+import { ControlDefinitionNameUpdateMessage, SocketCommand } from '@companion/core-shared/dist/api';
 import { CollectionId, IControlDefinition } from '@companion/core-shared/dist/collections';
-import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CButtonGroup } from '@coreui/react';
+import { literal } from '@companion/core-shared/dist/util';
+import {
+	CDropdown,
+	CDropdownToggle,
+	CDropdownItem,
+	CDropdownMenu,
+	CButton,
+	CButtonGroup,
+	CRow,
+	CCol,
+} from '@coreui/react';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import shortid from 'shortid';
+import { TextInputField } from '../../Components';
 //   import { BankPreview, dataToButtonImage } from "../../Components/BankButton";
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal';
 import { useCollectionOne } from '../../lib/subscription';
-import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../../util';
+import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit, socketEmit2 } from '../../util';
+import { ButtonStyleConfig } from './ButtonStyleConfig';
 //   import { ActionsPanel } from "./ActionsPanel";
 //   import { ButtonStyleConfig } from "./ButtonStyleConfig";
 //   import { FeedbacksPanel } from "./FeedbackPanel";
@@ -127,6 +140,23 @@ export function EditControl({ controlId }: EditControlProps) {
 	// if (configError) errors.push(configError);
 	// const loadError = errors.length > 0 ? errors.join(', ') : null;
 	// const dataReady = !loadError && !!config && Object.values(tableLoadStatus).filter((s) => s !== true).length === 0;
+
+	const setName = useCallback(
+		(value: string) => {
+			if (control && control.description !== value) {
+				socketEmit2(
+					context.socket,
+					SocketCommand.ControlDefinitionNameUpdate,
+					literal<ControlDefinitionNameUpdateMessage>({
+						controlId,
+						name: value,
+					}),
+				);
+			}
+		},
+		[context.socket, control, controlId],
+	);
+
 	const dataReady = !loadFailed && !!control;
 
 	return (
@@ -137,6 +167,18 @@ export function EditControl({ controlId }: EditControlProps) {
 			{control ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<div>
+						<CRow form>
+							<CCol className='fieldtype-textinput' sm={6}>
+								<label>Button text</label>
+								<TextInputField
+									definition={{ default: '', tooltip: 'Control description' }}
+									setValue={setName}
+									setValid={undefined}
+									value={control.description}
+								/>
+							</CCol>
+						</CRow>
+
 						{/* <ButtonEditPreview page={page} bank={bank} /> */}
 						{/* <CDropdown className='mt-2' style={{ display: 'inline-block' }}>
 							<CButtonGroup> */}
@@ -175,7 +217,7 @@ export function EditControl({ controlId }: EditControlProps) {
 						</CButton> */}
 					</div>
 
-					{/* <ButtonStyleConfig config={config} page={page} bank={bank} valueChanged={loadConfig} /> */}
+					<ButtonStyleConfig controlId={controlId} layerId={'default'} layer={control.defaultLayer} />
 
 					{/* {config.style === 'png' ? (
 						<>

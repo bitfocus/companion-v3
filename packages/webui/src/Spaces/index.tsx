@@ -23,8 +23,10 @@ import {
 	IControlDefinition,
 	ISurfaceSpace,
 	ISurfaceSpacePage,
+	SurfaceType,
 } from '@companion/core-shared/dist/collections';
 import { SpacePages } from './Pages';
+import { SpaceBasicGrid, SpaceBasicGridProps } from './BasicGrid';
 // import { InstanceVariables } from "./Variables";
 
 export function SpacesPage() {
@@ -59,6 +61,7 @@ export function SpacesPage() {
 	}, [allSpaces, currentSpaceId]);
 
 	const currentSpace = currentSpaceId ? allSpaces[currentSpaceId] : undefined;
+	const currentPage = Object.values(spacePages)[0];
 
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
@@ -95,9 +98,14 @@ export function SpacesPage() {
 
 			<CCol xs={12} xl={6} className='primary-panel'>
 				<MyErrorBoundary>
-					<h3>Space - {currentSpace?.name}</h3>
-					{/* <ControlsList controls={controls} editControl={editControl} /> */}
-					<p>Main</p>
+					{currentSpace && currentPage ? (
+						<>
+							<h3>Space - {currentSpace.name}</h3>
+							<SpacePageRender space={currentSpace} page={currentPage} />
+						</>
+					) : (
+						''
+					)}
 				</MyErrorBoundary>
 			</CCol>
 
@@ -148,4 +156,19 @@ export function SpacesPage() {
 			</CCol>
 		</CRow>
 	);
+}
+
+interface SpacePageRenderProps {
+	space: ISurfaceSpace;
+	page: ISurfaceSpacePage;
+}
+function SpacePageRender({ space, page }: SpacePageRenderProps) {
+	switch (space.cachedSpec.type) {
+		case SurfaceType.ButtonGrid:
+			return <SpaceBasicGrid spec={space.cachedSpec} page={page} />;
+		case SurfaceType.Advanced:
+			return <p>Advanced - TODO</p>;
+		default:
+			return <p>Unknown space type</p>;
+	}
 }

@@ -29,6 +29,8 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 							{
 								_id: pageId,
 								spaceId: docId,
+
+								name: 'New page',
 								controls: [],
 							},
 							{ session },

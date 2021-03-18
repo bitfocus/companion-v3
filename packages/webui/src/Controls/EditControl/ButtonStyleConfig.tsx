@@ -15,6 +15,7 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { IButtonControlRenderLayer } from '@companion/core-shared/dist/collections';
 import { ControlDefinitionRenderLayerUpdateMessage, SocketCommand } from '@companion/core-shared/dist/api';
 import { literal } from '@companion/core-shared/dist/util';
+import { rgba } from '@companion/core-shared/dist/color';
 
 export interface ButtonStyleConfigProps {
 	controlId: string;
@@ -71,8 +72,8 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 	// const setSizeValue = useCallback((val) => setValueInner('size', val), [setValueInner]);
 	const setTextAlignmentValue = useCallback((val) => setValueInner('textAlignment', val), [setValueInner]);
 	// const setPngAlignmentValue = useCallback((val) => setValueInner('pngalignment', val), [setValueInner]);
-	// const setColorValue = useCallback((val) => setValueInner('color', val), [setValueInner]);
-	// const setBackgroundColorValue = useCallback((val) => setValueInner('bgcolor', val), [setValueInner]);
+	const setTextColorValue = useCallback((val) => setValueInner('textColor', val), [setValueInner]);
+	const setBackgroundColorValue = useCallback((val) => setValueInner('backgroundColor', val), [setValueInner]);
 	// const setLatchValue = useCallback((val) => setValueInner('latch', val), [setValueInner]);
 	// const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner]);
 
@@ -139,24 +140,27 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 							setValue={setPngAlignmentValue}
 							value={config.pngalignment}
 						/>
-					</CCol>
+					</CCol>*/}
 
 					<CCol className='fieldtype-colorpicker' sm={2} xs={3}>
-						<label>Color</label>
+						<label>Text Color</label>
 						<ColorInputField
-							definition={{ default: 0xffffff }}
-							setValue={setColorValue}
-							value={config.color}
+							definition={{ default: rgba(255, 255, 255, 255) }}
+							alpha={true}
+							setValue={setTextColorValue}
+							value={layer.textColor}
 						/>
 					</CCol>
 					<CCol className='fieldtype-colorpicker' sm={2} xs={3}>
-						<label>Background</label>
+						<label>Background Color</label>
 						<ColorInputField
-							definition={{ default: 0x000000 }}
+							definition={{ default: rgba(0, 0, 0, 255) }}
+							alpha={true}
 							setValue={setBackgroundColorValue}
-							value={config.bgcolor}
+							value={layer.backgroundColor}
 						/>
 					</CCol>
+					{/* 
 
 					<CCol className='fieldtype-checkbox' sm={2} xs={3}>
 						<label>Latch/Toggle</label>

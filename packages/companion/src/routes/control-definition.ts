@@ -6,6 +6,7 @@ import {
 	ControlDefinitionRenderLayerUpdateMessage,
 	SocketCommand,
 } from '@companion/core-shared/dist/api';
+import { rgba } from '@companion/core-shared/dist/color';
 import { SocketAuthSessionWrapper } from './auth';
 import SocketIO from 'socket.io';
 import { getUserInfo } from '../auth';
@@ -34,6 +35,8 @@ export function socketControlDefinitionHandler(
 						text: '',
 						textSize: 'auto',
 						textAlignment: ['c', 'c'],
+						textColor: rgba(255, 255, 255, 255),
+						backgroundColor: rgba(0, 0, 0, 255),
 					},
 				});
 				return {

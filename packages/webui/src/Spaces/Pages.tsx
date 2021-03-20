@@ -34,7 +34,7 @@ export function SpacePages({
 		).then((msg: SurfaceSpaceCreateMessageReply) => {
 			selectPage(msg.id);
 		});
-	}, [context.socket, selectPage]);
+	}, [context.socket, selectPage, space._id]);
 
 	// TODO - sort by the defined order
 	const pagesList = Object.values(pages ?? {});
@@ -66,6 +66,7 @@ export function SpacePages({
 						return (
 							<PagesTableRow
 								key={page._id}
+								spaceId={space._id}
 								page={page}
 								allowDelete={pagesList.length > 1}
 								confirmModalRef={confirmModalRef}
@@ -80,12 +81,13 @@ export function SpacePages({
 }
 
 interface PagesTableRowProps {
+	spaceId: string;
 	page: ISurfaceSpacePage;
 	allowDelete: boolean;
 	confirmModalRef: any;
 	selectPage: (id: string) => void;
 }
-function PagesTableRow({ page, confirmModalRef, selectPage }: PagesTableRowProps) {
+function PagesTableRow({ spaceId, page, confirmModalRef, selectPage }: PagesTableRowProps) {
 	const context = useContext(CompanionContext);
 
 	const doSelect = useCallback(() => selectPage(page._id), [selectPage, page._id]);
@@ -101,12 +103,12 @@ function PagesTableRow({ page, confirmModalRef, selectPage }: PagesTableRowProps
 					SocketCommand.SurfaceSpacePageDelete,
 					literal<SurfaceSpacePageDeleteMessage>({
 						id: page._id,
-						spaceId: page.spaceId,
+						spaceId: spaceId,
 					}),
 				);
 			},
 		);
-	}, [confirmModalRef, context.socket, page._id]);
+	}, [confirmModalRef, context.socket, spaceId, page._id]);
 
 	return (
 		<tr>

@@ -9,5 +9,4 @@ export enum CollectionId {
 	Connections = 'connections',
 	ControlDefinitions = 'controlDefinitions',
 	SurfaceSpaces = 'surfaceSpaces',
-	SurfaceSpacePages = 'surfaceSpacePages',
 }

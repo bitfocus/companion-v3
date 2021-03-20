@@ -6,7 +6,6 @@ import {
 	IDeviceConnection,
 	IModule,
 	ISurfaceSpace,
-	ISurfaceSpacePage,
 } from '@companion/core-shared/dist/collections';
 import SocketIO from 'socket.io';
 
@@ -19,7 +18,6 @@ export interface ICore {
 		deviceConnections: Collection<IDeviceConnection>;
 		modules: Collection<IModule>;
 		surfaceSpaces: Collection<ISurfaceSpace>;
-		surfaceSpacePages: Collection<ISurfaceSpacePage>;
 	};
 	io: SocketIO.Server;
 	moduleFactory: ModuleFactory;

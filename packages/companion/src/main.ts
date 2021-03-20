@@ -16,7 +16,6 @@ import {
 	IDeviceConnection,
 	IModule,
 	ISurfaceSpace,
-	ISurfaceSpacePage,
 } from '@companion/core-shared/dist/collections';
 import getPort from 'get-port';
 import { startMongo } from './mongo';
@@ -68,7 +67,6 @@ export async function startup(configPath: string, appPath: string): Promise<void
 			deviceConnections: database.collection<IDeviceConnection>(CollectionId.Connections),
 			modules: database.collection<IModule>(CollectionId.Modules),
 			surfaceSpaces: database.collection<ISurfaceSpace>(CollectionId.SurfaceSpaces),
-			surfaceSpacePages: database.collection<ISurfaceSpacePage>(CollectionId.SurfaceSpacePages),
 		},
 		io,
 		moduleFactory,

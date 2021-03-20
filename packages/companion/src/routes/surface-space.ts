@@ -33,21 +33,6 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 				const session = core.client.startSession();
 				try {
 					const commitResult: any = await session.withTransaction(async () => {
-						const page = await core.models.surfaceSpacePages.insertOne(
-							{
-								_id: pageId,
-								spaceId: docId,
-
-								name: 'New page',
-								controls: {},
-							},
-							{ session },
-						);
-						if (page.insertedId !== pageId) {
-							await session.abortTransaction();
-							return;
-						}
-
 						const res = await core.models.surfaceSpaces.insertOne(
 							{
 								_id: docId,
@@ -59,7 +44,14 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 									width: 8,
 									height: 4,
 								},
-								pageIds: [pageId],
+								pages: [
+									{
+										_id: pageId,
+
+										name: 'New page',
+										controls: {},
+									},
+								],
 							},
 							{ session },
 						);
@@ -95,13 +87,6 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 				const session = core.client.startSession();
 				try {
 					const commitResult: any = await session.withTransaction(async () => {
-						const delPages = core.models.surfaceSpacePages.deleteMany(
-							{
-								spaceId: msg.id,
-							},
-							{ session },
-						);
-
 						const delSpace = await core.models.surfaceSpaces.deleteOne(
 							{
 								_id: msg.id,
@@ -115,10 +100,10 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 							return;
 						}
 
-						await Promise.all([
-							delPages,
-							// TODO - more
-						]);
+						// await Promise.all([
+						// 	delPages,
+						// 	// TODO - more
+						// ]);
 					});
 
 					if (commitResult) {
@@ -152,28 +137,18 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 							{ _id: msg.spaceId },
 							{
 								$push: {
-									pageIds: pageId,
+									pages: {
+										_id: pageId,
+
+										name: 'New page',
+										controls: {},
+									},
 								},
 							},
 							{ session },
 						);
 						if (ok.upsertedCount !== 1) {
 							// Didn't find the space to update
-							await session.abortTransaction();
-							return;
-						}
-
-						const page = await core.models.surfaceSpacePages.insertOne(
-							{
-								_id: pageId,
-								spaceId: msg.spaceId,
-
-								name: 'New page',
-								controls: {},
-							},
-							{ session },
-						);
-						if (page.insertedId !== pageId) {
 							await session.abortTransaction();
 							return;
 						}
@@ -208,16 +183,8 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 							{ _id: msg.spaceId },
 							{
 								$pull: {
-									pageIds: msg.id,
+									pages: { _id: msg.id },
 								},
-							},
-							{ session },
-						);
-
-						await core.models.surfaceSpacePages.deleteOne(
-							{
-								_id: msg.id,
-								spaceId: msg.spaceId,
 							},
 							{ session },
 						);
@@ -253,14 +220,14 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 					const commitResult: any = await session.withTransaction(async () => {
 						const control = await core.models.controlDefinitions.insertOne(controlDefaults, { session });
 
-						await core.models.surfaceSpacePages.updateOne(
+						await core.models.surfaceSpaces.updateOne(
 							{
-								_id: msg.pageId,
-								spaceId: msg.spaceId,
+								_id: msg.spaceId,
+								'pages._id': msg.pageId,
 							},
 							{
 								$set: {
-									[`controls.${msg.slotId}`]: control.insertedId,
+									[`pages.$.controls.${msg.slotId}`]: control.insertedId,
 								},
 							},
 						);
@@ -291,14 +258,14 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 				const session = core.client.startSession();
 				try {
 					const commitResult: any = await session.withTransaction(async () => {
-						await core.models.surfaceSpacePages.updateOne(
+						await core.models.surfaceSpaces.updateOne(
 							{
-								_id: msg.pageId,
-								spaceId: msg.spaceId,
+								_id: msg.spaceId,
+								'pages._id': msg.pageId,
 							},
 							{
 								$unset: {
-									[`controls.${msg.slotId}`]: 1,
+									[`pages.$.controls.${msg.slotId}`]: 1,
 								},
 							},
 						);
@@ -342,14 +309,15 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 							await session.abortTransaction();
 							return;
 						}
-						await core.models.surfaceSpacePages.updateOne(
+
+						await core.models.surfaceSpaces.updateOne(
 							{
-								_id: msg.pageId,
-								spaceId: msg.spaceId,
+								_id: msg.spaceId,
+								'pages._id': msg.pageId,
 							},
 							{
 								$set: {
-									[`controls.${msg.slotId}`]: msg.controlId,
+									[`pages.$.controls.${msg.slotId}`]: msg.controlId,
 								},
 							},
 						);

@@ -127,9 +127,6 @@ export function createSubscription(core: ICore, msg: CollectionSubscribeMessage)
 		case CollectionId.SurfaceSpaces: {
 			return createBasicSubscription(core.models.surfaceSpaces, msg);
 		}
-		case CollectionId.SurfaceSpacePages: {
-			return createBasicSubscription(core.models.surfaceSpacePages, msg);
-		}
 		default:
 			// TODO ensure unreachable
 			throw new Error(`Unknown doc: "${msg.doc}"`);

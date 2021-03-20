@@ -6,8 +6,7 @@ import { CompanionContext, MyErrorBoundary } from '../util';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
 import { SpacesList } from './List';
-import { useCollection } from '../lib/subscription';
-import { CollectionId, ISurfaceSpace, ISurfaceSpacePage, SurfaceType } from '@companion/core-shared/dist/collections';
+import { ISurfaceSpace, ISurfaceSpacePage, SurfaceType } from '@companion/core-shared/dist/collections';
 import { SpacePages } from './Pages';
 import { SpaceBasicGrid } from './BasicGrid';
 import { SlotEditor } from './SlotEditor';
@@ -22,17 +21,6 @@ export function SpacesPage() {
 	const [activeTab, setActiveTab] = useState('list');
 
 	const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null);
-	const spacePagesRaw = useCollection<ISurfaceSpacePage>(
-		context.socket,
-		CollectionId.SurfaceSpacePages,
-		!!currentSpaceId,
-	); // TODO - filter properly...
-	const spacePages: Record<string, ISurfaceSpacePage> = {};
-	for (const [k, v] of Object.entries(spacePagesRaw)) {
-		if (v.spaceId === currentSpaceId) {
-			spacePages[k] = v;
-		}
-	}
 
 	useEffect(() => {
 		// Ensure the current space is a valid id
@@ -44,6 +32,11 @@ export function SpacesPage() {
 	}, [context.spaces, currentSpaceId]);
 
 	const currentSpace = currentSpaceId ? context.spaces[currentSpaceId] : undefined;
+	const spacePages: Record<string, ISurfaceSpacePage> = {};
+	for (const page of currentSpace?.pages || []) {
+		spacePages[page._id] = page;
+	}
+
 	const currentPage = Object.values(spacePages)[0];
 
 	const [currentSlot, setCurrentSlot] = useState<string | null>(null);

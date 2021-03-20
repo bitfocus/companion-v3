@@ -36,12 +36,12 @@ export interface ISurfaceSpace {
 	// We aim to get the spec from the device plugin, but we need something once they are removed
 	cachedSpec: SomeSurfaceSpec;
 
-	pageIds: string[];
+	pages: ISurfaceSpacePage[];
 }
 
 export interface ISurfaceSpacePage {
 	_id: string;
-	spaceId: string;
+	// spaceId: string;
 
 	name: string;
 	/** SlotId to ControlId */

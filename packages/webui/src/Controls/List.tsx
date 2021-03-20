@@ -11,13 +11,7 @@ import { useCallback, useContext, useRef } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
 import { CompanionContext, socketEmit2 } from '../util';
 
-export function ControlsList({
-	controls,
-	editControl,
-}: {
-	controls: Record<string, IControlDefinition>;
-	editControl: (id: string) => void;
-}) {
+export function ControlsList({ editControl }: { editControl: (id: string) => void }) {
 	const context = useContext(CompanionContext);
 
 	const confirmModalRef = useRef<any>(null);
@@ -59,7 +53,7 @@ export function ControlsList({
 					</tr>
 				</thead>
 				<tbody>
-					{Object.values(controls ?? {}).map((control) => {
+					{Object.values(context.controls).map((control) => {
 						return (
 							<ControlsTableRow
 								key={control._id}

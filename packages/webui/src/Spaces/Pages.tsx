@@ -30,7 +30,6 @@ export function SpacePages({
 			SocketCommand.SurfaceSpaceCreate,
 			literal<SurfaceSpacePageCreateMessage>({
 				spaceId: space._id,
-				afterId: null,
 			}),
 		).then((msg: SurfaceSpaceCreateMessageReply) => {
 			selectPage(msg.id);

@@ -2,6 +2,10 @@ export enum SurfaceType {
 	ButtonGrid = 'BUTTONGRID',
 	Advanced = 'ADVANCED',
 }
+/**
+ * An advanced surface. These are custom ones with more controls or in a unique shape.
+ * They can define controls and coordinates for them for the ui, as well as a type for each control so that faders and encoders etc can be used.
+ */
 export interface SurfaceSpecAdvanced {
 	type: SurfaceType.Advanced;
 	deviceGuid: string;
@@ -11,6 +15,10 @@ export interface SurfaceSpecAdvanced {
 	todo: never;
 }
 
+/**
+ * A basic grid surface. Any surfaces which conform to this will allow for sharing the grid between surfaces.
+ * ControlId is dynamically generated as `${x}x${y}`
+ */
 export interface SurfaceSpecBasic {
 	type: SurfaceType.ButtonGrid;
 	deviceName: string;
@@ -36,5 +44,6 @@ export interface ISurfaceSpacePage {
 	spaceId: string;
 
 	name: string;
-	controls: never[];
+	/** SlotId to ControlId */
+	controls: Record<string, string>;
 }

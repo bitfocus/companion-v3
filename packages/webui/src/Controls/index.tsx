@@ -1,29 +1,19 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react';
-import { faCalculator, faDollarSign, faFileImport, faGift } from '@fortawesome/free-solid-svg-icons';
+import { faCalculator } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import shortid from 'shortid';
-// import { InstancePresets } from "./Presets";
 import { CompanionContext, MyErrorBoundary } from '../util';
-// import { ButtonsGridPanel } from "./ButtonGrid";
 import { EditControl } from './EditControl';
-// import { ImportExport } from "./ImportExport";
 import { useCallback, useContext, useRef, useState } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
 import { ControlsList } from './List';
-import { useCollection } from '../lib/subscription';
-import { CollectionId, IControlDefinition } from '@companion/core-shared/dist/collections';
-// import { InstanceVariables } from "./Variables";
 
 export function ControlsPage() {
-	const context = useContext(CompanionContext);
-
 	const clearModalRef = useRef();
 
 	const [tabResetToken, setTabResetToken] = useState(shortid());
 	const [activeTab, setActiveTab] = useState('presets');
 	const [selectedControlId, setSelectedControlId] = useState<string | null>(null);
-
-	const controls = useCollection<IControlDefinition>(context.socket, CollectionId.ControlDefinitions, true);
 
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
@@ -95,7 +85,7 @@ export function ControlsPage() {
 
 			<CCol xs={12} xl={6} className='primary-panel'>
 				<MyErrorBoundary>
-					<ControlsList controls={controls} editControl={editControl} />
+					<ControlsList editControl={editControl} />
 				</MyErrorBoundary>
 			</CCol>
 

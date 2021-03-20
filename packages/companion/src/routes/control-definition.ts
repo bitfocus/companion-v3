@@ -13,6 +13,24 @@ import { getUserInfo } from '../auth';
 import { ICore } from '../core';
 import { registerCommand } from './lib';
 import { ObjectID } from 'bson';
+import { ControlType, IControlDefinition } from '@companion/core-shared/dist/collections';
+
+export function createControlDefaults(type: ControlType): IControlDefinition {
+	// TODO - validate type
+
+	return {
+		_id: new ObjectID().toHexString(),
+		description: 'New control',
+		controlType: type,
+		defaultLayer: {
+			text: '',
+			textSize: 'auto',
+			textAlignment: ['c', 'c'],
+			textColor: rgba(255, 255, 255, 255),
+			backgroundColor: rgba(0, 0, 0, 255),
+		},
+	};
+}
 
 export function socketControlDefinitionHandler(
 	core: ICore,
@@ -25,20 +43,7 @@ export function socketControlDefinitionHandler(
 		async (msg: ControlDefinitionCreateMessage): Promise<ControlDefinitionCreateMessageReply> => {
 			const userSession = await getUserInfo(authSession.authSessionId);
 			if (userSession) {
-				// TODO - validate type
-
-				const conn = await core.models.controlDefinitions.insertOne({
-					_id: new ObjectID().toHexString(),
-					description: 'New control',
-					controlType: msg.type,
-					defaultLayer: {
-						text: '',
-						textSize: 'auto',
-						textAlignment: ['c', 'c'],
-						textColor: rgba(255, 255, 255, 255),
-						backgroundColor: rgba(0, 0, 0, 255),
-					},
-				});
+				const conn = await core.models.controlDefinitions.insertOne(createControlDefaults(msg.type));
 				return {
 					id: conn.insertedId,
 				};

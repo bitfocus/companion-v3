@@ -17,6 +17,9 @@ export enum SocketCommand {
 	SurfaceSpaceDelete = 'SURFACESPACE.DELETE',
 	SurfaceSpacePageCreate = 'SURFACESPACEPAGE.CREATE',
 	SurfaceSpacePageDelete = 'SURFACESPACEPAGE.DELETE',
+	SurfaceSpacePageSlotCreate = 'SURFACESPACEPAGESLOT.CREATE',
+	SurfaceSpacePageSlotClear = 'SURFACESPACEPAGESLOT.CLEAR',
+	SurfaceSpacePageSlotUseControl = 'SURFACESPACEPAGESLOT.USECONTROL',
 }
 
 // export type CommandTypes =
@@ -118,7 +121,7 @@ export interface SurfaceSpaceDeleteMessage {
 
 export interface SurfaceSpacePageCreateMessage {
 	spaceId: string;
-	afterId: string | null;
+	// afterId: string | null;
 }
 export interface SurfaceSpacePageCreateMessageReply {
 	id: string;
@@ -127,4 +130,27 @@ export interface SurfaceSpacePageCreateMessageReply {
 export interface SurfaceSpacePageDeleteMessage {
 	id: string;
 	spaceId: string;
+}
+
+export interface SurfaceSpacePageSlotCreateMessage {
+	spaceId: string;
+	pageId: string;
+	slotId: string;
+
+	type: ControlType;
+}
+export interface SurfaceSpacePageSlotCreateMessageReply {
+	id: string;
+}
+
+export interface SurfaceSpacePageSlotClearMessage {
+	spaceId: string;
+	pageId: string;
+	slotId: string;
+}
+export interface SurfaceSpacePageSlotUseControlMessage {
+	spaceId: string;
+	pageId: string;
+	slotId: string;
+	controlId: string;
 }

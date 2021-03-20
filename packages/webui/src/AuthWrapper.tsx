@@ -4,7 +4,13 @@ import { literal } from '@companion/core-shared/dist/util';
 import { AuthStatusContext, AuthStatusLink } from './BackendContext';
 import SocketIOClient from 'socket.io-client';
 import { CompanionContext, ICompanionContext } from './util';
-import { CollectionId, IDeviceConnection, IModule } from '@companion/core-shared/dist/collections';
+import {
+	CollectionId,
+	IControlDefinition,
+	IDeviceConnection,
+	IModule,
+	ISurfaceSpace,
+} from '@companion/core-shared/dist/collections';
 import { useCollection } from './lib/subscription';
 
 interface AuthComponentProps {
@@ -57,11 +63,15 @@ export function AuthComponentWrapper(props: React.PropsWithChildren<AuthComponen
 
 	const modules = useCollection<IModule>(props.socket, CollectionId.Modules, !!userInfo);
 	const connections = useCollection<IDeviceConnection>(props.socket, CollectionId.Connections, !!userInfo);
+	const controls = useCollection<IControlDefinition>(props.socket, CollectionId.ControlDefinitions, !!userInfo);
+	const spaces = useCollection<ISurfaceSpace>(props.socket, CollectionId.SurfaceSpaces, !!userInfo);
 
 	const contextValue: ICompanionContext = {
 		socket: props.socket,
 		notifier: undefined,
 		instances: {},
+		controls: controls,
+		spaces: spaces,
 		connections: connections,
 		modules: modules,
 		variableDefinitions: {},

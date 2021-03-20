@@ -1,32 +1,16 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react';
-import {
-	faCalculator,
-	faCalendar,
-	faDollarSign,
-	faFileImport,
-	faGamepad,
-	faGift,
-	faList,
-} from '@fortawesome/free-solid-svg-icons';
+import { faCalendar, faGamepad, faList } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import shortid from 'shortid';
-// import { InstancePresets } from "./Presets";
 import { CompanionContext, MyErrorBoundary } from '../util';
-// import { ButtonsGridPanel } from "./ButtonGrid";
-// import { ImportExport } from "./ImportExport";
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
 import { SpacesList } from './List';
 import { useCollection } from '../lib/subscription';
-import {
-	CollectionId,
-	IControlDefinition,
-	ISurfaceSpace,
-	ISurfaceSpacePage,
-	SurfaceType,
-} from '@companion/core-shared/dist/collections';
+import { CollectionId, ISurfaceSpace, ISurfaceSpacePage, SurfaceType } from '@companion/core-shared/dist/collections';
 import { SpacePages } from './Pages';
-import { SpaceBasicGrid, SpaceBasicGridProps } from './BasicGrid';
+import { SpaceBasicGrid } from './BasicGrid';
+import { SlotEditor } from './SlotEditor';
 // import { InstanceVariables } from "./Variables";
 
 export function SpacesPage() {
@@ -38,7 +22,6 @@ export function SpacesPage() {
 	const [activeTab, setActiveTab] = useState('list');
 
 	const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null);
-	const allSpaces = useCollection<ISurfaceSpace>(context.socket, CollectionId.SurfaceSpaces, true);
 	const spacePagesRaw = useCollection<ISurfaceSpacePage>(
 		context.socket,
 		CollectionId.SurfaceSpacePages,
@@ -53,15 +36,17 @@ export function SpacesPage() {
 
 	useEffect(() => {
 		// Ensure the current space is a valid id
-		const knownSpaces = Object.keys(allSpaces);
+		const knownSpaces = Object.keys(context.spaces);
 		if (!currentSpaceId || !knownSpaces.includes(currentSpaceId)) {
 			setCurrentSpaceId(knownSpaces[0] ?? null);
 			setActiveTab('list');
 		}
-	}, [allSpaces, currentSpaceId]);
+	}, [context.spaces, currentSpaceId]);
 
-	const currentSpace = currentSpaceId ? allSpaces[currentSpaceId] : undefined;
+	const currentSpace = currentSpaceId ? context.spaces[currentSpaceId] : undefined;
 	const currentPage = Object.values(spacePages)[0];
+
+	const [currentSlot, setCurrentSlot] = useState<string | null>(null);
 
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
@@ -75,21 +60,41 @@ export function SpacesPage() {
 
 	const selectSpace = useCallback(
 		(id) => {
-			const knownSpaces = Object.keys(allSpaces);
+			const knownSpaces = Object.keys(context.spaces);
 			if (id === null || knownSpaces.includes(id)) {
 				setCurrentSpaceId(id);
 			}
 		},
-		[allSpaces],
+		[context.spaces],
+	);
+	const doSelectSlot = useCallback(
+		(slotId: string | null) => {
+			// TODO - validate slotId
+
+			doChangeTab(slotId === null ? 'pages' : 'control');
+			setCurrentSlot(slotId);
+		},
+		[doChangeTab],
 	);
 	const selectPage = useCallback(
 		(id) => {
+			// clear the current editor
+			doSelectSlot(null);
+			setCurrentSlot(null);
+			setActiveTab((oldTab) => {
+				if (oldTab === 'control') {
+					return 'pages';
+				} else {
+					return oldTab;
+				}
+			});
+
 			// const knownSpaces = Object.keys(allSpaces);
 			// if (id === null || knownSpaces.includes(id)) {
 			// 	setCurrentSpaceId(id);
 			// }
 		},
-		[spacePages],
+		[spacePages, doSelectSlot],
 	);
 
 	return (
@@ -101,7 +106,7 @@ export function SpacesPage() {
 					{currentSpace && currentPage ? (
 						<>
 							<h3>Space - {currentSpace.name}</h3>
-							<SpacePageRender space={currentSpace} page={currentPage} />
+							<SpacePageRender space={currentSpace} page={currentPage} doSelectSlot={doSelectSlot} />
 						</>
 					) : (
 						''
@@ -128,11 +133,16 @@ export function SpacesPage() {
 									<FontAwesomeIcon icon={faGamepad} /> Attached Devices
 								</CNavLink>
 							</CNavItem>
+							<CNavItem>
+								<CNavLink data-tab='control' disabled={!currentSlot}>
+									<FontAwesomeIcon icon={faGamepad} /> Edit Control
+								</CNavLink>
+							</CNavItem>
 						</CNav>
 						<CTabContent fade={false}>
 							<CTabPane data-tab='list'>
 								<MyErrorBoundary>
-									<SpacesList spaces={allSpaces} selectSpace={selectSpace} />
+									<SpacesList selectSpace={selectSpace} />
 								</MyErrorBoundary>
 							</CTabPane>
 							<CTabPane data-tab='pages'>
@@ -150,6 +160,20 @@ export function SpacesPage() {
 									<p>Devices</p>
 								</MyErrorBoundary>
 							</CTabPane>
+							<CTabPane data-tab='control'>
+								<MyErrorBoundary>
+									{currentSpace && currentPage && currentSlot ? (
+										<SlotEditor
+											spaceId={currentSpace._id}
+											pageId={currentPage._id}
+											slotId={currentSlot}
+											controlId={currentPage.controls[currentSlot]}
+										/>
+									) : (
+										''
+									)}
+								</MyErrorBoundary>
+							</CTabPane>
 						</CTabContent>
 					</CTabs>
 				</div>
@@ -161,11 +185,12 @@ export function SpacesPage() {
 interface SpacePageRenderProps {
 	space: ISurfaceSpace;
 	page: ISurfaceSpacePage;
+	doSelectSlot: (slotId: string) => void;
 }
-function SpacePageRender({ space, page }: SpacePageRenderProps) {
+function SpacePageRender({ space, page, doSelectSlot }: SpacePageRenderProps) {
 	switch (space.cachedSpec.type) {
 		case SurfaceType.ButtonGrid:
-			return <SpaceBasicGrid spec={space.cachedSpec} page={page} />;
+			return <SpaceBasicGrid spec={space.cachedSpec} page={page} doSelectSlot={doSelectSlot} />;
 		case SurfaceType.Advanced:
 			return <p>Advanced - TODO</p>;
 		default:

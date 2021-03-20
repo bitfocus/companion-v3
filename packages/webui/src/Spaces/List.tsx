@@ -1,5 +1,4 @@
 import {
-	ControlDefinitionDeleteMessage,
 	SocketCommand,
 	SurfaceSpaceCreateMessage,
 	SurfaceSpaceCreateMessageReply,
@@ -12,13 +11,7 @@ import { useCallback, useContext, useRef } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
 import { CompanionContext, socketEmit2 } from '../util';
 
-export function SpacesList({
-	spaces,
-	selectSpace,
-}: {
-	spaces: Record<string, ISurfaceSpace>;
-	selectSpace: (id: string) => void;
-}) {
+export function SpacesList({ selectSpace }: { selectSpace: (id: string) => void }) {
 	const context = useContext(CompanionContext);
 
 	const confirmModalRef = useRef<any>(null);
@@ -60,7 +53,7 @@ export function SpacesList({
 					</tr>
 				</thead>
 				<tbody>
-					{Object.values(spaces ?? {}).map((space) => {
+					{Object.values(context.spaces).map((space) => {
 						return (
 							<SpacesTableRow
 								key={space._id}

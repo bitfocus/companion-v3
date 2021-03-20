@@ -3,6 +3,13 @@ import {
 	SurfaceSpaceCreateMessage,
 	SurfaceSpaceCreateMessageReply,
 	SurfaceSpaceDeleteMessage,
+	SurfaceSpacePageCreateMessage,
+	SurfaceSpacePageCreateMessageReply,
+	SurfaceSpacePageDeleteMessage,
+	SurfaceSpacePageSlotClearMessage,
+	SurfaceSpacePageSlotCreateMessage,
+	SurfaceSpacePageSlotCreateMessageReply,
+	SurfaceSpacePageSlotUseControlMessage,
 } from '@companion/core-shared/dist/api';
 import { SocketAuthSessionWrapper } from './auth';
 import SocketIO from 'socket.io';
@@ -11,6 +18,7 @@ import { ICore } from '../core';
 import { registerCommand } from './lib';
 import { ObjectID } from 'bson';
 import { SurfaceType } from '@companion/core-shared/dist/collections';
+import { createControlDefaults } from './control-definition';
 
 export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, authSession: SocketAuthSessionWrapper) {
 	registerCommand(
@@ -31,7 +39,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 								spaceId: docId,
 
 								name: 'New page',
-								controls: [],
+								controls: {},
 							},
 							{ session },
 						);
@@ -129,51 +137,237 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 		},
 	);
 
-	// registerCommand(
-	// 	socket,
-	// 	SocketCommand.ControlDefinitionRenderLayerUpdate,
-	// 	async (msg: ControlDefinitionRenderLayerUpdateMessage<any>): Promise<void> => {
-	// 		const userSession = await getUserInfo(authSession.authSessionId);
-	// 		if (userSession) {
-	// 			// TODO - target layer
-	// 			// TODO - some data validation
-	// 			const res = await core.models.controlDefinitions.updateOne(
-	// 				{ _id: msg.controlId },
-	// 				{
-	// 					$set: {
-	// 						[`defaultLayer.${msg.key}`]: msg.value,
-	// 					},
-	// 				},
-	// 			);
-	// 			if (res.upsertedCount === 0) {
-	// 				throw new Error('Not found');
-	// 			}
-	// 		} else {
-	// 			throw new Error('Not authorised');
-	// 		}
-	// 	},
-	// );
+	registerCommand(
+		socket,
+		SocketCommand.SurfaceSpacePageCreate,
+		async (msg: SurfaceSpacePageCreateMessage): Promise<SurfaceSpacePageCreateMessageReply> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				const pageId = new ObjectID().toHexString();
 
-	// registerCommand(
-	// 	socket,
-	// 	SocketCommand.ControlDefinitionNameUpdate,
-	// 	async (msg: ControlDefinitionNameUpdateMessage): Promise<void> => {
-	// 		const userSession = await getUserInfo(authSession.authSessionId);
-	// 		if (userSession) {
-	// 			const res = await core.models.controlDefinitions.updateOne(
-	// 				{ _id: msg.controlId },
-	// 				{
-	// 					$set: {
-	// 						description: msg.name,
-	// 					},
-	// 				},
-	// 			);
-	// 			if (res.upsertedCount === 0) {
-	// 				throw new Error('Not found');
-	// 			}
-	// 		} else {
-	// 			throw new Error('Not authorised');
-	// 		}
-	// 	},
-	// );
+				const session = core.client.startSession();
+				try {
+					const commitResult: any = await session.withTransaction(async () => {
+						const ok = await core.models.surfaceSpaces.updateOne(
+							{ _id: msg.spaceId },
+							{
+								$push: {
+									pageIds: pageId,
+								},
+							},
+							{ session },
+						);
+						if (ok.upsertedCount !== 1) {
+							// Didn't find the space to update
+							await session.abortTransaction();
+							return;
+						}
+
+						const page = await core.models.surfaceSpacePages.insertOne(
+							{
+								_id: pageId,
+								spaceId: msg.spaceId,
+
+								name: 'New page',
+								controls: {},
+							},
+							{ session },
+						);
+						if (page.insertedId !== pageId) {
+							await session.abortTransaction();
+							return;
+						}
+					});
+
+					if (commitResult) {
+						return {
+							id: pageId,
+						};
+					} else {
+						throw new Error('Creation failed');
+					}
+				} finally {
+					await session.endSession();
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.SurfaceSpacePageDelete,
+		async (msg: SurfaceSpacePageDeleteMessage): Promise<SurfaceSpacePageDeleteMessage> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				const session = core.client.startSession();
+				try {
+					const commitResult: any = await session.withTransaction(async () => {
+						await core.models.surfaceSpaces.updateOne(
+							{ _id: msg.spaceId },
+							{
+								$pull: {
+									pageIds: msg.id,
+								},
+							},
+							{ session },
+						);
+
+						await core.models.surfaceSpacePages.deleteOne(
+							{
+								_id: msg.id,
+								spaceId: msg.spaceId,
+							},
+							{ session },
+						);
+					});
+
+					if (commitResult) {
+						return {
+							id: msg.id,
+							spaceId: msg.spaceId,
+						};
+					} else {
+						throw new Error('Creation failed');
+					}
+				} finally {
+					await session.endSession();
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.SurfaceSpacePageSlotCreate,
+		async (msg: SurfaceSpacePageSlotCreateMessage): Promise<SurfaceSpacePageSlotCreateMessageReply> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				const controlDefaults = createControlDefaults(msg.type);
+
+				const session = core.client.startSession();
+				try {
+					const commitResult: any = await session.withTransaction(async () => {
+						const control = await core.models.controlDefinitions.insertOne(controlDefaults, { session });
+
+						await core.models.surfaceSpacePages.updateOne(
+							{
+								_id: msg.pageId,
+								spaceId: msg.spaceId,
+							},
+							{
+								$set: {
+									[`controls.${msg.slotId}`]: control.insertedId,
+								},
+							},
+						);
+					});
+
+					if (commitResult) {
+						return {
+							id: controlDefaults._id,
+						};
+					} else {
+						throw new Error('Creation failed');
+					}
+				} finally {
+					await session.endSession();
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.SurfaceSpacePageSlotClear,
+		async (msg: SurfaceSpacePageSlotClearMessage): Promise<SurfaceSpacePageSlotClearMessage> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				const session = core.client.startSession();
+				try {
+					const commitResult: any = await session.withTransaction(async () => {
+						await core.models.surfaceSpacePages.updateOne(
+							{
+								_id: msg.pageId,
+								spaceId: msg.spaceId,
+							},
+							{
+								$unset: {
+									[`controls.${msg.slotId}`]: 1,
+								},
+							},
+						);
+
+						// TODO - delete the control if unused and the user oks it
+					});
+
+					if (commitResult) {
+						return {
+							...msg,
+						};
+					} else {
+						throw new Error('Clearing failed');
+					}
+				} finally {
+					await session.endSession();
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.SurfaceSpacePageSlotUseControl,
+		async (msg: SurfaceSpacePageSlotUseControlMessage): Promise<SurfaceSpacePageSlotUseControlMessage> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				const session = core.client.startSession();
+				try {
+					const commitResult: any = await session.withTransaction(async () => {
+						const control = await core.models.controlDefinitions.findOne(
+							{
+								_id: msg.controlId,
+							},
+							{ session },
+						);
+						// TODO - this is a bit racey
+						if (!control) {
+							await session.abortTransaction();
+							return;
+						}
+						await core.models.surfaceSpacePages.updateOne(
+							{
+								_id: msg.pageId,
+								spaceId: msg.spaceId,
+							},
+							{
+								$set: {
+									[`controls.${msg.slotId}`]: msg.controlId,
+								},
+							},
+						);
+					});
+
+					if (commitResult) {
+						return {
+							...msg,
+						};
+					} else {
+						throw new Error('Clearing failed');
+					}
+				} finally {
+					await session.endSession();
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
 }

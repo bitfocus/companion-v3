@@ -1,12 +1,13 @@
 import { ISurfaceSpacePage, SurfaceSpecBasic } from '@companion/core-shared/dist/collections';
-import { CSSProperties } from 'react';
+import { CSSProperties, useCallback } from 'react';
 
 export interface SpaceBasicGridProps {
 	spec: SurfaceSpecBasic;
 	page: ISurfaceSpacePage;
+	doSelectSlot: (slotId: string) => void;
 }
 
-export function SpaceBasicGrid({ spec, page }: SpaceBasicGridProps) {
+export function SpaceBasicGrid({ spec, page, doSelectSlot }: SpaceBasicGridProps) {
 	const dim = 72; // pixels
 
 	const style: CSSProperties = {
@@ -22,7 +23,7 @@ export function SpaceBasicGrid({ spec, page }: SpaceBasicGridProps) {
 				.map((_, y) => {
 					return Array(spec.width)
 						.fill(0)
-						.map((_, x) => <SpaceGridBox x={x} y={y} />);
+						.map((_, x) => <SpaceGridBox x={x} y={y} onClick={doSelectSlot} />);
 				})}
 		</div>
 	);
@@ -31,10 +32,12 @@ export function SpaceBasicGrid({ spec, page }: SpaceBasicGridProps) {
 interface SpaceGridBoxProps {
 	x: number;
 	y: number;
+	onClick: (slot: string) => void;
 }
-function SpaceGridBox({ x, y }: SpaceGridBoxProps) {
+function SpaceGridBox({ x, y, onClick }: SpaceGridBoxProps) {
+	const doOnClick = useCallback(() => onClick(`${x}x${y}`), [onClick, x, y]);
 	return (
-		<div className='space-grid-box'>
+		<div className='space-grid-box' onClick={doOnClick}>
 			<div>
 				{x}.{y}
 			</div>

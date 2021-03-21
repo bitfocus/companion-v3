@@ -82,6 +82,60 @@ class ControlRenderer {
 		const rawBg = splitColors(control.defaultLayer.backgroundColor, true);
 
 		const imageDimension = 72; // TODO dynamic
+		const imageLayers: Array<sharp.OverlayOptions> = [];
+		if (control.defaultLayer.text) {
+			let fontsize = control.defaultLayer.textSize;
+			if (typeof fontsize === 'string') fontsize = 16;
+
+			let x: number;
+			let align: string;
+			switch (control.defaultLayer.textAlignment[0]) {
+				case 'l':
+					x = 0;
+					align = 'start';
+					break;
+				case 'c':
+					x = imageDimension / 2;
+					align = 'middle';
+					break;
+				case 'r':
+					x = imageDimension;
+					align = 'end';
+					break;
+			}
+			let y: number;
+			// TODO - refine
+			switch (control.defaultLayer.textAlignment[1]) {
+				case 't':
+					y = fontsize;
+					break;
+				case 'c':
+					y = (imageDimension + fontsize) / 2;
+					break;
+				case 'b':
+					y = imageDimension;
+					break;
+			}
+
+			// alignment-baseline="middle" // TODO - once this works then use it
+			imageLayers.push({
+				input: Buffer.from(
+					`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${imageDimension} ${imageDimension}" version="1.1">
+                        <text
+                            font-family="'sans-serif'"
+                            font-size="${fontsize}px" 
+                            x="${x}" 
+                            y="${y}"
+                            fill="#fff"
+                            text-anchor="${align}" 
+                            >${control.defaultLayer.text}</text>
+                    </svg>`,
+				),
+				top: imageDimension - 20,
+				left: 10,
+			});
+		}
+
 		const img = sharp({
 			create: {
 				width: imageDimension,
@@ -94,7 +148,7 @@ class ControlRenderer {
 					alpha: rawBg.a / 255,
 				},
 			},
-		});
+		}).composite(imageLayers);
 
 		const buffer = await img.toFormat('png').toBuffer();
 		const pngStr = `data:image/png;base64,${buffer.toString('base64')}`;

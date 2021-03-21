@@ -27,7 +27,7 @@ export function SpacePages({
 	const addPage = useCallback(() => {
 		socketEmit2(
 			context.socket,
-			SocketCommand.SurfaceSpaceCreate,
+			SocketCommand.SurfaceSpacePageCreate,
 			literal<SurfaceSpacePageCreateMessage>({
 				spaceId: space._id,
 			}),

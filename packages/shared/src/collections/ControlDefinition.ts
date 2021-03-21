@@ -14,6 +14,12 @@ export interface IControlDefinition {
 	// Rendering
 	defaultLayer: IButtonControlRenderLayer;
 
+	// Changed when the render is invalidated, to trigger a re-render
+	renderHash: string;
+
+	// A field that can be arbitrarily changed to ensure it exists throughout a transaction
+	touchedAt: number;
+
 	// Interaction
 	// TODO - actions
 	// TODO - feedbacks

@@ -1,24 +1,6 @@
-import { rgba } from '@companion/core-shared/dist/color';
+import { rgba, splitColors } from '@companion/core-shared/dist/color';
 import { useState, useEffect, useCallback, CSSProperties } from 'react';
 import { ColorResult, SketchPicker } from 'react-color';
-
-function splitColors(number: number, alpha: boolean): { r: number; g: number; b: number; a: number } {
-	if (alpha) {
-		return {
-			r: (number >> 24) & 0xff,
-			g: (number >> 16) & 0xff,
-			b: (number >> 8) & 0xff,
-			a: number & 0xff,
-		};
-	} else {
-		return {
-			r: (number >> 16) & 0xff,
-			g: (number >> 8) & 0xff,
-			b: number & 0xff,
-			a: 0xff,
-		};
-	}
-}
 
 export interface ColorInputFieldProps {
 	definition: any;

@@ -29,6 +29,8 @@ export function createControlDefaults(type: ControlType): IControlDefinition {
 			textColor: rgba(255, 255, 255, 255),
 			backgroundColor: rgba(0, 0, 0, 255),
 		},
+		renderHash: new ObjectID().toHexString(),
+		touchedAt: Date.now(),
 	};
 }
 
@@ -60,6 +62,7 @@ export function socketControlDefinitionHandler(
 			const userSession = await getUserInfo(authSession.authSessionId);
 			if (userSession) {
 				const res = await core.models.controlDefinitions.deleteOne({ _id: msg.id });
+				await core.models.controlRenders.deleteOne({ _id: msg.id });
 				if (res.deletedCount !== undefined && res.deletedCount > 0) {
 					// TODO - transaction?
 					// TODO - remove from assignments too
@@ -89,10 +92,11 @@ export function socketControlDefinitionHandler(
 					{
 						$set: {
 							[`defaultLayer.${msg.key}`]: msg.value,
+							renderHash: new ObjectID().toHexString(),
 						},
 					},
 				);
-				if (res.upsertedCount === 0) {
+				if (res.modifiedCount === 0) {
 					throw new Error('Not found');
 				}
 			} else {
@@ -115,7 +119,7 @@ export function socketControlDefinitionHandler(
 						},
 					},
 				);
-				if (res.upsertedCount === 0) {
+				if (res.modifiedCount === 0) {
 					throw new Error('Not found');
 				}
 			} else {

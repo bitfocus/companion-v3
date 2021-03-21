@@ -3,6 +3,7 @@ import { Collection, Db as MongoDb, MongoClient } from 'mongodb';
 import {
 	IBank,
 	IControlDefinition,
+	IControlRender,
 	IDeviceConnection,
 	IModule,
 	ISurfaceSpace,
@@ -18,6 +19,8 @@ export interface ICore {
 		deviceConnections: Collection<IDeviceConnection>;
 		modules: Collection<IModule>;
 		surfaceSpaces: Collection<ISurfaceSpace>;
+
+		controlRenders: Collection<IControlRender>;
 	};
 	io: SocketIO.Server;
 	moduleFactory: ModuleFactory;

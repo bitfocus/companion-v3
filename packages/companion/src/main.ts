@@ -13,12 +13,14 @@ import {
 	CollectionId,
 	IBank,
 	IControlDefinition,
+	IControlRender,
 	IDeviceConnection,
 	IModule,
 	ISurfaceSpace,
 } from '@companion/core-shared/dist/collections';
 import getPort from 'get-port';
 import { startMongo } from './mongo';
+import { startControlRenderer } from './services/renderer';
 
 // Inject asar parsing
 require('asar-node').register();
@@ -64,6 +66,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		models: {
 			banks: database.collection<IBank>('banks'),
 			controlDefinitions: database.collection<IControlDefinition>(CollectionId.ControlDefinitions),
+			controlRenders: database.collection<IControlRender>(CollectionId.ControlRenders),
 			deviceConnections: database.collection<IDeviceConnection>(CollectionId.Connections),
 			modules: database.collection<IModule>(CollectionId.Modules),
 			surfaceSpaces: database.collection<ISurfaceSpace>(CollectionId.SurfaceSpaces),
@@ -73,8 +76,10 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	};
 
 	// Delete all documents from 'temporary' collections
+	// TODO - this is a bit excessive maybe? what about multi-node setups?
 	await Promise.all([
 		core.models.modules.deleteMany({}),
+		core.models.controlRenders.deleteMany({}),
 		// TODO add more here
 	]);
 
@@ -102,6 +107,9 @@ export async function startup(configPath: string, appPath: string): Promise<void
 
 		await core.models.modules.insertMany(knownModules);
 	});
+
+	// start the various services
+	await startControlRenderer(core);
 
 	app.use(apiRouter(core));
 	socketHandler(core);

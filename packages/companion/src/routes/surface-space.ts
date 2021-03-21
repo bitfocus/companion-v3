@@ -147,7 +147,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 							},
 							{ session },
 						);
-						if (ok.upsertedCount !== 1) {
+						if (ok.modifiedCount !== 1) {
 							// Didn't find the space to update
 							await session.abortTransaction();
 							return;
@@ -230,6 +230,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 									[`pages.$.controls.${msg.slotId}`]: control.insertedId,
 								},
 							},
+							{ session },
 						);
 					});
 
@@ -268,6 +269,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 									[`pages.$.controls.${msg.slotId}`]: 1,
 								},
 							},
+							{ session },
 						);
 
 						// TODO - delete the control if unused and the user oks it
@@ -298,14 +300,19 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 				const session = core.client.startSession();
 				try {
 					const commitResult: any = await session.withTransaction(async () => {
-						const control = await core.models.controlDefinitions.findOne(
+						// Update the control to ensure it exists
+						const control = await core.models.controlDefinitions.updateOne(
 							{
 								_id: msg.controlId,
 							},
+							{
+								$set: {
+									touchedAt: Date.now(),
+								},
+							},
 							{ session },
 						);
-						// TODO - this is a bit racey
-						if (!control) {
+						if (control.modifiedCount === 0) {
 							await session.abortTransaction();
 							return;
 						}
@@ -320,6 +327,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 									[`pages.$.controls.${msg.slotId}`]: msg.controlId,
 								},
 							},
+							{ session },
 						);
 					});
 

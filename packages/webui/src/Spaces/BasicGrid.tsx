@@ -1,5 +1,12 @@
-import { ISurfaceSpacePage, SurfaceSpecBasic } from '@companion/core-shared/dist/collections';
-import { CSSProperties, useCallback } from 'react';
+import {
+	CollectionId,
+	IControlRender,
+	ISurfaceSpacePage,
+	SurfaceSpecBasic,
+} from '@companion/core-shared/dist/collections';
+import { CSSProperties, useCallback, useContext } from 'react';
+import { useCollectionOne } from '../lib/subscription';
+import { CompanionContext } from '../util';
 
 export interface SpaceBasicGridProps {
 	spec: SurfaceSpecBasic;
@@ -23,24 +30,40 @@ export function SpaceBasicGrid({ spec, page, doSelectSlot }: SpaceBasicGridProps
 				.map((_, y) => {
 					return Array(spec.width)
 						.fill(0)
-						.map((_, x) => <SpaceGridBox x={x} y={y} onClick={doSelectSlot} />);
+						.map((_, x) => {
+							const slotId = `${x}x${y}`;
+							return (
+								<SpaceGridBox
+									slotId={slotId}
+									controlId={page.controls[slotId]}
+									onClick={doSelectSlot}
+								/>
+							);
+						});
 				})}
 		</div>
 	);
 }
 
 interface SpaceGridBoxProps {
-	x: number;
-	y: number;
+	slotId: string;
+	controlId: string | undefined;
 	onClick: (slot: string) => void;
 }
-function SpaceGridBox({ x, y, onClick }: SpaceGridBoxProps) {
-	const doOnClick = useCallback(() => onClick(`${x}x${y}`), [onClick, x, y]);
+function SpaceGridBox({ slotId, controlId, onClick }: SpaceGridBoxProps) {
+	const context = useContext(CompanionContext);
+
+	const doOnClick = useCallback(() => onClick(slotId), [onClick, slotId]);
+
+	const [render, renderMissing] = useCollectionOne<IControlRender>(
+		context.socket,
+		CollectionId.ControlRenders,
+		controlId ?? null,
+	);
+
 	return (
 		<div className='space-grid-box' onClick={doOnClick}>
-			<div>
-				{x}.{y}
-			</div>
+			<div>{render ? <img src={render.pngStr} /> : slotId}</div>
 		</div>
 	);
 }

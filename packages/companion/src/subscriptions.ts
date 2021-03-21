@@ -127,6 +127,9 @@ export function createSubscription(core: ICore, msg: CollectionSubscribeMessage)
 		case CollectionId.SurfaceSpaces: {
 			return createBasicSubscription(core.models.surfaceSpaces, msg);
 		}
+		case CollectionId.ControlRenders: {
+			return createBasicSubscription(core.models.controlRenders, msg);
+		}
 		default:
 			// TODO ensure unreachable
 			throw new Error(`Unknown doc: "${msg.doc}"`);
@@ -143,7 +146,6 @@ function createBasicSubscription<T extends { _id: string }>(
 		throw new Error(`Can't have query`);
 	}
 
-	console.log('sub', msg.query);
 	const stream = collection.watch({
 		fullDocument: 'updateLookup',
 	});
@@ -208,7 +210,6 @@ function createBasicSubscription<T extends { _id: string }>(
 	});
 
 	stream.on('change', (doc) => {
-		console.log(doc, msg.query);
 		switch (doc.operationType) {
 			case 'insert':
 			case 'replace':

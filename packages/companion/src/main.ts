@@ -11,7 +11,6 @@ import fs from 'fs';
 import { MongoClient } from 'mongodb';
 import {
 	CollectionId,
-	IBank,
 	IControlDefinition,
 	IControlRender,
 	IDeviceConnection,
@@ -64,7 +63,6 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		db: database,
 		client: client,
 		models: {
-			banks: database.collection<IBank>('banks'),
 			controlDefinitions: database.collection<IControlDefinition>(CollectionId.ControlDefinitions),
 			controlRenders: database.collection<IControlRender>(CollectionId.ControlRenders),
 			deviceConnections: database.collection<IDeviceConnection>(CollectionId.Connections),

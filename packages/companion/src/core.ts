@@ -1,7 +1,6 @@
 import { ModuleFactory } from './module/module-host';
 import { Collection, Db as MongoDb, MongoClient } from 'mongodb';
 import {
-	IBank,
 	IControlDefinition,
 	IControlRender,
 	IDeviceConnection,
@@ -14,7 +13,6 @@ export interface ICore {
 	client: MongoClient;
 	db: MongoDb;
 	models: {
-		banks: Collection<IBank>;
 		controlDefinitions: Collection<IControlDefinition>;
 		deviceConnections: Collection<IDeviceConnection>;
 		modules: Collection<IModule>;

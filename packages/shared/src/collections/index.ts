@@ -1,4 +1,3 @@
-export * from './Bank';
 export * from './ControlDefinition';
 export * from './ControlRender';
 export * from './DeviceConnection';

@@ -193,7 +193,7 @@ class ControlRenderer {
 				console.error(`Completed render of ${controlId}`);
 			}
 		} finally {
-			await session.endSession();
+			await session.endSession({});
 		}
 	}
 }

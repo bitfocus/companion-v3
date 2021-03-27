@@ -70,7 +70,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 						throw new Error('Creation failed');
 					}
 				} finally {
-					await session.endSession();
+					await session.endSession({});
 				}
 			} else {
 				throw new Error('Not authorised');
@@ -114,7 +114,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 						throw new Error('Deletion failed');
 					}
 				} finally {
-					await session.endSession();
+					await session.endSession({});
 				}
 			} else {
 				throw new Error('Not authorised');
@@ -162,7 +162,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 						throw new Error('Creation failed');
 					}
 				} finally {
-					await session.endSession();
+					await session.endSession({});
 				}
 			} else {
 				throw new Error('Not authorised');
@@ -199,7 +199,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 						throw new Error('Creation failed');
 					}
 				} finally {
-					await session.endSession();
+					await session.endSession({});
 				}
 			} else {
 				throw new Error('Not authorised');
@@ -242,7 +242,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 						throw new Error('Creation failed');
 					}
 				} finally {
-					await session.endSession();
+					await session.endSession({});
 				}
 			} else {
 				throw new Error('Not authorised');
@@ -283,7 +283,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 						throw new Error('Clearing failed');
 					}
 				} finally {
-					await session.endSession();
+					await session.endSession({});
 				}
 			} else {
 				throw new Error('Not authorised');
@@ -339,7 +339,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 						throw new Error('Clearing failed');
 					}
 				} finally {
-					await session.endSession();
+					await session.endSession({});
 				}
 			} else {
 				throw new Error('Not authorised');

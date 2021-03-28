@@ -20,6 +20,7 @@ export enum SocketCommand {
 	SurfaceSpacePageSlotCreate = 'SURFACESPACEPAGESLOT.CREATE',
 	SurfaceSpacePageSlotClear = 'SURFACESPACEPAGESLOT.CLEAR',
 	SurfaceSpacePageSlotUseControl = 'SURFACESPACEPAGESLOT.USECONTROL',
+	SurfaceDeviceScan = 'SURFACEDEVICE.SCAN',
 }
 
 // export type CommandTypes =

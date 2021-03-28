@@ -9,17 +9,11 @@ import { ICore } from './core';
 import { ModuleFactory } from './module/module-host';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
-import {
-	CollectionId,
-	IControlDefinition,
-	IControlRender,
-	IDeviceConnection,
-	IModule,
-	ISurfaceSpace,
-} from '@companion/core-shared/dist/collections';
+import { CollectionId, IModule } from '@companion/core-shared/dist/collections';
 import getPort from 'get-port';
 import { startMongo } from './mongo';
 import { startControlRenderer } from './services/renderer';
+import { startSurfaceManager } from './services/surfaces';
 
 // Inject asar parsing
 require('asar-node').register();
@@ -63,11 +57,12 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		db: database,
 		client: client,
 		models: {
-			controlDefinitions: database.collection<IControlDefinition>(CollectionId.ControlDefinitions),
-			controlRenders: database.collection<IControlRender>(CollectionId.ControlRenders),
-			deviceConnections: database.collection<IDeviceConnection>(CollectionId.Connections),
-			modules: database.collection<IModule>(CollectionId.Modules),
-			surfaceSpaces: database.collection<ISurfaceSpace>(CollectionId.SurfaceSpaces),
+			controlDefinitions: database.collection(CollectionId.ControlDefinitions),
+			controlRenders: database.collection(CollectionId.ControlRenders),
+			deviceConnections: database.collection(CollectionId.Connections),
+			modules: database.collection(CollectionId.Modules),
+			surfaceDevices: database.collection(CollectionId.SurfaceDevices),
+			surfaceSpaces: database.collection(CollectionId.SurfaceSpaces),
 		},
 		io,
 		moduleFactory,
@@ -108,9 +103,10 @@ export async function startup(configPath: string, appPath: string): Promise<void
 
 	// start the various services
 	await startControlRenderer(core);
+	const surfaceManager = await startSurfaceManager(core);
 
 	app.use(apiRouter(core));
-	socketHandler(core);
+	socketHandler(core, surfaceManager);
 
 	app.use(staticsRouter());
 

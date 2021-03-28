@@ -5,6 +5,7 @@ import {
 	IControlRender,
 	IDeviceConnection,
 	IModule,
+	ISurfaceDevice,
 	ISurfaceSpace,
 } from '@companion/core-shared/dist/collections';
 import SocketIO from 'socket.io';
@@ -16,6 +17,7 @@ export interface ICore {
 		controlDefinitions: Collection<IControlDefinition>;
 		deviceConnections: Collection<IDeviceConnection>;
 		modules: Collection<IModule>;
+		surfaceDevices: Collection<ISurfaceDevice>;
 		surfaceSpaces: Collection<ISurfaceSpace>;
 
 		controlRenders: Collection<IControlRender>;

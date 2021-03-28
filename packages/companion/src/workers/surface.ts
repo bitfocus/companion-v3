@@ -1,26 +1,62 @@
-import { literal } from '@companion/core-shared/dist/util';
 import { expose } from 'threads/worker';
+import { listStreamDecks, openStreamDeck, StreamDeck } from '@elgato-stream-deck/node';
 
-let currentCount = 0;
+export interface DetectedSurfaceInfo {
+	id: string;
+	path: string;
+	deviceName: string;
+	// surfaceSpec: SomeSurfaceSpec;
+}
 
-export type Counter = {
-	getCount: () => number;
-	increment: () => number;
-	decrement: () => number;
+export type SurfaceWorker = {
+	listDevices(): DetectedSurfaceInfo[];
+	open(path: string): Promise<void>;
+	close(): Promise<void>;
 };
 
-const counter: Counter = {
-	getCount() {
-		return currentCount;
+let device: StreamDeck | undefined;
+
+const counter: SurfaceWorker = {
+	listDevices() {
+		if (device) throw new Error('Cannot scan on a thread that is being used to run a device');
+
+		const devices: DetectedSurfaceInfo[] = [];
+
+		const streamdecks = listStreamDecks();
+		for (const streamdeck of streamdecks) {
+			devices.push({
+				id: streamdeck.serialNumber ?? streamdeck.path,
+				path: streamdeck.path,
+				deviceName: `StreamDeck ${streamdeck.model}`,
+				// surfaceSpec: literal<SurfaceSpecBasic>({
+				// 	type: SurfaceType.ButtonGrid,
+				// 	width: 0,
+				// 	height: 0,
+				// }),
+			});
+		}
+
+		return devices;
 	},
-	increment() {
-		return ++currentCount;
+
+	async open(path: string): Promise<void> {
+		if (device) throw new Error('A device has already been opened on this thread');
+
+		device = openStreamDeck(path, {
+			resetToLogoOnClose: true,
+		});
+		await device.clearPanel();
+
+		// TODO - close on process exit etc
 	},
-	decrement() {
-		return --currentCount;
+
+	async close(): Promise<void> {
+		if (!device) return;
+
+		await device.close();
+
+		device = undefined;
 	},
 };
-
-// export type Counter = typeof counter;
 
 expose(counter);

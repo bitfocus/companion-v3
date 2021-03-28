@@ -16,6 +16,8 @@ import { socketAuthHandler, SocketAuthSessionWrapper } from './auth';
 import { socketDeviceConnectionHandler } from './connections';
 import { socketControlDefinitionHandler } from './control-definition';
 import { socketSurfaceSpaceHandler } from './surface-space';
+import { SurfaceManager } from '../services/surfaces';
+import { socketSurfaceDeviceHandler } from './surface-device';
 
 export function apiRouter(core: ICore): Router {
 	const router = Router();
@@ -41,7 +43,7 @@ export function apiRouter(core: ICore): Router {
 
 // function assertNever(val: never): void {}
 
-export function socketHandler(core: ICore): void {
+export function socketHandler(core: ICore, surfaceManager: SurfaceManager): void {
 	core.io.on('connection', (socket: SocketIO.Socket) => {
 		console.log('a user connected');
 
@@ -69,6 +71,7 @@ export function socketHandler(core: ICore): void {
 		socketDeviceConnectionHandler(core, socket, authSession);
 		socketControlDefinitionHandler(core, socket, authSession);
 		socketSurfaceSpaceHandler(core, socket, authSession);
+		socketSurfaceDeviceHandler(core, socket, authSession, surfaceManager);
 
 		socket.on(SocketCommand.CollectionSubscribe, async (msg: CollectionSubscribeMessage) => {
 			const userInfo = await getUserInfo(authSession.authSessionId);

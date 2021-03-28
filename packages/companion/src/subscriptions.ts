@@ -130,6 +130,9 @@ export function createSubscription(core: ICore, msg: CollectionSubscribeMessage)
 		case CollectionId.ControlRenders: {
 			return createBasicSubscription(core.models.controlRenders, msg);
 		}
+		case CollectionId.SurfaceDevices: {
+			return createBasicSubscription(core.models.surfaceDevices, msg);
+		}
 		default:
 			// TODO ensure unreachable
 			throw new Error(`Unknown doc: "${msg.doc}"`);

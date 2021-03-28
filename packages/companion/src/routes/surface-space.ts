@@ -94,10 +94,24 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 							{ session },
 						);
 
-						if (!delSpace.deletedCount || delSpace.deletedCount === 0) {
-							// Nothing deleted
-							await session.abortTransaction();
-							return;
+						// Detach any devices
+						const updatedDevices = await core.models.surfaceDevices.updateMany(
+							{
+								surfaceSpaceId: msg.id,
+							},
+							{
+								$unset: {
+									surfaceSpaceId: 1,
+								},
+							},
+						);
+
+						if (updatedDevices.result.nModified === 0) {
+							if (!delSpace.deletedCount || delSpace.deletedCount === 0) {
+								// Nothing deleted
+								await session.abortTransaction();
+								return;
+							}
 						}
 
 						// await Promise.all([

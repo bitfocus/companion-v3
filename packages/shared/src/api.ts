@@ -21,6 +21,8 @@ export enum SocketCommand {
 	SurfaceSpacePageSlotClear = 'SURFACESPACEPAGESLOT.CLEAR',
 	SurfaceSpacePageSlotUseControl = 'SURFACESPACEPAGESLOT.USECONTROL',
 	SurfaceDeviceScan = 'SURFACEDEVICE.SCAN',
+	SurfaceDeviceAttach = 'SURFACEDEVICE.ATTACH',
+	SurfaceDeviceDetach = 'SURFACEDEVICE.DETACH',
 }
 
 // export type CommandTypes =
@@ -154,4 +156,14 @@ export interface SurfaceSpacePageSlotUseControlMessage {
 	pageId: string;
 	slotId: string;
 	controlId: string;
+}
+
+export interface SurfaceDeviceAttachMessage {
+	spaceId: string;
+	deviceId: string;
+}
+
+export interface SurfaceDeviceDetachMessage {
+	spaceId: string;
+	deviceId: string;
 }

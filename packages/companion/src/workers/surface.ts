@@ -16,7 +16,7 @@ export type SurfaceWorker = {
 
 let device: StreamDeck | undefined;
 
-const counter: SurfaceWorker = {
+const surfaceWorker: SurfaceWorker = {
 	listDevices() {
 		if (device) throw new Error('Cannot scan on a thread that is being used to run a device');
 
@@ -59,4 +59,4 @@ const counter: SurfaceWorker = {
 	},
 };
 
-expose(counter);
+expose(surfaceWorker);

@@ -27,12 +27,14 @@ import { faCog, faPlus, faSync, faTrash } from '@fortawesome/free-solid-svg-icon
 import shortid from 'shortid';
 import { useCollection } from './lib/subscription';
 import { CollectionId, ISurfaceDevice } from '@companion/core-shared/dist/collections';
-import { SocketCommand } from '@companion/core-shared/dist/api';
+import { SocketCommand, SurfaceDeviceAttachMessage } from '@companion/core-shared/dist/api';
+import { literal } from '@companion/core-shared/dist/util';
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const context = useContext(CompanionContext);
 
 	const editModalRef = useRef<any>();
+	const attachModalRef = useRef<any>();
 
 	const [scanning, setScanning] = useState(false);
 	const [scanError, setScanError] = useState<string | null>(null);
@@ -65,10 +67,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	// const configureDevice = useCallback((device) => {
 	// 	editModalRef.current.show(device);
 	// }, []);
-	const attachDevice = useCallback((device) => {
-		// TODO
+	const attachDevice = useCallback((device: ISurfaceDevice) => {
+		attachModalRef.current?.show(device);
 	}, []);
-	const detachDevice = useCallback((device) => {
+	const detachDevice = useCallback((device: ISurfaceDevice) => {
 		// TODO
 	}, []);
 
@@ -84,6 +86,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				{scanError}
 			</CAlert>
 
+			<SurfaceAttachModal ref={attachModalRef} />
 			{/* <SurfaceEditModal ref={editModalRef} /> */}
 
 			<table className='table table-responsive-sm'>
@@ -134,6 +137,108 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				{scanning ? ' Checking for new devices...' : ' Rescan USB'}
 			</CButton>
 		</div>
+	);
+});
+
+interface ISuraceAttachProps {}
+
+export interface ISuraceAttachHandle {
+	show(deviceId: ISurfaceDevice): void;
+}
+
+const SurfaceAttachModal = forwardRef<ISuraceAttachHandle, ISuraceAttachProps>(function SurfaceAttachModal(
+	_props,
+	ref,
+) {
+	const context = useContext(CompanionContext);
+
+	const [deviceInfo, setDeviceInfo] = useState<ISurfaceDevice | null>(null);
+	const [show, setShow] = useState(false);
+
+	const doClose = useCallback(() => setShow(false), []);
+	const onClosed = useCallback(() => {
+		setDeviceInfo(null);
+	}, []);
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			show(device) {
+				setDeviceInfo(device);
+				setShow(true);
+			},
+		}),
+		[],
+	);
+
+	const [spaceId, setSpaceId] = useState<string | undefined>(undefined);
+	useEffect(() => {
+		setSpaceId((oldSpaceId) => {
+			if (oldSpaceId && context.spaces[oldSpaceId]) {
+				return oldSpaceId;
+			} else {
+				return Object.keys(context.spaces)[0];
+			}
+		});
+	}, [context.spaces]);
+
+	const doAttach = useCallback(() => {
+		if (deviceInfo && spaceId) {
+			socketEmit2(
+				context.socket,
+				SocketCommand.SurfaceDeviceAttach,
+				literal<SurfaceDeviceAttachMessage>({
+					deviceId: deviceInfo._id,
+					spaceId,
+				}),
+			)
+				.then(() => {
+					doClose();
+				})
+				.catch((err) => {
+					console.error('Device attach failed', err);
+
+					// TODO - present to user
+				});
+		}
+	}, [context.socket, deviceInfo, spaceId, doClose]);
+
+	return (
+		<CModal show={show} onClose={doClose} onClosed={onClosed}>
+			<CModalHeader closeButton>
+				<h5>Attach {deviceInfo?.name} to Space</h5>
+			</CModalHeader>
+			<CModalBody>
+				{deviceInfo ? (
+					<CForm>
+						<CFormGroup>
+							<CLabel htmlFor='spaceId'>Button rotation</CLabel>
+							<CSelect
+								name='spaceId'
+								value={spaceId ?? undefined}
+								onChange={(e) => setSpaceId(e.currentTarget.value)}
+							>
+								{Object.entries(context.spaces).map(([id, space]) => (
+									<option key={id} value={id}>
+										{space.name}
+									</option>
+								))}
+							</CSelect>
+						</CFormGroup>
+					</CForm>
+				) : (
+					''
+				)}
+			</CModalBody>
+			<CModalFooter>
+				<CButton color='secondary' onClick={doClose}>
+					Cancel
+				</CButton>
+				<CButton color='primary' onClick={doAttach}>
+					Attach
+				</CButton>
+			</CModalFooter>
+		</CModal>
 	);
 });
 

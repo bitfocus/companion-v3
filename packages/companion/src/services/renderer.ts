@@ -78,6 +78,7 @@ class ControlRenderer {
 		}
 
 		console.log(`Starting render of ${controlId}`);
+		const start = Date.now();
 
 		const rawBg = splitColors(control.defaultLayer.backgroundColor, true);
 
@@ -174,6 +175,7 @@ class ControlRenderer {
 					return;
 				}
 
+				// TODO - this is incredibly slow...
 				await this.core.models.controlRenders.replaceOne(
 					{
 						_id: controlId,
@@ -183,14 +185,17 @@ class ControlRenderer {
 						renderHash: control.renderHash,
 						pngStr: pngStr,
 					},
-					{ upsert: true },
+					{
+						upsert: true,
+						session,
+					},
 				);
 			});
 
 			if (!commitResult) {
 				console.error(`Saving render of ${controlId} failed`);
 			} else {
-				console.error(`Completed render of ${controlId}`);
+				console.error(`Completed render of ${controlId} in ${Date.now() - start}ms`);
 			}
 		} finally {
 			await session.endSession({});

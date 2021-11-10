@@ -3,9 +3,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "node ./scripts/start.js",
-		"dev-electron": "cross-env ELECTRON=1 node ./scripts/start.js",
 		"build": "yarn lerna run --scope=companion3 --stream build",
-		"build-unpacked": "yarn lerna run --scope=companion3 --stream build-unpacked",
 		"clean": "yarn lerna run --scope=companion3 --stream clean",
 		"postinstall": "yarn lerna link"
 	},
@@ -26,8 +24,6 @@
 		"asar": "^3.0.2",
 		"concurrently": "^6.0.0",
 		"cross-env": "^7.0.3",
-		"electron": "^8.5.5",
-		"electron-builder": "^22.9.1",
 		"eslint": "^7.22.0",
 		"eslint-config-prettier": "^8.1.0",
 		"eslint-plugin-prettier": "^3.3.1",

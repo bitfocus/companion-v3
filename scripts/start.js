@@ -47,7 +47,7 @@ const { startMongo } = require('../packages/companion/src/mongo');
 					name: 'CORE-SHARED',
 				},
 				{
-					command: `yarn workspace companion3 ${process.env.ELECTRON ? 'dev-electron' : 'dev-server'}`,
+					command: `yarn workspace companion3 dev-server`,
 					name: 'SERVER',
 					prefixColor: 'bgBlue.bold',
 					env: {

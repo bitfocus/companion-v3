@@ -23,4 +23,4 @@ Instead set the environment variable `REACT_APP_SERVER_URL=http://localhost:8000
 ### `yarn build`
 
 Builds the app for production to the `build` folder.\
-This gets called when doing an electron build and `yarn update`, so should not be needed often
+This gets called when doing a build and `yarn update`, so should not be needed often

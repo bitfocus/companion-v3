@@ -12,9 +12,7 @@
 		"lint": "eslint 'src/**/*.{ts,tsx}'",
 		"build-server": "tsc",
 		"dev-server": "nodemon --ignore config.json --watch src --watch ../module-framework/dist src/headless.ts",
-		"dev-electron": "nodemon -e js,ts,json --ignore src/client --watch src --exec \"yarn build-server && electron .\"",
-		"build": "concurrently --prefix \"[{name}]\" --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"yarn build-server\" \"yarn build-client\"",
-		"build-unpacked": "yarn build && electron-builder --dir -c.electronVersion $(node -p \"require('electron/package.json').version\")"
+		"build": "concurrently --prefix \"[{name}]\" --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"yarn build-server\" \"yarn build-client\""
 	},
 	"keywords": [
 		"typescript",
@@ -27,33 +25,6 @@
 		"node"
 	],
 	"license": "MIT",
-	"main": "dist/electron.js",
-	"build": {
-		"directories": {
-			"buildResources": "assets/",
-			"output": "electron-output/"
-		},
-		"files": [
-			"views",
-			"assets",
-			"dist",
-			"LICENSE",
-			"!**/*.d.ts",
-			"!**/*.tsbuildinfo",
-			"!**/*.map"
-		],
-		"extraFiles": [
-			"bundled-modules"
-		],
-		"linux": {
-			"extraFiles": [
-				{
-					"from": "../../tools/mongodb/linux-x64",
-					"to": "mongodb"
-				}
-			]
-		}
-	},
 	"jest": {
 		"roots": [
 			"<rootDir>/src"

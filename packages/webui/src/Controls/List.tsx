@@ -4,11 +4,12 @@ import {
 	ControlDefinitionDeleteMessage,
 	SocketCommand,
 } from '@companion/core-shared/dist/api';
-import { ControlType, IControlDefinition } from '@companion/core-shared/dist/collections';
+import { CollectionId, ControlType, IControlDefinition, IControlRender } from '@companion/core-shared/dist/collections';
 import { literal } from '@companion/core-shared/dist/util';
 import { CButton } from '@coreui/react';
-import { useCallback, useContext, useRef } from 'react';
+import { ReactElement, useCallback, useContext, useRef } from 'react';
 import { GenericConfirmModal } from '../Components/GenericConfirmModal';
+import { useCollectionOne } from '../lib/subscription';
 import { CompanionContext, socketEmit2 } from '../util';
 
 export function ControlsList({ editControl }: { editControl: (id: string) => void }) {
@@ -96,10 +97,25 @@ function ControlsTableRow({ control, confirmModalRef, editControl }: ControlsTab
 		);
 	}, [confirmModalRef, context.socket, control._id]);
 
+	const [render, renderMissing] = useCollectionOne<IControlRender>(
+		context.socket,
+		CollectionId.ControlRenders,
+		control._id,
+	);
+
+	let controlPreview: ReactElement | string = 'Unsupported control type';
+	switch (control.controlType) {
+		case ControlType.Button:
+			controlPreview = render ? <img src={render.pngStr} /> : 'Loading';
+			break;
+		default:
+		// TODO - ensure unreachable
+	}
+
 	return (
 		<tr>
 			<td>{control.description || 'Unnamed control'}</td>
-			<td>TODO - preview render</td>
+			<td>{controlPreview}</td>
 			<td className='action-buttons'>
 				<CButton onClick={doEdit} color='primary' size='sm'>
 					edit

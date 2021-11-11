@@ -5,7 +5,13 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { PRIMARY_COLOR } from './Constants';
 import { BarLoader } from 'react-spinners';
 import SocketIOClient from 'socket.io-client';
-import { IControlDefinition, IDeviceConnection, IModule, ISurfaceSpace } from '@companion/core-shared/dist/collections';
+import {
+	IControlDefinition,
+	IDeviceConnection,
+	IDeviceConnectionAction,
+	IModule,
+	ISurfaceSpace,
+} from '@companion/core-shared/dist/collections';
 import { SocketCommand } from '@companion/core-shared/dist/api';
 
 export interface ICompanionContext {
@@ -18,7 +24,7 @@ export interface ICompanionContext {
 	modules: Record<string, IModule>;
 	variableDefinitions: Record<string, unknown[]>;
 	variableValues: Record<string, string>;
-	actions: unknown | undefined;
+	actions: IDeviceConnectionAction[];
 	feedbacks: unknown | undefined;
 }
 export const CompanionContext = React.createContext<ICompanionContext>({
@@ -31,7 +37,7 @@ export const CompanionContext = React.createContext<ICompanionContext>({
 	modules: {},
 	variableDefinitions: {},
 	variableValues: {},
-	actions: undefined,
+	actions: [],
 	feedbacks: undefined,
 });
 

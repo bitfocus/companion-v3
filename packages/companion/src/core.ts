@@ -4,6 +4,7 @@ import {
 	IControlDefinition,
 	IControlRender,
 	IDeviceConnection,
+	IDeviceConnectionAction,
 	IModule,
 	ISurfaceDevice,
 	ISurfaceSpace,
@@ -21,6 +22,7 @@ export interface ICore {
 		surfaceSpaces: Collection<ISurfaceSpace>;
 
 		controlRenders: Collection<IControlRender>;
+		deviceConnectionActions: Collection<IDeviceConnectionAction>;
 	};
 	io: SocketIO.Server;
 	moduleFactory: ModuleFactory;

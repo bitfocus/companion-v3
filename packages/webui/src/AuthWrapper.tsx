@@ -8,6 +8,7 @@ import {
 	CollectionId,
 	IControlDefinition,
 	IDeviceConnection,
+	IDeviceConnectionAction,
 	IModule,
 	ISurfaceSpace,
 } from '@companion/core-shared/dist/collections';
@@ -63,8 +64,13 @@ export function AuthComponentWrapper(props: React.PropsWithChildren<AuthComponen
 
 	const modules = useCollection<IModule>(props.socket, CollectionId.Modules, !!userInfo);
 	const connections = useCollection<IDeviceConnection>(props.socket, CollectionId.Connections, !!userInfo);
+	const actions = useCollection<IDeviceConnectionAction>(props.socket, CollectionId.ConnectionActions, !!userInfo);
 	const controls = useCollection<IControlDefinition>(props.socket, CollectionId.ControlDefinitions, !!userInfo);
 	const spaces = useCollection<ISurfaceSpace>(props.socket, CollectionId.SurfaceSpaces, !!userInfo);
+
+	const actions2 = useMemo(() => {
+		return Object.values(actions);
+	}, [actions]);
 
 	const contextValue: ICompanionContext = {
 		socket: props.socket,
@@ -76,7 +82,7 @@ export function AuthComponentWrapper(props: React.PropsWithChildren<AuthComponen
 		modules: modules,
 		variableDefinitions: {},
 		variableValues: {},
-		actions: undefined,
+		actions: actions2,
 		feedbacks: undefined,
 	};
 

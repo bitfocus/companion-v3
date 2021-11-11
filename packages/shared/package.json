@@ -10,5 +10,8 @@
 		"build:main": "tsc -p tsconfig.build.json",
 		"watch": "yarn build:main --watch",
 		"lint": "eslint . --ext .ts --ext .js --ignore-pattern dist"
+	},
+	"dependencies": {
+		"@companion/module-framework": "0.1.0"
 	}
 }

@@ -60,6 +60,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 			controlDefinitions: database.collection(CollectionId.ControlDefinitions),
 			controlRenders: database.collection(CollectionId.ControlRenders),
 			deviceConnections: database.collection(CollectionId.Connections),
+			deviceConnectionActions: database.collection(CollectionId.ConnectionActions),
 			modules: database.collection(CollectionId.Modules),
 			surfaceDevices: database.collection(CollectionId.SurfaceDevices),
 			surfaceSpaces: database.collection(CollectionId.SurfaceSpaces),
@@ -73,6 +74,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	await Promise.all([
 		core.models.modules.deleteMany({}),
 		core.models.controlRenders.deleteMany({}),
+		core.models.deviceConnectionActions.deleteMany({}),
 		// TODO add more here
 	]);
 
@@ -100,6 +102,33 @@ export async function startup(configPath: string, appPath: string): Promise<void
 
 		await core.models.modules.insertMany(knownModules);
 	});
+
+	// Hack: temporarily fake some actions
+	core.models.deviceConnections
+		.find()
+		.forEach(async (connection) => {
+			await core.models.deviceConnectionActions.insertOne({
+				_id: connection._id,
+				actions: {
+					test1: {
+						label: 'Test 1',
+						options: [],
+					},
+					test2: {
+						label: 'Test 2',
+						options: [
+							{
+								id: 'one',
+								label: 'One',
+								type: 'text',
+								value: '',
+							},
+						],
+					},
+				},
+			});
+		})
+		.catch((e) => console.error(e));
 
 	// start the various services
 	await startControlRenderer(core);

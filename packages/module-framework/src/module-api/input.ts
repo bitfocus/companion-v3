@@ -28,6 +28,7 @@ export interface CompanionInputFieldTextInput extends CompanionInputField {
 	type: 'textinput';
 	regex?: string;
 	default?: string;
+	required?: boolean;
 }
 
 export interface DropdownChoice {
@@ -36,8 +37,14 @@ export interface DropdownChoice {
 }
 export interface CompanionInputFieldDropdown extends CompanionInputField {
 	type: 'dropdown';
-	default: ConfigValue;
+	default: ConfigValue | ConfigValue[];
 	choices: DropdownChoice[];
+
+	multiple: boolean;
+
+	minChoicesForSearch?: number;
+	minSelection?: number;
+	maximumSelectionLength?: number;
 }
 export interface CompanionInputFieldCheckbox extends CompanionInputField {
 	type: 'checkbox';

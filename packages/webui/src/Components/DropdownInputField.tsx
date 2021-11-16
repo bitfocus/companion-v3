@@ -2,6 +2,11 @@ import { CompanionInputFieldDropdown, ConfigValue } from '@companion/module-fram
 import { useMemo, useEffect, useCallback } from 'react';
 import Select from 'react-select';
 
+interface DropdownOption {
+	label: string;
+	value: ConfigValue;
+}
+
 export interface DropdownInputFieldProps {
 	definition: CompanionInputFieldDropdown;
 	value: ConfigValue | ConfigValue[];
@@ -38,13 +43,14 @@ export function DropdownInputField({ definition, value, setValue, setValid }: Dr
 		setValid?.(true);
 	}, [definition.default, value, setValue, setValid]);
 
+	const valueLength = Array.isArray(value) ? value.length : 0;
 	const onChange = useCallback(
-		(e) => {
-			const newValue = isMultiple ? e?.map((v) => v.value) ?? [] : e?.value;
-
+		(e: any) => {
 			let isValid = true;
 
 			if (isMultiple) {
+				const newValue: ConfigValue[] = Array.isArray(e) ? e.map((v: DropdownOption) => v.value) : [];
+
 				for (const val of newValue) {
 					// Require the selected choices to be valid
 					if (!definition.choices.find((c) => c.id === val)) {
@@ -55,7 +61,7 @@ export function DropdownInputField({ definition, value, setValue, setValid }: Dr
 				if (
 					typeof definition.minSelection === 'number' &&
 					newValue.length < definition.minSelection &&
-					newValue.length <= (this.props.value || []).length
+					newValue.length <= valueLength
 				) {
 					// Block change if too few are selected
 					return;
@@ -64,25 +70,31 @@ export function DropdownInputField({ definition, value, setValue, setValid }: Dr
 				if (
 					typeof definition.maximumSelectionLength === 'number' &&
 					newValue.length > definition.maximumSelectionLength &&
-					newValue.length >= (this.props.value || []).length
+					newValue.length >= valueLength
 				) {
 					// Block change if too many are selected
 					return;
 				}
+
+				setValue(newValue);
+				setValid?.(isValid);
 			} else {
+				const newValue: ConfigValue = !Array.isArray(e) ? e.value : undefined;
+
 				// Require the selected choice to be valid
 				if (!definition.choices.find((c) => c.id === newValue)) {
 					isValid = false;
 				}
-			}
 
-			setValue(newValue);
-			setValid?.(isValid);
+				setValue(newValue);
+				setValid?.(isValid);
+			}
 		},
 		[
 			setValue,
 			setValid,
 			isMultiple,
+			valueLength,
 			definition.minSelection,
 			definition.maximumSelectionLength,
 			definition.choices,

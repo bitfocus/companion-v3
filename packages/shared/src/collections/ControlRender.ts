@@ -6,3 +6,7 @@ export interface IControlRender {
 
 	pngStr: string;
 }
+
+export function pngBufferToString(buffer: Buffer): string {
+	return `data:image/png;base64,${buffer.toString('base64')}`;
+}

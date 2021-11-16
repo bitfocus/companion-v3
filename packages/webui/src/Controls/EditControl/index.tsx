@@ -18,6 +18,7 @@ import { TextInputField } from '../../Components';
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal';
 import { useCollectionOne } from '../../lib/subscription';
 import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit, socketEmit2 } from '../../util';
+import { ActionsPanel } from './ActionsPanel';
 import { ButtonStyleConfig } from './ButtonStyleConfig';
 //   import { ActionsPanel } from "./ActionsPanel";
 //   import { ButtonStyleConfig } from "./ButtonStyleConfig";
@@ -220,6 +221,14 @@ export function EditControl({ controlId }: EditControlProps) {
 					<hr />
 
 					<ButtonStyleConfig controlId={controlId} layerId={'default'} layer={control.defaultLayer} />
+
+					<h4 className='mt-3'>Down actions</h4>
+					<ActionsPanel
+						controlId={controlId}
+						actions={control.downActions ?? []}
+						dragId={'downAction'}
+						addPlaceholder='+ Add key down action'
+					/>
 
 					{/* {config.style === 'png' ? (
 						<>

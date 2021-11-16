@@ -1,3 +1,4 @@
+import { InputValue } from '@companion/core-shared/node_modules/@companion/module-framework';
 import { CollectionId, ControlType, IButtonControlRenderLayer, SurfaceType } from './collections';
 
 export enum SocketCommand {
@@ -13,6 +14,12 @@ export enum SocketCommand {
 	ControlDefinitionDelete = 'CONTROLDEFINITION.DELETE',
 	ControlDefinitionRenderLayerUpdate = 'CONTROLDEFINITION.RENDERLAYER.UPDATE',
 	ControlDefinitionNameUpdate = 'CONTROLDEFINITION.NAME.UPDATE',
+	ControlDefinitionActionAdd = 'CONTROLDEFINITION.ACTION.ADD',
+	ControlDefinitionActionRemove = 'CONTROLDEFINITION.ACTION.REMOVE',
+	ControlDefinitionActionSetDelay = 'CONTROLDEFINITION.ACTION.SET_DELAY',
+	ControlDefinitionActionSetOption = 'CONTROLDEFINITION.ACTION.SET_OPTION',
+	ControlDefinitionActionReorder = 'CONTROLDEFINITION.ACTION.REORDER',
+
 	SurfaceSpaceCreate = 'SURFACESPACE.CREATE',
 	SurfaceSpaceDelete = 'SURFACESPACE.DELETE',
 	SurfaceSpacePageCreate = 'SURFACESPACEPAGE.CREATE',
@@ -96,6 +103,35 @@ export interface ControlDefinitionCreateMessageReply {
 }
 export interface ControlDefinitionDeleteMessage {
 	id: string;
+}
+
+export interface ControlDefinitionActionAddMessage {
+	controlId: string;
+	connectionId: string;
+	actionId: string;
+}
+
+export interface ControlDefinitionActionRemoveMessage {
+	controlId: string;
+	actionId: string;
+}
+export interface ControlDefinitionActionSetDelayMessage {
+	controlId: string;
+	actionId: string;
+	delay: number;
+}
+export interface ControlDefinitionActionSetOptionMessage {
+	controlId: string;
+	actionId: string;
+
+	option: string;
+	value: InputValue;
+}
+export interface ControlDefinitionActionReorderMessage {
+	controlId: string;
+	actionId: string;
+
+	beforeActionId: string;
 }
 
 export interface ControlDefinitionRenderLayerUpdateMessage<T extends keyof IButtonControlRenderLayer> {

@@ -12,7 +12,7 @@ import {
 export interface ActionTableRowOptionProps {
 	actionId: string;
 	option: SomeCompanionInputField;
-	value: InputValue;
+	value: InputValue | undefined;
 	setValue: (actionId: string, optionId: string, value: InputValue) => void;
 }
 export function ActionTableRowOption({ actionId, option, value, setValue }: ActionTableRowOptionProps) {

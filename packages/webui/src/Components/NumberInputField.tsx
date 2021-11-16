@@ -3,7 +3,7 @@ import { CCol, CInput, CRow } from '@coreui/react';
 import { CompanionInputFieldNumber } from '@companion/module-framework';
 
 export interface NumberInputFieldProps {
-	definition: CompanionInputFieldNumber;
+	definition: Omit<CompanionInputFieldNumber, 'id' | 'label'>;
 	value: number;
 	setValue: (value: number) => void;
 	setValid?: (valid: boolean) => void;

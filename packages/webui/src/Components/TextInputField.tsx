@@ -3,7 +3,7 @@ import { CInput } from '@coreui/react';
 import { CompanionInputFieldTextInput } from '@companion/module-framework';
 
 export interface TextInputFieldProps {
-	definition: CompanionInputFieldTextInput;
+	definition: Omit<CompanionInputFieldTextInput, 'type' | 'id' | 'label'>;
 	value: string;
 	setValue: (value: string) => void;
 	setValid?: (valid: boolean) => void;

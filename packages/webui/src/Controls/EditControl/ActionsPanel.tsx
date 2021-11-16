@@ -1,156 +1,120 @@
 import { CButton, CForm, CInputGroup, CInputGroupAppend, CInputGroupText } from '@coreui/react';
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
 import { NumberInputField } from '../../Components';
-import { CompanionContext, MyErrorBoundary, socketEmit } from '../../util';
-import update from 'immutability-helper';
+import { CompanionContext, MyErrorBoundary, socketEmit2 } from '../../util';
 import Select from 'react-select';
 import { ActionTableRowOption } from './Table';
 import { useDrag, useDrop } from 'react-dnd';
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal';
 import { IControlAction } from '@companion/core-shared/dist/collections';
+import { InputValue } from '@companion/module-framework';
+import { literal } from '@companion/core-shared/dist/util';
+import {
+	ControlDefinitionActionAddMessage,
+	ControlDefinitionActionRemoveMessage,
+	ControlDefinitionActionReorderMessage,
+	ControlDefinitionActionSetDelayMessage,
+	ControlDefinitionActionSetOptionMessage,
+	SocketCommand,
+} from '@companion/core-shared/dist/api';
 
 export interface ActionsPanelProps {
-	page: number;
-	bank: number;
+	controlId: string;
 	dragId: string;
-	addCommand: string;
-	getCommand: string;
-	updateOption: string;
-	orderCommand: string;
-	setDelay: string;
-	deleteCommand: string;
 	addPlaceholder: string;
-	setLoadStatus: never;
-	loadStatusKey: string;
-	reloadToken: string;
+	actions: IControlAction[];
 }
 
-export function ActionsPanel({
-	page,
-	bank,
-	dragId,
-	addCommand,
-	getCommand,
-	updateOption,
-	orderCommand,
-	setDelay,
-	deleteCommand,
-	addPlaceholder,
-	setLoadStatus,
-	loadStatusKey,
-	reloadToken,
-}: ActionsPanelProps) {
+export function ActionsPanel({ controlId, dragId, addPlaceholder, actions }: ActionsPanelProps) {
 	const context = useContext(CompanionContext);
-	const [actions, setActions] = useState([]);
 
 	const confirmModal = useRef();
 
-	// Ensure the correct data is loaded
-	useEffect(() => {
-		setLoadStatus(loadStatusKey, false);
-		socketEmit(context.socket, getCommand, [page, bank])
-			.then(([page, bank, actions]) => {
-				setActions(actions || []);
-				setLoadStatus(loadStatusKey, true);
-			})
-			.catch((e) => {
-				setLoadStatus(loadStatusKey, `Failed to load ${loadStatusKey}`);
-				console.error('Failed to load bank actions', e);
-			});
-	}, [context.socket, getCommand, setLoadStatus, loadStatusKey, page, bank, reloadToken]);
-
 	const setValue = useCallback(
 		(actionId, key, val) => {
-			// The server doesn't repond to our change, so we assume it was ok
-			setActions((oldActions) => {
-				const actionIndex = oldActions.findIndex((a) => a.id === actionId);
-
-				const oldValue = (oldActions[actionIndex].options || {})[key];
-				if (oldValue !== val) {
-					context.socket.emit(updateOption, page, bank, actionId, key, val);
-
-					return update(oldActions, {
-						[actionIndex]: {
-							options: {
-								[key]: { $set: val },
-							},
-						},
-					});
-				} else {
-					return oldActions;
-				}
-			});
+			socketEmit2(
+				context.socket,
+				SocketCommand.ControlDefinitionActionSetOption,
+				literal<ControlDefinitionActionSetOptionMessage>({
+					controlId,
+					actionId,
+					option: key,
+					value: val,
+				}),
+			);
 		},
-		[context.socket, page, bank, updateOption],
+		[context.socket, controlId],
 	);
 
 	const doDelay = useCallback(
 		(actionId, delay) => {
-			// The server doesn't repond to our change, so we assume it was ok
-			setActions((oldActions) => {
-				const actionIndex = oldActions.findIndex((a) => a.id === actionId);
-
-				const oldValue = oldActions[actionIndex].options?.delay;
-				if (oldValue !== delay) {
-					context.socket.emit(setDelay, page, bank, actionId, delay);
-
-					return update(oldActions, {
-						[actionIndex]: {
-							delay: { $set: delay },
-						},
-					});
-				} else {
-					return oldActions;
-				}
-			});
+			socketEmit2(
+				context.socket,
+				SocketCommand.ControlDefinitionActionSetDelay,
+				literal<ControlDefinitionActionSetDelayMessage>({
+					controlId,
+					actionId,
+					delay,
+				}),
+			);
 		},
-		[context.socket, page, bank, setDelay],
+		[context.socket, controlId],
 	);
 
-	const deleteAction = useCallback((actionId) => {
-		setActions((oldActions) => oldActions.filter((a) => a.id !== actionId));
-	}, []);
-	const doDelete = useCallback(
-		(actionId) => {
-			confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
-				context.socket.emit(deleteCommand, page, bank, actionId);
-				deleteAction(actionId);
-			});
+	const deleteAction = useCallback(
+		(actionId: string) => {
+			socketEmit2(
+				context.socket,
+				SocketCommand.ControlDefinitionActionRemove,
+				literal<ControlDefinitionActionRemoveMessage>({
+					controlId,
+					actionId: actionId,
+				}),
+			);
 		},
-		[context.socket, page, bank, deleteCommand, deleteAction],
+		[context.socket, controlId],
+	);
+	const doDelete = useCallback(
+		(actionId: string) => {
+			// confirmModal.current?.show('Delete action', 'Delete action?', 'Delete', () => {
+			// 	context.socket.emit(deleteCommand, page, bank, actionId);
+			deleteAction(actionId);
+			// });
+		},
+		[context.socket, controlId, deleteAction],
 	);
 
 	const addAction = useCallback(
-		(actionType) => {
-			socketEmit(context.socket, addCommand, [page, bank, actionType])
-				.then(([page, bank, actions]) => {
-					setActions(actions || []);
-				})
-				.catch((e) => {
-					console.error('Failed to add bank action', e);
-				});
+		(connectionId: string, actionId: string) => {
+			socketEmit2(
+				context.socket,
+				SocketCommand.ControlDefinitionActionAdd,
+				literal<ControlDefinitionActionAddMessage>({
+					controlId,
+					connectionId: connectionId,
+					actionId: actionId,
+				}),
+			);
 		},
-		[context.socket, addCommand, bank, page],
+		[context.socket, controlId],
 	);
 
 	const moveCard = useCallback(
-		(dragIndex, hoverIndex) => {
-			// The server doesn't repond to our change, so we assume it was ok
-			context.socket.emit(orderCommand, page, bank, dragIndex, hoverIndex);
+		(dragActionId: string, hoverActionId: string) => {
+			socketEmit2(
+				context.socket,
+				SocketCommand.ControlDefinitionActionReorder,
+				literal<ControlDefinitionActionReorderMessage>({
+					controlId,
+					actionId: dragActionId,
 
-			setActions((actions) => {
-				const dragCard = actions[dragIndex];
-				return update(actions, {
-					$splice: [
-						[dragIndex, 1],
-						[hoverIndex, 0, dragCard],
-					],
-				});
-			});
+					beforeActionId: hoverActionId,
+				}),
+			);
 		},
-		[context.socket, page, bank, orderCommand],
+		[context.socket, controlId],
 	);
 
 	return (
@@ -183,10 +147,16 @@ interface ActionTableRowProps {
 	action: IControlAction;
 	index: number;
 	dragId: string;
-	setValue: never;
+	setValue: (actionId: string, key: string, val: InputValue) => void;
 	doDelete: (actionId: string) => void;
 	doDelay: (actionId: string, delay: number) => void;
-	moveCard: (dragIndex: number, hoverIndex: number) => void;
+	moveCard: (dragActionId: string, hoverActionId: string) => void;
+}
+
+interface DragItem {
+	type: string;
+	actionId: string;
+	index: number;
 }
 
 function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, moveCard }: ActionTableRowProps) {
@@ -195,10 +165,10 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete]);
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id]);
 
-	const ref = useRef(null);
+	const ref = useRef<HTMLTableRowElement>(null);
 	const [, drop] = useDrop({
 		accept: dragId,
-		hover(item, monitor) {
+		hover(item: DragItem, monitor) {
 			if (!ref.current) {
 				return;
 			}
@@ -232,7 +202,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 				return;
 			}
 			// Time to actually perform the action
-			moveCard(dragIndex, hoverIndex);
+			moveCard(item.actionId, action.id);
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
@@ -241,11 +211,11 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 		},
 	});
 	const [{ isDragging }, drag, preview] = useDrag({
-		item: {
+		item: literal<DragItem>({
 			type: dragId,
 			actionId: action.id,
 			index: index,
-		},
+		}),
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
 		}),
@@ -260,14 +230,13 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 		return context.actions.find((a) => a.actionId === action.actionId && a.connectionId === action.connectionId);
 	}, [context.actions, action.actionId, action.connectionId]);
 
-	const options = actionSpec?.options ?? [];
+	const options = actionSpec?.rawAction?.options ?? [];
 
 	let name = '';
 	if (actionSpec) {
-		name = `${connectionLabel}: ${actionSpec.label}`;
+		name = `${connectionLabel}: ${actionSpec.rawAction.label}`;
 	} else {
-		const actionId = action.label.split(/:/)[1];
-		name = `${connectionLabel}: ${actionId} (undefined)`;
+		name = `${connectionLabel}: Unknown action (${action.actionId})`;
 	}
 
 	return (
@@ -284,7 +253,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 							<label>Delay</label>
 							<CInputGroup>
 								<NumberInputField
-									definition={{ default: 0 }}
+									definition={{ type: 'number', default: 0, min: 0, max: Number.POSITIVE_INFINITY }}
 									value={action.delay}
 									setValue={innerDelay}
 								/>
@@ -328,7 +297,7 @@ interface ActionOption {
 	value: ActionId;
 }
 interface AddActionDropdownProps {
-	onSelect: (id: ActionId) => void;
+	onSelect: (connectionId: string, actionId: string) => void;
 	placeholder: string;
 }
 function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownProps) {
@@ -345,7 +314,7 @@ function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownProps) {
 	const innerChange = useCallback(
 		(e: ActionOption | null) => {
 			if (e?.value) {
-				onSelect(e.value);
+				onSelect(e.value[0], e.value[1]);
 			}
 		},
 		[onSelect],

@@ -1,4 +1,5 @@
 import {
+	ControlDefinitionActionSetOptionMessage,
 	ControlDefinitionCreateMessage,
 	ControlDefinitionCreateMessageReply,
 	ControlDefinitionDeleteMessage,
@@ -14,6 +15,11 @@ import { ICore } from '../core';
 import { registerCommand } from './lib';
 import { ObjectID } from 'bson';
 import { ControlType, IControlDefinition } from '@companion/core-shared/dist/collections';
+import {
+	ControlDefinitionActionAddMessage,
+	ControlDefinitionActionRemoveMessage,
+} from '@companion/core-shared/src/api';
+import { ControlDefinitionActionSetDelayMessage } from '@companion/core-shared/src/api';
 
 export function createControlDefaults(type: ControlType): IControlDefinition {
 	// TODO - validate type
@@ -31,6 +37,8 @@ export function createControlDefaults(type: ControlType): IControlDefinition {
 		},
 		renderHash: new ObjectID().toHexString(),
 		touchedAt: Date.now(),
+
+		downActions: [],
 	};
 }
 
@@ -122,6 +130,137 @@ export function socketControlDefinitionHandler(
 				if (res.modifiedCount === 0) {
 					throw new Error('Not found');
 				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.ControlDefinitionActionAdd,
+		async (msg: ControlDefinitionActionAddMessage): Promise<void> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				// TODO - verify action is valid
+
+				const res = await core.models.controlDefinitions.updateOne(
+					{ _id: msg.controlId },
+					{
+						$push: {
+							downActions: {
+								id: new ObjectID().toHexString(),
+
+								connectionId: msg.connectionId,
+								actionId: msg.actionId,
+								delay: 0,
+								options: {}, // TODO - defaults
+							},
+						},
+					},
+				);
+				if (res.modifiedCount === 0) {
+					throw new Error('Not found');
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.ControlDefinitionActionRemove,
+		async (msg: ControlDefinitionActionRemoveMessage): Promise<void> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				const res = await core.models.controlDefinitions.updateOne(
+					{ _id: msg.controlId },
+					{
+						$pull: {
+							downActions: {
+								id: msg.actionId,
+							},
+						},
+					},
+				);
+				if (res.modifiedCount === 0) {
+					throw new Error('Not found');
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.ControlDefinitionActionSetDelay,
+		async (msg: ControlDefinitionActionSetDelayMessage): Promise<void> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				// TODO data sanity checking
+
+				const res = await core.models.controlDefinitions.updateOne(
+					{ _id: msg.controlId, 'downActions.id': msg.actionId },
+					{
+						$set: {
+							'downActions.$.delay': msg.delay,
+						},
+					},
+				);
+				if (res.modifiedCount === 0) {
+					throw new Error('Not found');
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.ControlDefinitionActionSetOption,
+		async (msg: ControlDefinitionActionSetOptionMessage): Promise<void> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				// TODO data sanity checking
+
+				const res = await core.models.controlDefinitions.updateOne(
+					{ _id: msg.controlId, 'downActions.id': msg.actionId },
+					{
+						$set: {
+							[`downActions.$.options.${msg.option}`]: msg.value,
+						},
+					},
+				);
+				if (res.modifiedCount === 0) {
+					throw new Error('Not found');
+				}
+			} else {
+				throw new Error('Not authorised');
+			}
+		},
+	);
+
+	registerCommand(
+		socket,
+		SocketCommand.ControlDefinitionActionRemove,
+		async (msg: ControlDefinitionActionRemoveMessage): Promise<void> => {
+			const userSession = await getUserInfo(authSession.authSessionId);
+			if (userSession) {
+				// TODO
+				// const res = await core.models.controlDefinitions.updateOne(
+				// 	{ _id: msg.controlId, 'downActions.id': msg.actionId },
+				// 	{
+				// 		$set: {
+				// 			[`downActions.$.options.${msg.option}`]: msg.value,
+				// 		},
+				// 	},
+				// );
+				// if (res.modifiedCount === 0) {
+				// 	throw new Error('Not found');
+				// }
 			} else {
 				throw new Error('Not authorised');
 			}

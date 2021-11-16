@@ -1,3 +1,4 @@
+import { pngBufferToString } from '@companion/core-shared/dist/collections';
 import { splitColors } from '@companion/core-shared/dist/color';
 import PQueue from 'p-queue';
 import sharp from 'sharp';
@@ -152,51 +153,46 @@ class ControlRenderer {
 		}).composite(imageLayers);
 
 		const buffer = await img.toFormat('png').toBuffer();
-		const pngStr = `data:image/png;base64,${buffer.toString('base64')}`;
+		const pngStr = pngBufferToString(buffer);
 
 		// save the png
 		const session = this.core.client.startSession();
 		try {
-			const commitResult: any = await session.withTransaction(async () => {
-				// Update the control to ensure it exists
-				const updated = await this.core.models.controlDefinitions.updateOne(
-					{
-						_id: controlId,
+			// Update the control to ensure it exists
+			const updated = await this.core.models.controlDefinitions.updateOne(
+				{
+					_id: controlId,
+				},
+				{
+					$set: {
+						touchedAt: Date.now(),
 					},
-					{
-						$set: {
-							touchedAt: Date.now(),
-						},
-					},
-					{ session },
-				);
-				if (updated.modifiedCount === 0) {
-					await session.abortTransaction();
-					return;
-				}
-
-				// TODO - this is incredibly slow...
-				await this.core.models.controlRenders.replaceOne(
-					{
-						_id: controlId,
-					},
-					{
-						_id: controlId,
-						renderHash: control.renderHash,
-						pngStr: pngStr,
-					},
-					{
-						upsert: true,
-						session,
-					},
-				);
-			});
-
-			if (!commitResult) {
-				console.error(`Saving render of ${controlId} failed`);
-			} else {
-				console.error(`Completed render of ${controlId} in ${Date.now() - start}ms`);
+				},
+				{ session },
+			);
+			if (updated.modifiedCount === 0) {
+				return;
 			}
+
+			// TODO - this is incredibly slow...
+			await this.core.models.controlRenders.replaceOne(
+				{
+					_id: controlId,
+				},
+				{
+					_id: controlId,
+					renderHash: control.renderHash,
+					pngStr: pngStr,
+				},
+				{
+					upsert: true,
+					// session,
+				},
+			);
+
+			console.log(`Completed render of ${controlId} in ${Date.now() - start}ms`);
+		} catch (e) {
+			console.error(`Saving render of ${controlId} failed`);
 		} finally {
 			await session.endSession({});
 		}

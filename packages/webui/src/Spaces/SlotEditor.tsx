@@ -10,7 +10,7 @@ import { useCallback, useContext, useRef } from 'react';
 import { CompanionContext, socketEmit2 } from '../util';
 import { literal } from '@companion/core-shared/dist/util';
 import { EditControl } from '../Controls/EditControl';
-import { GenericConfirmModal } from '../Components/GenericConfirmModal';
+import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 
 export interface SlotEditorProps {
 	spaceId: string;
@@ -22,7 +22,7 @@ export interface SlotEditorProps {
 export function SlotEditor({ spaceId, pageId, slotId, controlId }: SlotEditorProps) {
 	const context = useContext(CompanionContext);
 
-	const confirmRef = useRef<any>(null);
+	const confirmRef = useRef<IGenericConfirmModalHandle>(null);
 
 	const doCreateControl = useCallback(() => {
 		socketEmit2(

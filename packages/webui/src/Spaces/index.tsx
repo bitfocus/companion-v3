@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import shortid from 'shortid';
 import { CompanionContext, MyErrorBoundary } from '../util';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { GenericConfirmModal } from '../Components/GenericConfirmModal';
+import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { SpacesList } from './List';
 import { ISurfaceSpace, ISurfaceSpacePage, SurfaceType } from '@companion/core-shared/dist/collections';
 import { SpacePages } from './Pages';
@@ -15,7 +15,7 @@ import { SlotEditor } from './SlotEditor';
 export function SpacesPage() {
 	const context = useContext(CompanionContext);
 
-	const clearModalRef = useRef();
+	const clearModalRef = useRef<IGenericConfirmModalHandle>(null);
 
 	const [tabResetToken, setTabResetToken] = useState(shortid());
 	const [activeTab, setActiveTab] = useState('list');

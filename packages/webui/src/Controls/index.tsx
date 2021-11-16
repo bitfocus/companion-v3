@@ -5,11 +5,11 @@ import shortid from 'shortid';
 import { CompanionContext, MyErrorBoundary } from '../util';
 import { EditControl } from './EditControl';
 import { useCallback, useContext, useRef, useState } from 'react';
-import { GenericConfirmModal } from '../Components/GenericConfirmModal';
+import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { ControlsList } from './List';
 
 export function ControlsPage() {
-	const clearModalRef = useRef();
+	const clearModalRef = useRef<IGenericConfirmModalHandle>(null);
 
 	const [tabResetToken, setTabResetToken] = useState(shortid());
 	const [activeTab, setActiveTab] = useState('presets');

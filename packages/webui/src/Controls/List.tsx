@@ -8,14 +8,14 @@ import { CollectionId, ControlType, IControlDefinition, IControlRender } from '@
 import { literal } from '@companion/core-shared/dist/util';
 import { CButton } from '@coreui/react';
 import { ReactElement, useCallback, useContext, useRef } from 'react';
-import { GenericConfirmModal } from '../Components/GenericConfirmModal';
+import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { useCollectionOne } from '../lib/subscription';
 import { CompanionContext, socketEmit2 } from '../util';
 
 export function ControlsList({ editControl }: { editControl: (id: string) => void }) {
 	const context = useContext(CompanionContext);
 
-	const confirmModalRef = useRef<any>(null);
+	const confirmModalRef = useRef<IGenericConfirmModalHandle>(null);
 
 	const addControl = useCallback(() => {
 		socketEmit2(

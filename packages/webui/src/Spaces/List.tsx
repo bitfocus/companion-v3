@@ -8,13 +8,13 @@ import { ISurfaceSpace, SurfaceType } from '@companion/core-shared/dist/collecti
 import { literal } from '@companion/core-shared/dist/util';
 import { CButton } from '@coreui/react';
 import { useCallback, useContext, useRef } from 'react';
-import { GenericConfirmModal } from '../Components/GenericConfirmModal';
+import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { CompanionContext, socketEmit2 } from '../util';
 
 export function SpacesList({ selectSpace }: { selectSpace: (id: string) => void }) {
 	const context = useContext(CompanionContext);
 
-	const confirmModalRef = useRef<any>(null);
+	const confirmModalRef = useRef<IGenericConfirmModalHandle>(null);
 
 	const addSpace = useCallback(() => {
 		socketEmit2(

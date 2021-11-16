@@ -7,7 +7,7 @@ import { CompanionContext, MyErrorBoundary, socketEmit2 } from '../../util';
 import Select from 'react-select';
 import { ActionTableRowOption } from './Table';
 import { useDrag, useDrop } from 'react-dnd';
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal';
+import { GenericConfirmModal, IGenericConfirmModalHandle } from '../../Components/GenericConfirmModal';
 import { IControlAction } from '@companion/core-shared/dist/collections';
 import { InputValue } from '@companion/module-framework';
 import { literal } from '@companion/core-shared/dist/util';
@@ -30,7 +30,7 @@ export interface ActionsPanelProps {
 export function ActionsPanel({ controlId, dragId, addPlaceholder, actions }: ActionsPanelProps) {
 	const context = useContext(CompanionContext);
 
-	const confirmModal = useRef();
+	const confirmModal = useRef<IGenericConfirmModalHandle>(null);
 
 	const setValue = useCallback(
 		(actionId, key, val) => {
@@ -78,12 +78,11 @@ export function ActionsPanel({ controlId, dragId, addPlaceholder, actions }: Act
 	);
 	const doDelete = useCallback(
 		(actionId: string) => {
-			// confirmModal.current?.show('Delete action', 'Delete action?', 'Delete', () => {
-			// 	context.socket.emit(deleteCommand, page, bank, actionId);
-			deleteAction(actionId);
-			// });
+			confirmModal.current?.show('Delete action', 'Delete action?', 'Delete', () => {
+				deleteAction(actionId);
+			});
 		},
-		[context.socket, controlId, deleteAction],
+		[deleteAction],
 	);
 
 	const addAction = useCallback(
@@ -223,7 +222,6 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	preview(drop(ref));
 
 	const connection = context.connections[action.connectionId];
-	// const module = instance ? context.modules[instance.instance_type] : undefined
 	const connectionLabel = connection?.label ?? action.connectionId;
 
 	const actionSpec = useMemo(() => {

@@ -8,7 +8,7 @@ import { ISurfaceSpace, ISurfaceSpacePage } from '@companion/core-shared/dist/co
 import { literal } from '@companion/core-shared/dist/util';
 import { CButton } from '@coreui/react';
 import { useCallback, useContext, useRef } from 'react';
-import { GenericConfirmModal } from '../Components/GenericConfirmModal';
+import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { CompanionContext, socketEmit2 } from '../util';
 
 export function SpacePages({
@@ -22,7 +22,7 @@ export function SpacePages({
 }) {
 	const context = useContext(CompanionContext);
 
-	const confirmModalRef = useRef<any>(null);
+	const confirmModalRef = useRef<IGenericConfirmModalHandle>(null);
 
 	const addPage = useCallback(() => {
 		socketEmit2(

@@ -15,7 +15,7 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import shortid from 'shortid';
 import { TextInputField } from '../../Components';
 //   import { BankPreview, dataToButtonImage } from "../../Components/BankButton";
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal';
+import { GenericConfirmModal, IGenericConfirmModalHandle } from '../../Components/GenericConfirmModal';
 import { useCollectionOne } from '../../lib/subscription';
 import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit, socketEmit2 } from '../../util';
 import { ActionsPanel } from './ActionsPanel';
@@ -30,7 +30,7 @@ export interface EditControlProps {
 export function EditControl({ controlId }: EditControlProps) {
 	const context = useContext(CompanionContext);
 
-	const resetModalRef = useRef();
+	const resetModalRef = useRef<IGenericConfirmModalHandle>(null);
 
 	// const [config, setConfig] = useState(null);
 	// const [configError, setConfigError] = useState(null);

@@ -246,10 +246,10 @@ export function socketControlDefinitionHandler(
 	registerCommand(
 		socket,
 		SocketCommand.ControlDefinitionActionRemove,
-		async (msg: ControlDefinitionActionRemoveMessage): Promise<void> => {
+		async (_msg: ControlDefinitionActionRemoveMessage): Promise<void> => {
 			const userSession = await getUserInfo(authSession.authSessionId);
 			if (userSession) {
-				// TODO
+				// TODO implement
 				// const res = await core.models.controlDefinitions.updateOne(
 				// 	{ _id: msg.controlId, 'downActions.id': msg.actionId },
 				// 	{

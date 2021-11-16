@@ -13,7 +13,6 @@ import {
 	CProgress,
 } from '@coreui/react';
 import {
-	faCalendarAlt,
 	faClipboardList,
 	faClock,
 	faCloud,
@@ -36,7 +35,6 @@ import { MySidebar } from './Layout/Sidebar';
 import { MyHeader } from './Layout/Header';
 import { Scheduler } from './Scheduler';
 import { InstancesPage } from './Instances';
-import { ButtonsPage } from './Buttons';
 import { AuthComponentWrapper } from './AuthWrapper';
 import { AuthStatusContext } from './BackendContext';
 import { ControlsPage } from './Controls';
@@ -196,7 +194,7 @@ function AppLoading({ progress, connected }) {
 }
 
 function AppContent({ buttonGridHotPress }) {
-	const [activeRootTab, setActiveRootTab] = useState('buttons');
+	const [activeRootTab, setActiveRootTab] = useState('spaces');
 	// const [activeRootTabToken, setActiveRootTabToken] = useState(shortid())
 
 	const changeTab = useCallback((tab) => {
@@ -221,11 +219,6 @@ function AppContent({ buttonGridHotPress }) {
 					<CNavItem>
 						<CNavLink data-tab='spaces'>
 							<FontAwesomeIcon icon={faCloud} /> Spaces
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab='buttons'>
-							<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
@@ -263,11 +256,6 @@ function AppContent({ buttonGridHotPress }) {
 					<CTabPane data-tab='spaces'>
 						<MyErrorBoundary>
 							<SpacesPage />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab='buttons'>
-						<MyErrorBoundary>
-							<ButtonsPage hotPress={buttonGridHotPress} />
 						</MyErrorBoundary>
 					</CTabPane>
 					<CTabPane data-tab='surfaces'>

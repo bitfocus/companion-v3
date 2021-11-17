@@ -11,5 +11,9 @@
 	"files": [
 		"README.md",
 		"dist"
-	]
+	],
+	"dependencies": {
+		"p-timeout": "^4.1.0",
+		"socket.io-client": "^3"
+	}
 }

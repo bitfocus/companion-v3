@@ -32,9 +32,16 @@ export class ModuleHost {
 		this.children = new Map();
 
 		this.socketPort = socketPort;
-		this.socketServer = new SocketIO.Server(socketPort, {
+		this.socketServer = new SocketIO.Server({
 			transports: ['websocket'],
+			allowEIO3: true,
+			cors: {
+				origin: `http://localhost:${this.socketPort}`,
+				methods: ['GET', 'POST'],
+			},
 		});
+		this.socketServer.listen(this.socketPort);
+		console.log(`Module host listening on port: ${this.socketPort}`);
 	}
 
 	async start(): Promise<void> {
@@ -87,6 +94,11 @@ export class ModuleHost {
 	private async stopConnection(connectionId: string): Promise<void> {
 		const child = this.children.get(connectionId);
 		if (child) {
+			if (child.socket) {
+				child.socket.disconnect(true);
+				delete child.socket;
+			}
+
 			// TODO - race safety
 			child.monitor.stop(() => {
 				// cleanup
@@ -95,10 +107,45 @@ export class ModuleHost {
 		}
 	}
 
-	private listenToModuleSocket(_socket: SocketIO.Socket): void {
-		// TODO - listen for close
-		// socket.on('register', () => {
-		// })
+	private listenToModuleSocket(socket: SocketIO.Socket): void {
+		socket.once('register', (connectionId: string, token: string) => {
+			const child = this.children.get(connectionId);
+			if (!child) {
+				console.log(`Got register for bad connectionId: "${connectionId}"`);
+				socket.disconnect(true);
+				return;
+			}
+
+			if (child.socket) {
+				console.log(`Got register for already registered connectionId: "${connectionId}"`);
+				socket.disconnect(true);
+				return;
+			}
+
+			if (child.authToken !== token) {
+				console.log(`Got register with bad auth token for connectionId: "${connectionId}"`);
+				socket.disconnect(true);
+				return;
+			}
+
+			socket.on('close', () => {
+				const child2 = this.children.get(connectionId);
+				if (child2 && child2.socket === socket) {
+					// If this socket is the one for a connection, then cleanup on close
+					delete child2.socket;
+				}
+			});
+
+			// Register successful
+			child.socket = socket;
+
+			// TODO - more params?
+
+			console.log(`Registered module client "${connectionId}"`);
+			socket.emit('registered');
+
+			// TODO - start pings
+		});
 	}
 
 	private async restartConnection(connectionId: string): Promise<void> {
@@ -122,11 +169,14 @@ export class ModuleHost {
 				delete child.socket;
 			} else {
 				const token = shortid();
-				const monitor = Respawn(['node', path.join(module.modulePath, module.manifest.entrypoint)], {
+				const cmd = ['node', path.join(module.modulePath, module.manifest.entrypoint)];
+				console.log(`Connection "${connection.label}" command: ${JSON.stringify(cmd)}`);
+
+				const monitor = Respawn(cmd, {
 					name: `Connection "${connection.label}"(${connection._id})`,
 					env: {
 						CONNECTION_ID: connection._id,
-						SOCKETIO_URL: `https://localhost:${this.socketPort}`,
+						SOCKETIO_URL: `ws://localhost:${this.socketPort}`,
 						SOCKETIO_TOKEN: token,
 					},
 					maxRestarts: -1,
@@ -155,6 +205,7 @@ export class ModuleHost {
 					monitor: monitor,
 					authToken: token,
 				};
+				this.children.set(connection._id, child);
 			}
 
 			// Start the child

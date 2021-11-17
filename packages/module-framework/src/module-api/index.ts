@@ -1,10 +1,1 @@
-export * from './action';
-export * from './base';
-export * from './config';
-export * from './enums';
-export * from './feedback';
-export * from './input';
-export * from './preset';
-export * from './upgrade';
-export * from './util';
-export * from './variable';
+export * as ModuleApiV0 from './v0';

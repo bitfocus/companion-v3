@@ -5,6 +5,7 @@ import SocketIO from 'socket.io';
 import getPort from 'get-port';
 import shortid from 'shortid';
 import path from 'path';
+import { HostApiVersion } from '@companion/module-framework/dist/host-api/versions';
 
 interface ChildProcessInfo {
 	monitor: Respawn.RespawnMonitor;
@@ -108,7 +109,7 @@ export class ModuleHost {
 	}
 
 	private listenToModuleSocket(socket: SocketIO.Socket): void {
-		socket.once('register', (connectionId: string, token: string) => {
+		socket.once('register', (apiVersion: HostApiVersion, connectionId: string, token: string) => {
 			const child = this.children.get(connectionId);
 			if (!child) {
 				console.log(`Got register for bad connectionId: "${connectionId}"`);
@@ -160,6 +161,8 @@ export class ModuleHost {
 				return;
 			}
 
+			// TODO - look at the runtime and api fields to figure out how to handle this
+
 			let child = this.children.get(connection._id);
 			if (child) {
 				const child2 = child;
@@ -167,6 +170,8 @@ export class ModuleHost {
 
 				// Cleanup
 				delete child.socket;
+
+				// TODO - regenerate the monitor
 			} else {
 				const token = shortid();
 				const cmd = ['node', path.join(module.modulePath, module.manifest.entrypoint)];

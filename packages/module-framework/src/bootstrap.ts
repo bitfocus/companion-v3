@@ -1,20 +1,20 @@
 import * as SocketIOClient from 'socket.io-client';
-import {
-	CompanionActions,
-	CompanionFeedbacks,
-	CompanionModuleSystem,
-	CompanionPreset,
-	CompanionVariable,
-	InstanceBase,
-	InstanceStatus,
-	LogLevel,
-} from './module-api';
+import { ModuleApiV0 } from './module-api';
 import PTimeout from 'p-timeout';
+import { HostApiVersion } from './host-api/versions';
+import { InstanceBaseShared } from './instance-base';
 
 let hasEntrypoint = false;
 
 /** Run the module entrypoint */
-export function runEntrypoint(factory: new (system: CompanionModuleSystem, id: string) => InstanceBase<any>): void {
+export function runEntrypointV0(factory: new (internal: unknown, id: string) => ModuleApiV0.InstanceBaseV0<any>): void {
+	runEntrypointInner(factory, HostApiVersion.v0);
+}
+
+function runEntrypointInner(
+	factory: new (internal: unknown, id: string) => InstanceBaseShared<any>,
+	apiVersion: HostApiVersion,
+): void {
 	// Ensure only called once per module
 	if (hasEntrypoint) throw new Error(`runEntrypoint can only be called once`);
 	hasEntrypoint = true;
@@ -32,21 +32,17 @@ export function runEntrypoint(factory: new (system: CompanionModuleSystem, id: s
 	if (typeof socketIoToken !== 'string' || !socketIoToken)
 		throw new Error('Module initialise is missing SOCKETIO_TOKEN');
 
-	let module: InstanceBase<any> | undefined;
+	let module: InstanceBaseShared<any> | undefined;
 
 	const socket = SocketIOClient.io(socketIoUrl, { reconnection: false, timeout: 5000, transports: ['websocket'] });
 	socket.on('connect', () => {
 		console.log(`Connected to module-host: ${socket.id}`);
 
-		socket.emit('register', connectionId, socketIoToken);
+		socket.emit('register', apiVersion, connectionId, socketIoToken);
 		socket.once('registered', () => {
 			console.log(`Module-host accepted registration`);
 
-			const wrapper = new SystemSocketWrapper(socket);
-
-			module = new factory(wrapper, connectionId);
-
-			// TODO - subscribe to socket events
+			module = new factory(socket, connectionId);
 		});
 	});
 	socket.on('connect_error', (e: any) => {
@@ -71,38 +67,4 @@ export function runEntrypoint(factory: new (system: CompanionModuleSystem, id: s
 		// Kill the process
 		process.exit(11);
 	});
-}
-
-class SystemSocketWrapper implements CompanionModuleSystem {
-	#socket: SocketIOClient.Socket;
-
-	constructor(socket: SocketIOClient.Socket) {
-		this.#socket = socket;
-	}
-
-	setActionDefinitions(actions: CompanionActions): Promise<void> {
-		throw new Error('Method not implemented.');
-	}
-	setVariableDefinitions(variables: CompanionVariable[]): Promise<void> {
-		throw new Error('Method not implemented.');
-	}
-	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
-		throw new Error('Method not implemented.');
-	}
-	setPresetDefinitions(presets: CompanionPreset[]): Promise<void> {
-		throw new Error('Method not implemented.');
-	}
-	variableChanged(variableId: string, value: string): void {
-		throw new Error('Method not implemented.');
-	}
-	checkFeedbacks(feedbackId?: string): void {
-		throw new Error('Method not implemented.');
-	}
-	updateStatus(level: InstanceStatus | null, message?: string): void {
-		throw new Error('Method not implemented.');
-	}
-	log(level: LogLevel, message: string): void {
-		throw new Error('Method not implemented.');
-	}
-	//
 }

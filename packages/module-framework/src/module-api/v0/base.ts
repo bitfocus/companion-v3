@@ -1,3 +1,4 @@
+import * as SocketIOClient from 'socket.io-client';
 import { CompanionInputField } from './input';
 import { CompanionActionEvent, CompanionActions } from './action';
 import { CompanionUpgradeScript } from './upgrade';
@@ -5,31 +6,28 @@ import { CompanionFeedbackEvent, CompanionFeedbackResult, CompanionFeedbacks } f
 import { CompanionVariable } from './variable';
 import { CompanionPreset } from './preset';
 import { InstanceStatus, LogLevel } from './enums';
+import { HostApiCommands, LogMessageMessage, SetStatusMessage } from '../../host-api/v0';
+import { literal } from '../../util';
+import { InstanceBaseShared } from '../../instance-base';
 
-export interface CompanionModuleSystem {
-	setActionDefinitions(actions: CompanionActions): Promise<void>;
-	setVariableDefinitions(variables: CompanionVariable[]): Promise<void>;
-	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void>;
-	setPresetDefinitions(presets: CompanionPreset[]): Promise<void>;
-
-	variableChanged(variableId: string, value: string): void;
-	checkFeedbacks(feedbackId?: string): void;
-
-	updateStatus(level: InstanceStatus | null, message?: string): void;
-	log(level: LogLevel, message: string): void;
-}
-
-export abstract class InstanceBase<TConfig> {
-	private readonly system: CompanionModuleSystem;
+export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TConfig> {
+	#socket: SocketIOClient.Socket;
 
 	public readonly id: string;
 
 	/**
 	 * Create an instance of the module.
 	 */
-	constructor(system: CompanionModuleSystem, id: string) {
-		this.system = system;
+	constructor(internal: unknown, id: string) {
+		if (!(internal instanceof SocketIOClient.Socket) || typeof id !== 'string')
+			throw new Error(
+				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`,
+			);
+
+		this.#socket = internal;
 		this.id = id;
+
+		// TODO - subscribe to socket events
 
 		this.updateStatus(null, 'Initializing');
 		this.log(LogLevel.DEBUG, 'Initializing');
@@ -71,30 +69,48 @@ export abstract class InstanceBase<TConfig> {
 	}
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
-		return this.system.setActionDefinitions(actions);
+		// return this.system.setActionDefinitions(actions);
+		return Promise.resolve();
 	}
 	setVariableDefinitions(variables: CompanionVariable[]): Promise<void> {
-		return this.system.setVariableDefinitions(variables);
+		// return this.system.setVariableDefinitions(variables);
+		return Promise.resolve();
 	}
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
-		return this.system.setFeedbackDefinitions(feedbacks);
+		// return this.system.setFeedbackDefinitions(feedbacks);
+		return Promise.resolve();
 	}
 	setPresetDefinitions(presets: CompanionPreset[]): Promise<void> {
-		return this.system.setPresetDefinitions(presets);
+		// return this.system.setPresetDefinitions(presets);
+		return Promise.resolve();
 	}
 
 	variableChanged(variableId: string, value: string): void {
-		return this.system.variableChanged(variableId, value);
+		// return this.system.variableChanged(variableId, value);
 	}
 	checkFeedbacks(feedbackId?: string): void {
-		return this.system.checkFeedbacks(feedbackId);
+		// return this.system.checkFeedbacks(feedbackId);
 	}
 
-	updateStatus(level: InstanceStatus | null, message?: string): void {
-		return this.system.updateStatus(level, message);
+	updateStatus(status: InstanceStatus | null, message?: string | null): void {
+		// return this.system.updateStatus(level, message);
+		this.#socket.emit(
+			HostApiCommands.SetStatus,
+			literal<SetStatusMessage>({
+				status,
+				message: message ?? null,
+			}),
+		);
 	}
 
 	log(level: LogLevel, message: string): void {
-		return this.system.log(level, message);
+		// return this.system.log(level, message);
+		this.#socket.emit(
+			HostApiCommands.LogMessage,
+			literal<LogMessageMessage>({
+				level,
+				message,
+			}),
+		);
 	}
 }

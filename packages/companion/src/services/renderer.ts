@@ -39,9 +39,7 @@ class ControlRenderer {
 					break;
 				}
 				case 'delete':
-					this.core.models.controlRenders
-						.deleteOne({ _id: doc.documentKey._id })
-						.catch((e) => console.error(`ControlRender "${doc.documentKey._id}" cleanup failed: ${e}`));
+					this.deleteRender(doc.documentKey._id);
 					break;
 				case 'drop':
 				case 'dropDatabase':
@@ -62,7 +60,13 @@ class ControlRenderer {
 		});
 	}
 
-	async renderControl(controlId: string): Promise<void> {
+	private deleteRender(controlId: string): void {
+		this.core.models.controlRenders
+			.deleteOne({ _id: controlId })
+			.catch((e) => console.error(`ControlRender "${controlId}" cleanup failed: ${e}`));
+	}
+
+	private async renderControl(controlId: string): Promise<void> {
 		const [control, render] = await Promise.all([
 			this.core.models.controlDefinitions.findOne({ _id: controlId }),
 			this.core.models.controlRenders.findOne({ _id: controlId }),

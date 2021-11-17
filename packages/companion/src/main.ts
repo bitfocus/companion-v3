@@ -6,17 +6,15 @@ import * as config from './config';
 import http from 'http';
 import SocketIO from 'socket.io';
 import { ICore } from './core';
-import { ModuleFactory } from './module/module-host';
+import { ModuleRegistry } from './services/module-registry';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
-import { CollectionId, IModule } from '@companion/core-shared/dist/collections';
+import { CollectionId } from '@companion/core-shared/dist/collections';
 import getPort from 'get-port';
 import { startMongo } from './mongo';
 import { startControlRenderer } from './services/renderer';
 import { startSurfaceManager } from './services/surfaces';
-
-// Inject asar parsing
-require('asar-node').register();
+import { startModuleHost } from './services/module-host';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -37,7 +35,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		mongoUrl = await startMongo(configPath, path.join(appPath, '../..'), '127.0.0.1', mongoPort);
 	}
 
-	const client = new MongoClient(mongoUrl, { useUnifiedTopology: true });
+	const client = new MongoClient(mongoUrl, { useUnifiedTopology: true, w: 'majority', j: false });
 	await client.connect();
 
 	const database = client.db(process.env.MONGO_DB ?? 'companion3');
@@ -51,7 +49,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		},
 	});
 
-	const moduleFactory = new ModuleFactory(configPath);
+	const moduleFactory = new ModuleRegistry(configPath);
 
 	const core: ICore = {
 		db: database,
@@ -66,7 +64,6 @@ export async function startup(configPath: string, appPath: string): Promise<void
 			surfaceSpaces: database.collection(CollectionId.SurfaceSpaces),
 		},
 		io,
-		moduleFactory,
 	};
 
 	// Delete all documents from 'temporary' collections
@@ -78,29 +75,9 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		// TODO add more here
 	]);
 
-	const modules = moduleFactory.listModules();
-	modules.then(async (modList) => {
-		console.log(`Discovered ${modList.length} modules:`);
-
-		const knownModules: IModule[] = [];
-		modList.forEach((m) => {
-			console.log(` - ${m.name}@${m.version} (${m.asarPath})`);
-			knownModules.push({
-				_id: m.name,
-				name: m.name,
-				version: m.version,
-				asarPath: m.asarPath,
-				isSystem: false, // TODO
-
-				products: [m.name],
-				manufacturer: m.name,
-
-				hasHelp: true,
-				keywords: [],
-			});
-		});
-
-		await core.models.modules.insertMany(knownModules);
+	// Update the list of modules
+	moduleFactory.rescanModules(core.models.modules).catch((e) => {
+		console.error(`Module scan failed: ${e}`);
 	});
 
 	// Hack: temporarily fake some actions
@@ -146,6 +123,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	// start the various services
 	await startControlRenderer(core);
 	const surfaceManager = await startSurfaceManager(core);
+	await startModuleHost(core);
 
 	app.use(apiRouter(core));
 	socketHandler(core, surfaceManager);

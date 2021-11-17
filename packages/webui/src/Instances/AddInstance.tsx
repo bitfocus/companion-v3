@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { CompanionContext, socketEmit2 } from '../util';
 import { ConnectionCreateMessageReply, SocketCommand } from '@companion/core-shared/dist/api';
+import { IModule } from '@companion/core-shared/dist/collections';
 
 export function AddInstancesPanel({
 	showHelp,
@@ -29,7 +30,7 @@ const AddInstancesInner = memo(function AddInstancesInner({
 	const context = useContext(CompanionContext);
 	const [filter, setFilter] = useState('');
 
-	const addInstance = (moduleId: string, product: string) => {
+	const addInstance = (moduleId: string, product: string | undefined) => {
 		socketEmit2(context.socket, SocketCommand.ConnectionCreate, {
 			moduleId,
 			product,
@@ -45,35 +46,43 @@ const AddInstancesInner = memo(function AddInstancesInner({
 			});
 	};
 
-	const candidates = [];
+	const candidates: Array<React.ReactElement> = [];
 	try {
 		const regexp = new RegExp(filter, 'i');
 
-		for (const module of Object.values(context.modules ?? {})) {
-			const products = new Set(module.products);
-			for (const subprod of products) {
-				const id = module.name;
-				const name = `${module.manufacturer} ${subprod}`;
-				const keywords = module.keywords || [];
+		const addProduct = (module: IModule, subprod: string | undefined) => {
+			const id = module.manifest.id;
+			const name = `${module.manifest.manufacturer} ${subprod ?? ''}`;
+			const keywords = module.manifest.keywords || [];
 
-				if (name.replace(';', ' ').match(regexp) || keywords.find((kw) => kw.match(regexp))) {
-					candidates.push(
-						<div key={name + id}>
-							<CButton color='primary' onClick={() => addInstance(id, subprod)}>
-								Add
-							</CButton>
-							&nbsp;
-							{name}
-							{module.hasHelp ? (
-								<div className='instance_help' onClick={() => showHelp(id)}>
-									<FontAwesomeIcon icon={faQuestionCircle} />
-								</div>
-							) : (
-								''
-							)}
-						</div>,
-					);
+			if (name.replace(';', ' ').match(regexp) || keywords.find((kw) => kw.match(regexp))) {
+				candidates.push(
+					<div key={name + id}>
+						<CButton color='primary' onClick={() => addInstance(id, subprod)}>
+							Add
+						</CButton>
+						&nbsp;
+						{name}
+						{module.hasHelp ? (
+							<div className='instance_help' onClick={() => showHelp(id)}>
+								<FontAwesomeIcon icon={faQuestionCircle} />
+							</div>
+						) : (
+							''
+						)}
+					</div>,
+				);
+			}
+		};
+
+		for (const module of Object.values(context.modules ?? {})) {
+			if (module.manifest.products) {
+				const products = new Set(module.manifest.products);
+				for (const subprod of products) {
+					addProduct(module, subprod);
 				}
+			} else {
+				addProduct(module, undefined);
 			}
 		}
 	} catch (e) {

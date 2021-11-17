@@ -19,7 +19,7 @@ export function socketDeviceConnectionHandler(
 			const userSession = await getUserInfo(authSession.authSessionId);
 			if (userSession) {
 				const module = await core.models.modules.findOne({ _id: msg.moduleId });
-				if (module && module.products.includes(msg.product)) {
+				if (module && (!module.manifest.products || module.manifest.products.includes(msg.product))) {
 					const conn = await core.models.deviceConnections.insertOne({
 						_id: shortid(),
 						moduleId: msg.moduleId,

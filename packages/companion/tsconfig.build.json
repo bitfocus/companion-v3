@@ -8,11 +8,13 @@
 		// "importHelpers": false,
 		"paths": {
 			"*": ["./node_modules/*"],
-			"@companion/core-shared": ["../shared/src"]
+			"@companion/core-shared": ["../shared/src"],
+			"respawn": ["./src/@types/respawn"]
 		},
 		"types": ["node"],
 		"declaration": true,
-		"declarationMap": true
+		"declarationMap": true,
 		// "module": "ES2020"
+		"typeRoots": ["./node_modules/@types", "./src/@types"]
 	}
 }

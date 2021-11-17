@@ -132,9 +132,9 @@ function InstancesTableRow({
 						) : (
 							''
 						)}
-						<b>{moduleInfo?.name ?? ''}</b>
+						<b>{moduleInfo?.manifest?.name ?? ''}</b>
 						<br />
-						{moduleInfo?.manufacturer ?? ''}
+						{moduleInfo?.manifest?.manufacturer ?? ''}
 					</>
 				) : (
 					connection.moduleId

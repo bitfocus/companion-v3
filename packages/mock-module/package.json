@@ -7,9 +7,10 @@
 		"build": "rimraf dist && yarn build:main",
 		"build:main": "tsc -p tsconfig.build.json",
 		"build:watch": "tsc -p tsconfig.build.json --watch",
-		"package": "./scripts/package.sh"
+		"package": "./scripts/package.sh",
+		"package2": "./scripts/package2.sh"
 	},
 	"dependencies": {
-		"@companion/module-framework": "file:../module-framework"
+		"@companion/module-framework": "*"
 	}
 }

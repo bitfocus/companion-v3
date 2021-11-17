@@ -1,4 +1,3 @@
-import { ModuleFactory } from './module/module-host';
 import { Collection, Db as MongoDb, MongoClient } from 'mongodb';
 import {
 	IControlDefinition,
@@ -25,5 +24,5 @@ export interface ICore {
 		deviceConnectionActions: Collection<IDeviceConnectionAction>;
 	};
 	io: SocketIO.Server;
-	moduleFactory: ModuleFactory;
+	// moduleFactory: ModuleRegistry;
 }

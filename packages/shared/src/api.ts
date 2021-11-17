@@ -1,4 +1,4 @@
-import { InputValue } from '@companion/core-shared/node_modules/@companion/module-framework';
+import { InputValue } from '@companion/module-framework';
 import { CollectionId, ControlType, IButtonControlRenderLayer, SurfaceType } from './collections';
 
 export enum SocketCommand {

@@ -1,13 +1,12 @@
+import { ModuleManifest } from '@companion/module-framework';
+
 export interface IModule {
 	_id: string;
-	name: string;
-	version: string;
-	asarPath: string;
+
+	manifest: ModuleManifest;
+
+	modulePath: string;
 	isSystem: boolean;
 
-	manufacturer: string;
-	products: string[];
-
-	keywords: string[];
 	hasHelp: boolean;
 }

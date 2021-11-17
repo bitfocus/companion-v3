@@ -6,12 +6,13 @@ import {
 	LogLevel,
 	CompanionInputField,
 	combineRgb,
+	runEntrypoint,
 } from '@companion/module-framework';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface MockConfig {}
 
-export default class MockModule extends InstanceBase<MockConfig> {
+class MockModule extends InstanceBase<MockConfig> {
 	init(config: MockConfig): void | Promise<void> {
 		console.log(`module ${this.id} received init: ${JSON.stringify(config)}`);
 		this.log(LogLevel.INFO, `received init: ${JSON.stringify(config)}`);
@@ -96,3 +97,5 @@ export default class MockModule extends InstanceBase<MockConfig> {
 		return {};
 	}
 }
+
+runEntrypoint(MockModule);

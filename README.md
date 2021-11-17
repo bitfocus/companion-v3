@@ -21,7 +21,7 @@ It is expected for there to be a folder `tools/mongodb/${process.platform}-${pro
 
 -   /packages - Various projects (companion + system modules)
 -   /packages/companion - Companion server/backend source code
-    -   bundled-modules - any modules to be distributed with companion should be built into an asar file in here. the expectation is that not everything will be bundled, many will be distributed via a 'module store'
+    -   bundled-modules - any modules to be distributed with companion should be placed here. the expectation is that not everything will be bundled, many will be distributed via a 'module store'
     -   userdata - database docs etc generated at runtime. Located here in development, gets placed elsewhere in production?
 -   /packages/webui - Companion webui source code
     -   assets - static assets served over http

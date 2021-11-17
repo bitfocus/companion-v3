@@ -1,0 +1,21 @@
+{
+	"id": "prototype-module3",
+	"name": "Prototype module",
+	"version": "0.1.1",
+	"license": "MIT",
+	"repository": "https://github.com/julusian/nope",
+	"maintainers": [
+		{
+			"name": "Julian Waller",
+			"email": "git@julusian.co.uk",
+			"github": "Julusian"
+		}
+	],
+	"runtime": "node-14",
+	"api": "socket.io",
+	"entrypoint": "dist/index.js",
+	"universal": true,
+
+	"manufacturer": "Testing",
+	"keywords": ["abc"]
+}

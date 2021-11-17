@@ -34,7 +34,7 @@ export function ControlsList({ editControl }: { editControl: (id: string) => voi
 			<h4>Controls</h4>
 			<p>
 				This is a list of all the controls you have defined. These can be assigned to multiple slots across
-				different devices and pages.
+				different spaces and pages.
 			</p>
 
 			<p>

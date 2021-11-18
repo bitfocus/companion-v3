@@ -142,7 +142,7 @@ export class ModuleHost {
 				return;
 			}
 
-			socket.on('close', () => {
+			socket.on('disconnect', () => {
 				const child2 = this.children.get(connectionId);
 				if (child2 && child2.socket === socket) {
 					// If this socket is the one for a connection, then cleanup on close

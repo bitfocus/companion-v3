@@ -19,12 +19,13 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	 * Create an instance of the module.
 	 */
 	constructor(internal: unknown, id: string) {
-		if (!(internal instanceof SocketIOClient.Socket) || typeof id !== 'string')
+		const socket = internal as SocketIOClient.Socket; // TODO - can this be safer?
+		if (!socket.connected || typeof id !== 'string')
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`,
 			);
 
-		this.#socket = internal;
+		this.#socket = socket;
 		this.id = id;
 
 		// TODO - subscribe to socket events

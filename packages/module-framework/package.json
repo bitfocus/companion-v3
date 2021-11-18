@@ -4,6 +4,11 @@
 	"type": "module",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
+	"exports2": {
+		".": "./dist/index.js",
+		"./module/v0": "./dist/module-api/v0/index.js",
+		"./host": "./dist/host-api"
+	},
 	"license": "MIT",
 	"scripts": {
 		"watch": "tsc-watch --onSuccess \"yarn pack -f bundle.tar.gz\"",
@@ -15,6 +20,6 @@
 	],
 	"dependencies": {
 		"p-timeout": "^5.0.2",
-		"socket.io-client": "^3"
+		"socket.io-client": "^4.4.0"
 	}
 }

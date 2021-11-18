@@ -12,7 +12,7 @@
 		}
 	],
 	"runtime": "node-16",
-	"api": "socket.io",
+	"api": "socket.io4",
 	"entrypoint": "dist/index.js",
 	"universal": true,
 

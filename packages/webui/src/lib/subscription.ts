@@ -2,7 +2,7 @@ import shortid from 'shortid';
 import { SocketCommand, CollectionSubscribeMessage } from '@companion/core-shared/dist/api';
 import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
 import { literal } from '@companion/core-shared/dist/util';
-import SocketIOClient from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import { useEffect, useState } from 'react';
 import { CollectionId } from '@companion/core-shared/dist/collections';
 
@@ -14,7 +14,7 @@ export interface SubscribeQuery {
 	query?: never;
 }
 function subscribeToCollection<T extends { _id: string }>(
-	socket: SocketIOClient.Socket,
+	socket: Socket,
 	collection: CollectionId,
 	query: any,
 	options: any, // TODO - type
@@ -63,7 +63,7 @@ function subscribeToCollection<T extends { _id: string }>(
 }
 
 export function useCollection<T extends { _id: string }>(
-	socket: SocketIOClient.Socket,
+	socket: Socket,
 	collection: CollectionId,
 	enable: boolean,
 	query?: undefined,
@@ -95,7 +95,7 @@ export function useCollection<T extends { _id: string }>(
 }
 
 export function useCollectionOne<T extends { _id: string }>(
-	socket: SocketIOClient.Socket,
+	socket: Socket,
 	collection: CollectionId,
 	docId: string | null,
 	timeout: number = 0,

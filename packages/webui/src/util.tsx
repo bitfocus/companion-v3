@@ -4,7 +4,7 @@ import { CAlert, CButton, CCol } from '@coreui/react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { PRIMARY_COLOR } from './Constants';
 import { BarLoader } from 'react-spinners';
-import SocketIOClient from 'socket.io-client';
+import { Socket, io } from 'socket.io-client';
 import {
 	IControlDefinition,
 	IDeviceConnection,
@@ -15,7 +15,7 @@ import {
 import { SocketCommand } from '@companion/core-shared/dist/api';
 
 export interface ICompanionContext {
-	socket: SocketIOClient.Socket;
+	socket: Socket;
 	notifier: any | undefined;
 	instances: Record<string, unknown>;
 	controls: Record<string, IControlDefinition>;
@@ -28,7 +28,7 @@ export interface ICompanionContext {
 	feedbacks: unknown | undefined;
 }
 export const CompanionContext = React.createContext<ICompanionContext>({
-	socket: SocketIOClient.io({ autoConnect: false }),
+	socket: io({ autoConnect: false }),
 	notifier: undefined,
 	instances: {},
 	controls: {},
@@ -42,7 +42,7 @@ export const CompanionContext = React.createContext<ICompanionContext>({
 });
 
 export function socketEmit2(
-	socket: SocketIOClient.Socket,
+	socket: Socket,
 	name: SocketCommand,
 	msg: any,
 	timeout?: number,
@@ -67,7 +67,7 @@ export function socketEmit2(
 }
 
 export function socketEmit<T>(
-	socket: SocketIOClient.Socket,
+	socket: Socket,
 	name: string,
 	args: any[],
 	timeout?: number,

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { LoginMessage, LogoutMessage, SocketCommand, UserInfoMessage } from '@companion/core-shared/dist/api';
 import { literal } from '@companion/core-shared/dist/util';
 import { AuthStatusContext, AuthStatusLink } from './BackendContext';
-import SocketIOClient from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import { CompanionContext, ICompanionContext } from './util';
 import {
 	CollectionId,
@@ -15,7 +15,7 @@ import {
 import { useCollection } from './lib/subscription';
 
 interface AuthComponentProps {
-	socket: SocketIOClient.Socket;
+	socket: Socket;
 }
 
 export function AuthComponentWrapper(props: React.PropsWithChildren<AuthComponentProps>) {

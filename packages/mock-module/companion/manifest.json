@@ -11,7 +11,7 @@
 			"github": "Julusian"
 		}
 	],
-	"runtime": "node-14",
+	"runtime": "node-16",
 	"api": "socket.io",
 	"entrypoint": "dist/index.js",
 	"universal": true,

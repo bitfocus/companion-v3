@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"description": "",
 	"engines": {
-		"node": "14.x",
+		"node": "^16.13",
 		"yarn": "1.22"
 	},
 	"scripts": {
@@ -54,23 +54,23 @@
 		"@julusian/jpeg-turbo": "^1.0.1",
 		"axios": "^0.21.1",
 		"body-parser": "^1.19.0",
-		"concurrently": "^6.0.0",
+		"concurrently": "^6.4.0",
 		"express": "^4.17.1",
 		"get-port": "^5.1.1",
 		"mongodb": "^3.6.5",
 		"p-queue": "^6.6.2",
 		"read-pkg-up": "^7.0.1",
 		"respawn": "^2.6.0",
-		"semver": "^7.3.4",
-		"sharp": "^0.27.2",
+		"semver": "^7.3.5",
+		"sharp": "^0.29.3",
 		"shortid": "^2.2.16",
 		"socket.io": "^3.1.2",
 		"threads": "^1.6.3",
-		"tslib": "^2.1.0",
+		"tslib": "^2.3.1",
 		"underscore": "^1.12.1"
 	},
 	"devDependencies": {
-		"@types/sharp": "^0.27.1",
+		"@types/sharp": "^0.29.4",
 		"ts-node": "^9.1.1"
 	}
 }

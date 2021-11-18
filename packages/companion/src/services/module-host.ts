@@ -5,7 +5,7 @@ import SocketIO from 'socket.io';
 import getPort from 'get-port';
 import shortid from 'shortid';
 import path from 'path';
-import { HostApiVersion } from '@companion/module-framework/dist/host-api/versions';
+import { HostApiVersion, isSupportedApiVersion } from '@companion/module-framework/dist/host-api/versions';
 
 interface ChildProcessInfo {
 	monitor: Respawn.RespawnMonitor;
@@ -110,6 +110,19 @@ export class ModuleHost {
 
 	private listenToModuleSocket(socket: SocketIO.Socket): void {
 		socket.once('register', (apiVersion: HostApiVersion, connectionId: string, token: string) => {
+			if (!isSupportedApiVersion(apiVersion)) {
+				console.log(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`);
+				socket.disconnect(true);
+				return;
+			}
+
+			if (apiVersion !== HostApiVersion.v0) {
+				// Future: Temporary until version selection is implemented
+				console.log(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`);
+				socket.disconnect(true);
+				return;
+			}
+
 			const child = this.children.get(connectionId);
 			if (!child) {
 				console.log(`Got register for bad connectionId: "${connectionId}"`);

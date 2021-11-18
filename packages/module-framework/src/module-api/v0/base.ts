@@ -68,27 +68,27 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		// TODO
 	}
 
-	setActionDefinitions(actions: CompanionActions): Promise<void> {
+	setActionDefinitions(_actions: CompanionActions): Promise<void> {
 		// return this.system.setActionDefinitions(actions);
 		return Promise.resolve();
 	}
-	setVariableDefinitions(variables: CompanionVariable[]): Promise<void> {
+	setVariableDefinitions(_variables: CompanionVariable[]): Promise<void> {
 		// return this.system.setVariableDefinitions(variables);
 		return Promise.resolve();
 	}
-	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
+	setFeedbackDefinitions(_feedbacks: CompanionFeedbacks): Promise<void> {
 		// return this.system.setFeedbackDefinitions(feedbacks);
 		return Promise.resolve();
 	}
-	setPresetDefinitions(presets: CompanionPreset[]): Promise<void> {
+	setPresetDefinitions(_presets: CompanionPreset[]): Promise<void> {
 		// return this.system.setPresetDefinitions(presets);
 		return Promise.resolve();
 	}
 
-	variableChanged(variableId: string, value: string): void {
+	variableChanged(_variableId: string, _value: string): void {
 		// return this.system.variableChanged(variableId, value);
 	}
-	checkFeedbacks(feedbackId?: string): void {
+	checkFeedbacks(_feedbackId?: string): void {
 		// return this.system.checkFeedbacks(feedbackId);
 	}
 

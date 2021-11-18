@@ -2,6 +2,11 @@ export function literal<T>(v: T): T {
 	return v;
 }
 
+/** Type assert that a value is never */
+export function assertNever(_val: never): void {
+	// Nothing to do
+}
+
 export interface RgbComponents {
 	r: number;
 	g: number;

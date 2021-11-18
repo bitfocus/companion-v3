@@ -1,10 +1,10 @@
-import { CollectionSubscribeMessage, CollectionUnsubscribeMessage } from '@companion/core-shared/dist/api';
-import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
-import { literal } from '@companion/core-shared/dist/util';
-import { ICore } from './core';
-import SocketIO from 'socket.io';
-import { Collection } from 'mongodb';
-import { CollectionId } from '@companion/core-shared/dist/collections';
+import { CollectionSubscribeMessage, CollectionUnsubscribeMessage } from '@companion/core-shared/dist/api.js';
+import { SubscriptionEvent } from '@companion/core-shared/dist/subscription.js';
+import { literal } from '@companion/core-shared/dist/util.js';
+import { ICore } from './core.js';
+import * as SocketIO from 'socket.io';
+import Mongo from 'mongodb';
+import { CollectionId } from '@companion/core-shared/dist/collections/index.js';
 import { Observable, Subject } from 'rxjs';
 
 interface SubscriptionEntry {
@@ -50,7 +50,7 @@ export function socketSubscribe(core: ICore, socket: SocketIO.Socket, msg: Colle
 	sub.init(entry);
 }
 
-function subscribeToDeletes<T extends { _id: string }>(collection: Collection<T>): Observable<string> {
+function subscribeToDeletes<T extends { _id: string }>(collection: Mongo.Collection<T>): Observable<string> {
 	const subId = collection.collectionName;
 	let sub = deleteSubscriptions.get(subId);
 	if (!sub) {
@@ -143,7 +143,7 @@ export function createSubscription(core: ICore, msg: CollectionSubscribeMessage)
 }
 
 function createBasicSubscription<T extends { _id: string }>(
-	collection: Collection<T>,
+	collection: Mongo.Collection<T>,
 	msg: CollectionSubscribeMessage,
 ) {
 	if (msg.query !== undefined && typeof msg.query !== 'string') {

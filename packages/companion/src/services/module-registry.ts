@@ -1,13 +1,16 @@
 import fs from 'fs';
 import fsp from 'fs/promises';
 import path from 'path';
-import { literal } from '@companion/core-shared/dist/util';
+import { literal } from '@companion/core-shared/dist/util.js';
 import { ModuleManifest } from '@companion/module-framework';
 import _ from 'underscore';
 import semver from 'semver';
-import { IS_PACKAGED } from '../config';
-import { IModule } from '@companion/core-shared/dist/collections';
-import { BulkWriteReplaceOneOperation, Collection } from 'mongodb';
+import { IS_PACKAGED } from '../config.js';
+import { IModule } from '@companion/core-shared/dist/collections/index.js';
+import Mongo from 'mongodb';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export interface ModuleInfo {
 	manifest: ModuleManifest;
@@ -55,12 +58,12 @@ export class ModuleRegistry {
 		fs.mkdirSync(this.modulePath, { recursive: true });
 	}
 
-	async rescanModules(db: Collection<IModule>): Promise<void> {
+	async rescanModules(db: Mongo.Collection<IModule>): Promise<void> {
 		const modules = await this.listModules();
 
 		console.log(`Discovered ${modules.length} modules:`);
 
-		const writeOps: Array<BulkWriteReplaceOneOperation<IModule>> = [];
+		const writeOps: Array<Mongo.BulkWriteReplaceOneOperation<IModule>> = [];
 		const knownIds: string[] = [];
 
 		for (const m of modules) {

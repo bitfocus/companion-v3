@@ -6,12 +6,13 @@
 		"node": "^16.13",
 		"yarn": "1.22"
 	},
+	"type": "module",
 	"scripts": {
 		"test": "jest",
 		"clean": "rimraf dist",
 		"lint": "eslint 'src/**/*.{ts,tsx}'",
 		"build-server": "tsc",
-		"dev-server": "nodemon --ignore config.json --watch src --watch ../module-framework/dist -e js,ts,d.ts src/headless.ts",
+		"dev-server": "TS_NODE_PROJECT=\"\" nodemon --exec \"node --loader ts-node/esm\" --ignore config.json --watch src --watch ../module-framework/dist -e js,ts,d.ts src/headless.ts",
 		"build": "concurrently --prefix \"[{name}]\" --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"yarn build-server\" \"yarn build-client\""
 	},
 	"keywords": [
@@ -58,7 +59,7 @@
 		"express": "^4.17.1",
 		"get-port": "^5.1.1",
 		"mongodb": "^3.7.3",
-		"p-queue": "^6.6.2",
+		"p-queue": "^7.1.0",
 		"read-pkg-up": "^7.0.1",
 		"respawn": "^2.6.0",
 		"semver": "^7.3.5",
@@ -68,9 +69,5 @@
 		"threads": "^1.7.0",
 		"tslib": "^2.3.1",
 		"underscore": "^1.13.0"
-	},
-	"devDependencies": {
-		"@types/sharp": "^0.29.4",
-		"ts-node": "^9.1.1"
 	}
 }

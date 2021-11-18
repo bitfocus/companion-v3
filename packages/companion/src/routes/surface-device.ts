@@ -1,10 +1,14 @@
-import { SocketCommand, SurfaceDeviceAttachMessage, SurfaceDeviceDetachMessage } from '@companion/core-shared/dist/api';
-import { SocketAuthSessionWrapper } from './auth';
-import SocketIO from 'socket.io';
-import { getUserInfo } from '../auth';
-import { ICore } from '../core';
-import { registerCommand } from './lib';
-import { SurfaceManager } from '../services/surfaces';
+import {
+	SocketCommand,
+	SurfaceDeviceAttachMessage,
+	SurfaceDeviceDetachMessage,
+} from '@companion/core-shared/dist/api.js';
+import { SocketAuthSessionWrapper } from './auth.js';
+import * as SocketIO from 'socket.io';
+import { getUserInfo } from '../auth.js';
+import { ICore } from '../core.js';
+import { registerCommand } from './lib.js';
+import { SurfaceManager } from '../services/surfaces.js';
 
 export function socketSurfaceDeviceHandler(
 	core: ICore,

@@ -1,20 +1,20 @@
 import express from 'express';
 import path from 'path';
-import { apiRouter, socketHandler } from './routes/api-router';
-import { staticsRouter } from './statics-router';
-import * as config from './config';
+import { apiRouter, socketHandler } from './routes/api-router.js';
+import { staticsRouter } from './statics-router.js';
+import * as config from './config.js';
 import http from 'http';
-import SocketIO from 'socket.io';
-import { ICore } from './core';
-import { ModuleRegistry } from './services/module-registry';
+import * as SocketIO from 'socket.io';
+import { ICore } from './core.js';
+import { ModuleRegistry } from './services/module-registry.js';
 import fs from 'fs';
-import { MongoClient } from 'mongodb';
-import { CollectionId } from '@companion/core-shared/dist/collections';
+import Mongo from 'mongodb';
+import { CollectionId } from '@companion/core-shared/dist/collections/index.js';
 import getPort from 'get-port';
-import { startMongo } from './mongo';
-import { startControlRenderer } from './services/renderer';
-import { startSurfaceManager } from './services/surfaces';
-import { startModuleHost } from './services/module-host';
+import { startMongo } from './mongo.js';
+import { startControlRenderer } from './services/renderer.js';
+import { startSurfaceManager } from './services/surfaces.js';
+import { startModuleHost } from './services/module-host.js';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -35,7 +35,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		mongoUrl = await startMongo(configPath, path.join(appPath, '../..'), '127.0.0.1', mongoPort);
 	}
 
-	const client = new MongoClient(mongoUrl, { useUnifiedTopology: true, w: 'majority', j: false });
+	const client = new Mongo.MongoClient(mongoUrl, { useUnifiedTopology: true, w: 'majority', j: false });
 	await client.connect();
 
 	const database = client.db(process.env.MONGO_DB ?? 'companion3');
@@ -76,7 +76,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	]);
 
 	// Update the list of modules
-	moduleFactory.rescanModules(core.models.modules).catch((e) => {
+	await moduleFactory.rescanModules(core.models.modules).catch((e) => {
 		console.error(`Module scan failed: ${e}`);
 	});
 
@@ -128,7 +128,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	app.use(apiRouter(core));
 	socketHandler(core, surfaceManager);
 
-	app.use(staticsRouter());
+	app.use(await staticsRouter());
 
 	await new Promise<void>((resolve) => {
 		server.listen(config.SERVER_PORT, () => {

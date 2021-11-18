@@ -1,11 +1,11 @@
 import PQueue from 'p-queue';
-import { ICore } from '../core';
+import { ICore } from '../core.js';
 import Respawn from 'respawn';
-import SocketIO from 'socket.io';
+import * as SocketIO from 'socket.io';
 import getPort from 'get-port';
 import shortid from 'shortid';
 import path from 'path';
-import { HostApiVersion, isSupportedApiVersion } from '@companion/module-framework/dist/host-api/versions';
+import { HostApiVersion, isSupportedApiVersion } from '@companion/module-framework/dist/host-api/versions.js';
 
 interface ChildProcessInfo {
 	monitor: Respawn.RespawnMonitor;

@@ -1,13 +1,15 @@
 {
 	"name": "root",
 	"private": true,
+	"type": "module",
 	"scripts": {
-		"dev": "node ./scripts/start.js",
+		"dev": "TS_NODE_PROJECT=\"./packages/companion/tsconfig.json\" node --loader ts-node/esm ./scripts/start.cjs",
 		"build": "yarn lerna run --scope=companion3 --stream build",
 		"clean": "yarn lerna run --scope=companion3 --stream clean",
 		"postinstall": "yarn lerna link"
 	},
 	"devDependencies": {
+		"@tsconfig/node16": "^1.0.2",
 		"@types/app-root-path": "^1.2.4",
 		"@types/concurrently": "^6.4.0",
 		"@types/express": "^4.17.13",
@@ -17,6 +19,7 @@
 		"@types/node": "^16.11.7",
 		"@types/sanitize-html": "^1.27.1",
 		"@types/semver": "^7.3.0",
+		"@types/sharp": "^0.29.4",
 		"@types/shortid": "^0.0.29",
 		"@types/underscore": "^1.11.3",
 		"@typescript-eslint/eslint-plugin": "^4.18.0",
@@ -33,7 +36,7 @@
 		"prettier": "^2.2.1",
 		"request": "^2.88.2",
 		"rimraf": "^3.0.2",
-		"ts-node": "^9.1.1",
+		"ts-node": "^10.4.0",
 		"tsc-watch": "^4.5.0",
 		"typescript": "~4.5"
 	},

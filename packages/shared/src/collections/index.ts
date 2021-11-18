@@ -1,9 +1,9 @@
-export * from './ControlDefinition';
-export * from './ControlRender';
-export * from './DeviceConnection';
-export * from './Module';
-export * from './SurfaceDevice';
-export * from './SurfaceSpace';
+export * from './ControlDefinition.js';
+export * from './ControlRender.js';
+export * from './DeviceConnection.js';
+export * from './Module.js';
+export * from './SurfaceDevice.js';
+export * from './SurfaceSpace.js';
 
 export enum CollectionId {
 	Modules = 'modules',

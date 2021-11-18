@@ -1,8 +1,7 @@
 {
+	"extends": "@tsconfig/node16/tsconfig.json",
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "esnext",
-		"noImplicitAny": true,
+		"module": "es2020",
 		"moduleResolution": "node",
 		"sourceMap": true,
 		"paths": {
@@ -13,16 +12,8 @@
 		"listFiles": false,
 		"traceResolution": false,
 		"pretty": true,
-		"lib": ["esnext"],
 		"types": ["node"],
-		"strict": true,
-		"alwaysStrict": false,
-		"forceConsistentCasingInFileNames": true,
-		"noFallthroughCasesInSwitch": true,
-		"noImplicitReturns": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"esModuleInterop": true
+		"forceConsistentCasingInFileNames": true
 	},
 	"compileOnSave": false
 }

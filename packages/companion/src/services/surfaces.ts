@@ -1,8 +1,8 @@
-import { ICore } from '../core';
+import { ICore } from '../core.js';
 import { ModuleThread, spawn, Thread, Worker } from 'threads';
-import { SurfaceWorker } from '../workers/surface';
-import { SurfaceDeviceStatus } from '@companion/core-shared/dist/collections';
-import { ObjectID } from 'bson';
+import { SurfaceWorker } from '../workers/surface.js';
+import { SurfaceDeviceStatus } from '@companion/core-shared/dist/collections/index.js';
+import Bson from 'bson';
 
 interface WrappedSurface {
 	readonly worker: ModuleThread<SurfaceWorker>;
@@ -24,27 +24,25 @@ export class SurfaceManager {
 	}
 
 	async start(): Promise<void> {
-		this.scanner = await spawn<SurfaceWorker>(new Worker('../workers/surface'));
-
-		// Set all the surfaces as being offline, as we don't yet know if they are there
-		await this.core.models.surfaceDevices.updateMany(
-			{},
-			{
-				$set: {
-					status: SurfaceDeviceStatus.OFFLINE,
-				},
-			},
-		);
-		// Remove any devices which are offline and have not been adopted
-		await this.core.models.surfaceDevices.deleteMany({
-			status: SurfaceDeviceStatus.OFFLINE,
-			adopted: false,
-		});
-
-		// Do a scan in the background, but dont worry if it fails
-		setTimeout(() => {
-			this.scan().catch(() => null);
-		}, 1000);
+		// this.scanner = await spawn<SurfaceWorker>(new Worker('../workers/surface'));
+		// // Set all the surfaces as being offline, as we don't yet know if they are there
+		// await this.core.models.surfaceDevices.updateMany(
+		// 	{},
+		// 	{
+		// 		$set: {
+		// 			status: SurfaceDeviceStatus.OFFLINE,
+		// 		},
+		// 	},
+		// );
+		// // Remove any devices which are offline and have not been adopted
+		// await this.core.models.surfaceDevices.deleteMany({
+		// 	status: SurfaceDeviceStatus.OFFLINE,
+		// 	adopted: false,
+		// });
+		// // Do a scan in the background, but dont worry if it fails
+		// setTimeout(() => {
+		// 	this.scan().catch(() => null);
+		// }, 1000);
 	}
 
 	async destroy(): Promise<void> {
@@ -69,7 +67,7 @@ export class SurfaceManager {
 
 					if (!existing) {
 						// Create the new surface
-						const newId = new ObjectID().toHexString();
+						const newId = new Bson.ObjectID().toHexString();
 						updatedIds.add(newId);
 						updates.push(
 							this.core.models.surfaceDevices.insertOne({
@@ -196,25 +194,25 @@ export class SurfaceManager {
 			}
 
 			// open the device in the worker
-			worker = await spawn<SurfaceWorker>(new Worker('../workers/surface'));
-			await worker.open(path);
+			// worker = await spawn<SurfaceWorker>(new Worker('../workers/surface'));
+			// await worker.open(path);
 
-			const wrappedDevice: WrappedSurface = {
-				worker,
-				surfaceSpaceId: deviceInfo.surfaceSpaceId,
-			};
-			this.devices.set(deviceId, wrappedDevice);
+			// const wrappedDevice: WrappedSurface = {
+			// 	worker,
+			// 	surfaceSpaceId: deviceInfo.surfaceSpaceId,
+			// };
+			// this.devices.set(deviceId, wrappedDevice);
 
-			// TODO - subscribe to events
+			// // TODO - subscribe to events
 
-			await this.core.models.surfaceDevices.updateOne(
-				{
-					_id: deviceId,
-				},
-				{
-					status: SurfaceDeviceStatus.READY,
-				},
-			);
+			// await this.core.models.surfaceDevices.updateOne(
+			// 	{
+			// 		_id: deviceId,
+			// 	},
+			// 	{
+			// 		status: SurfaceDeviceStatus.READY,
+			// 	},
+			// );
 		} finally {
 			if (worker) {
 				try {

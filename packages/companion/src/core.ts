@@ -1,4 +1,4 @@
-import { Collection, Db as MongoDb, MongoClient } from 'mongodb';
+import Mongo from 'mongodb';
 import {
 	IControlDefinition,
 	IControlRender,
@@ -7,21 +7,21 @@ import {
 	IModule,
 	ISurfaceDevice,
 	ISurfaceSpace,
-} from '@companion/core-shared/dist/collections';
-import SocketIO from 'socket.io';
+} from '@companion/core-shared/dist/collections/index.js';
+import * as SocketIO from 'socket.io';
 
 export interface ICore {
-	client: MongoClient;
-	db: MongoDb;
+	client: Mongo.MongoClient;
+	db: Mongo.Db;
 	models: {
-		controlDefinitions: Collection<IControlDefinition>;
-		deviceConnections: Collection<IDeviceConnection>;
-		modules: Collection<IModule>;
-		surfaceDevices: Collection<ISurfaceDevice>;
-		surfaceSpaces: Collection<ISurfaceSpace>;
+		controlDefinitions: Mongo.Collection<IControlDefinition>;
+		deviceConnections: Mongo.Collection<IDeviceConnection>;
+		modules: Mongo.Collection<IModule>;
+		surfaceDevices: Mongo.Collection<ISurfaceDevice>;
+		surfaceSpaces: Mongo.Collection<ISurfaceSpace>;
 
-		controlRenders: Collection<IControlRender>;
-		deviceConnectionActions: Collection<IDeviceConnectionAction>;
+		controlRenders: Mongo.Collection<IControlRender>;
+		deviceConnectionActions: Mongo.Collection<IDeviceConnectionAction>;
 	};
 	io: SocketIO.Server;
 	// moduleFactory: ModuleRegistry;

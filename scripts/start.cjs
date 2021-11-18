@@ -1,13 +1,17 @@
 const concurrently = require('concurrently');
 const path = require('path');
+// import concurrently from 'concurrently';
+// import path from 'path';
 
-require('ts-node').register({
-	project: './packages/companion/tsconfig.json',
-});
-
-const { startMongo } = require('../packages/companion/src/mongo');
+// require('ts-node').register({
+// 	project: './packages/companion/tsconfig.json',
+// 	compilerOptions: {
+// 		module: 'commonjs',
+// 	},
+// });
 
 (async () => {
+	const { startMongo } = await import('../packages/companion/src/mongo.ts');
 	try {
 		/** Startup mongo */
 		const dataPath = path.join(__dirname, '../packages/companion/userdata/');

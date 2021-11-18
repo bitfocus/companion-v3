@@ -1,27 +1,26 @@
-import bodyParser from 'body-parser';
 import { Router } from 'express';
-import { ICore } from '../core';
+import { ICore } from '../core.js';
 import {
 	SocketCommand,
 	CollectionSubscribeMessage,
 	CollectionUnsubscribeMessage,
 	UserInfoMessage,
-} from '@companion/core-shared/dist/api';
-import { literal } from '@companion/core-shared/dist/util';
-import { SubscriptionEvent } from '@companion/core-shared/dist/subscription';
-import { socketSubscribe, socketUnsubscribe, unsubscribeAllForSocket } from '../subscriptions';
-import { getUserInfo } from '../auth';
-import SocketIO from 'socket.io';
-import { socketAuthHandler, SocketAuthSessionWrapper } from './auth';
-import { socketDeviceConnectionHandler } from './connections';
-import { socketControlDefinitionHandler } from './control-definition';
-import { socketSurfaceSpaceHandler } from './surface-space';
-import { SurfaceManager } from '../services/surfaces';
-import { socketSurfaceDeviceHandler } from './surface-device';
+} from '@companion/core-shared/dist/api.js';
+import { literal } from '@companion/core-shared/dist/util.js';
+import { SubscriptionEvent } from '@companion/core-shared/dist/subscription.js';
+import { socketSubscribe, socketUnsubscribe, unsubscribeAllForSocket } from '../subscriptions.js';
+import { getUserInfo } from '../auth.js';
+import * as SocketIO from 'socket.io';
+import { socketAuthHandler, SocketAuthSessionWrapper } from './auth.js';
+import { socketDeviceConnectionHandler } from './connections.js';
+import { socketControlDefinitionHandler } from './control-definition.js';
+import { socketSurfaceSpaceHandler } from './surface-space.js';
+import { SurfaceManager } from '../services/surfaces.js';
+import { socketSurfaceDeviceHandler } from './surface-device.js';
 
 export function apiRouter(core: ICore): Router {
 	const router = Router();
-	router.use(bodyParser.json());
+	// router.use(bodyParser.json());
 
 	router.get('/api/users', async (_req, res) => {
 		const items = await core.db.collection('workspaces').find().toArray();

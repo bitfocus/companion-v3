@@ -6,15 +6,15 @@ import {
 	ControlDefinitionNameUpdateMessage,
 	ControlDefinitionRenderLayerUpdateMessage,
 	SocketCommand,
-} from '@companion/core-shared/dist/api';
-import { rgba } from '@companion/core-shared/dist/color';
-import { SocketAuthSessionWrapper } from './auth';
-import SocketIO from 'socket.io';
-import { getUserInfo } from '../auth';
-import { ICore } from '../core';
-import { registerCommand } from './lib';
-import { ObjectID } from 'bson';
-import { ControlType, IControlDefinition } from '@companion/core-shared/dist/collections';
+} from '@companion/core-shared/dist/api.js';
+import { rgba } from '@companion/core-shared/dist/color.js';
+import { SocketAuthSessionWrapper } from './auth.js';
+import * as SocketIO from 'socket.io';
+import { getUserInfo } from '../auth.js';
+import { ICore } from '../core.js';
+import { registerCommand } from './lib.js';
+import Bson from 'bson';
+import { ControlType, IControlDefinition } from '@companion/core-shared/dist/collections/index.js';
 import {
 	ControlDefinitionActionAddMessage,
 	ControlDefinitionActionRemoveMessage,
@@ -25,7 +25,7 @@ export function createControlDefaults(type: ControlType): IControlDefinition {
 	// TODO - validate type
 
 	return {
-		_id: new ObjectID().toHexString(),
+		_id: new Bson.ObjectID().toHexString(),
 		description: 'New control',
 		controlType: type,
 		defaultLayer: {
@@ -35,7 +35,7 @@ export function createControlDefaults(type: ControlType): IControlDefinition {
 			textColor: rgba(255, 255, 255, 255),
 			backgroundColor: rgba(0, 0, 0, 255),
 		},
-		renderHash: new ObjectID().toHexString(),
+		renderHash: new Bson.ObjectID().toHexString(),
 		touchedAt: Date.now(),
 
 		downActions: [],
@@ -100,7 +100,7 @@ export function socketControlDefinitionHandler(
 					{
 						$set: {
 							[`defaultLayer.${msg.key}`]: msg.value,
-							renderHash: new ObjectID().toHexString(),
+							renderHash: new Bson.ObjectID().toHexString(),
 						},
 					},
 				);
@@ -149,7 +149,7 @@ export function socketControlDefinitionHandler(
 					{
 						$push: {
 							downActions: {
-								id: new ObjectID().toHexString(),
+								id: new Bson.ObjectID().toHexString(),
 
 								connectionId: msg.connectionId,
 								actionId: msg.actionId,

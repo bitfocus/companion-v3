@@ -1,8 +1,8 @@
-import { pngBufferToString } from '@companion/core-shared/dist/collections';
-import { splitColors } from '@companion/core-shared/dist/color';
+import { pngBufferToString } from '@companion/core-shared/dist/collections/index.js';
+import { splitColors } from '@companion/core-shared/dist/color.js';
 import PQueue from 'p-queue';
 import sharp from 'sharp';
-import { ICore } from '../core';
+import { ICore } from '../core.js';
 
 class ControlRenderer {
 	private readonly core: ICore;

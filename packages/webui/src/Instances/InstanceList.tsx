@@ -179,7 +179,7 @@ function InstancesTableRow({
 	);
 }
 
-function processModuleStatus(status: [InstanceStatus, string]) {
+function processModuleStatus(status: [InstanceStatus | -1, string]) {
 	if (status) {
 		switch (status[0]) {
 			case -1:

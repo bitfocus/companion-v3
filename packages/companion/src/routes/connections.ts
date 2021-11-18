@@ -1,11 +1,11 @@
-import { ConnectionDeleteMessage, ConnectionEnabledMessage, SocketCommand } from '@companion/core-shared/dist/api';
-import { SocketAuthSessionWrapper } from './auth';
-import SocketIO from 'socket.io';
-import { ConnectionCreateMessage, ConnectionCreateMessageReply } from '@companion/core-shared/dist/api';
-import { getUserInfo } from '../auth';
-import { ICore } from '../core';
+import { ConnectionDeleteMessage, ConnectionEnabledMessage, SocketCommand } from '@companion/core-shared/dist/api.js';
+import { SocketAuthSessionWrapper } from './auth.js';
+import * as SocketIO from 'socket.io';
+import { ConnectionCreateMessage, ConnectionCreateMessageReply } from '@companion/core-shared/dist/api.js';
+import { getUserInfo } from '../auth.js';
+import { ICore } from '../core.js';
 import shortid from 'shortid';
-import { registerCommand } from './lib';
+import { registerCommand } from './lib.js';
 
 export function socketDeviceConnectionHandler(
 	core: ICore,

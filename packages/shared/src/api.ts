@@ -1,5 +1,5 @@
 import { InputValue } from '@companion/module-framework';
-import { CollectionId, ControlType, IButtonControlRenderLayer, SurfaceType } from './collections';
+import { CollectionId, ControlType, IButtonControlRenderLayer, SurfaceType } from './collections/index.js';
 
 export enum SocketCommand {
 	Login = 'LOGIN',

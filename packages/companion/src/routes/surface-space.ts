@@ -10,15 +10,15 @@ import {
 	SurfaceSpacePageSlotCreateMessage,
 	SurfaceSpacePageSlotCreateMessageReply,
 	SurfaceSpacePageSlotUseControlMessage,
-} from '@companion/core-shared/dist/api';
-import { SocketAuthSessionWrapper } from './auth';
-import SocketIO from 'socket.io';
-import { getUserInfo } from '../auth';
-import { ICore } from '../core';
-import { registerCommand } from './lib';
-import { ObjectID } from 'bson';
-import { SurfaceType } from '@companion/core-shared/dist/collections';
-import { createControlDefaults } from './control-definition';
+} from '@companion/core-shared/dist/api.js';
+import { SocketAuthSessionWrapper } from './auth.js';
+import * as SocketIO from 'socket.io';
+import { getUserInfo } from '../auth.js';
+import { ICore } from '../core.js';
+import { registerCommand } from './lib.js';
+import Bson from 'bson';
+import { SurfaceType } from '@companion/core-shared/dist/collections/index.js';
+import { createControlDefaults } from './control-definition.js';
 
 export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, authSession: SocketAuthSessionWrapper) {
 	registerCommand(
@@ -27,8 +27,8 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 		async (_msg: SurfaceSpaceCreateMessage): Promise<SurfaceSpaceCreateMessageReply> => {
 			const userSession = await getUserInfo(authSession.authSessionId);
 			if (userSession) {
-				const docId = new ObjectID().toHexString();
-				const pageId = new ObjectID().toHexString();
+				const docId = new Bson.ObjectID().toHexString();
+				const pageId = new Bson.ObjectID().toHexString();
 
 				const session = core.client.startSession();
 				try {
@@ -142,7 +142,7 @@ export function socketSurfaceSpaceHandler(core: ICore, socket: SocketIO.Socket, 
 		async (msg: SurfaceSpacePageCreateMessage): Promise<SurfaceSpacePageCreateMessageReply> => {
 			const userSession = await getUserInfo(authSession.authSessionId);
 			if (userSession) {
-				const pageId = new ObjectID().toHexString();
+				const pageId = new Bson.ObjectID().toHexString();
 
 				const session = core.client.startSession();
 				try {

@@ -1,5 +1,5 @@
-import { SocketCommand } from '@companion/core-shared/dist/api';
-import SocketIO from 'socket.io';
+import { SocketCommand } from '@companion/core-shared/dist/api.js';
+import * as SocketIO from 'socket.io';
 
 export function registerCommand<T, T2 = void>(
 	socket: SocketIO.Socket,

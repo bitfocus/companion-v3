@@ -1,8 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { spawn } from 'child_process';
-import concurrently = require('concurrently');
-import { IS_PACKAGED } from './config';
+import concurrently from 'concurrently';
+import { IS_PACKAGED } from './config.js';
 
 export async function startMongo(configPath: string, rootPath: string, host: string, port: number): Promise<string> {
 	const mongoDir = IS_PACKAGED

@@ -1,8 +1,8 @@
-import { SocketCommand, LoginMessage, UserInfoMessage, LogoutMessage } from '@companion/core-shared/dist/api';
-import { literal } from '@companion/core-shared/dist/util';
-import { login, getUserInfo, logout } from '../auth';
-import { unsubscribeAllForSocket } from '../subscriptions';
-import SocketIO from 'socket.io';
+import { SocketCommand, LoginMessage, UserInfoMessage, LogoutMessage } from '@companion/core-shared/dist/api.js';
+import { literal } from '@companion/core-shared/dist/util.js';
+import { login, getUserInfo, logout } from '../auth.js';
+import { unsubscribeAllForSocket } from '../subscriptions.js';
+import * as SocketIO from 'socket.io';
 
 export interface SocketAuthSessionWrapper {
 	authSessionId: string | null;

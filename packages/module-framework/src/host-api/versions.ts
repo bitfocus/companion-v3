@@ -1,4 +1,4 @@
-import { assertNever } from '../util';
+import { assertNever } from '../util.js';
 
 export enum HostApiVersion {
 	v0 = 'v0',

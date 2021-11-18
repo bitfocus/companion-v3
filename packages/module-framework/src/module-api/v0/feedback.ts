@@ -1,4 +1,4 @@
-import { SomeCompanionInputField, InputValue } from './input';
+import { SomeCompanionInputField, InputValue } from './input.js';
 
 export interface CompanionFeedbackEvent {
 	type: string;

@@ -1,4 +1,4 @@
-import { InputValue } from './input';
+import { InputValue } from './input.js';
 
 export type CompanionUpgradeScript<TConfig> = (
 	config: CompanionCoreInstanceconfig & TConfig,

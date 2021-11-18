@@ -1,4 +1,4 @@
-import { SomeCompanionInputField, InputValue } from './input';
+import { SomeCompanionInputField, InputValue } from './input.js';
 
 export interface CompanionAction {
 	label: string;

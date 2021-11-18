@@ -1,8 +1,8 @@
 import * as SocketIOClient from 'socket.io-client';
-import { ModuleApiV0 } from './module-api';
+import { ModuleApiV0 } from './module-api/index.js';
 import PTimeout from 'p-timeout';
-import { HostApiVersion } from './host-api/versions';
-import { InstanceBaseShared } from './instance-base';
+import { HostApiVersion } from './host-api/versions.js';
+import { InstanceBaseShared } from './instance-base.js';
 
 let hasEntrypoint = false;
 

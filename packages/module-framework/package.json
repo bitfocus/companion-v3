@@ -1,6 +1,7 @@
 {
 	"name": "@companion/module-framework",
 	"version": "0.1.0",
+	"type": "module",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"license": "MIT",
@@ -13,7 +14,7 @@
 		"dist"
 	],
 	"dependencies": {
-		"p-timeout": "^4.1.0",
+		"p-timeout": "^5.0.2",
 		"socket.io-client": "^3"
 	}
 }

@@ -1,14 +1,14 @@
 import * as SocketIOClient from 'socket.io-client';
-import { CompanionInputField } from './input';
-import { CompanionActionEvent, CompanionActions } from './action';
-import { CompanionUpgradeScript } from './upgrade';
-import { CompanionFeedbackEvent, CompanionFeedbackResult, CompanionFeedbacks } from './feedback';
-import { CompanionVariable } from './variable';
-import { CompanionPreset } from './preset';
-import { InstanceStatus, LogLevel } from './enums';
-import { HostApiCommands, LogMessageMessage, SetStatusMessage } from '../../host-api/v0';
-import { literal } from '../../util';
-import { InstanceBaseShared } from '../../instance-base';
+import { CompanionInputField } from './input.js';
+import { CompanionActionEvent, CompanionActions } from './action.js';
+import { CompanionUpgradeScript } from './upgrade.js';
+import { CompanionFeedbackEvent, CompanionFeedbackResult, CompanionFeedbacks } from './feedback.js';
+import { CompanionVariable } from './variable.js';
+import { CompanionPreset } from './preset.js';
+import { InstanceStatus, LogLevel } from './enums.js';
+import { HostApiCommands, LogMessageMessage, SetStatusMessage } from '../../host-api/v0.js';
+import { literal } from '../../util.js';
+import { InstanceBaseShared } from '../../instance-base.js';
 
 export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TConfig> {
 	#socket: SocketIOClient.Socket;

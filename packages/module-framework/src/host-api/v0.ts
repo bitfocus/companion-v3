@@ -1,4 +1,4 @@
-import { InstanceStatus, LogLevel } from '../module-api/v0';
+import { InstanceStatus, LogLevel } from '../module-api/v0/index.js';
 
 // TODO fill out more
 export enum HostApiCommands {

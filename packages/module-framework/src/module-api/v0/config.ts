@@ -1,4 +1,4 @@
-import { CompanionInputField, SomeCompanionInputField } from './input';
+import { CompanionInputField, SomeCompanionInputField } from './input.js';
 
 export type ConfigValue = string | number;
 

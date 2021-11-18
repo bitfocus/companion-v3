@@ -1,4 +1,4 @@
-import { ConfigValue } from './config';
+import { ConfigValue } from './config.js';
 
 export type InputValue = number | string | boolean;
 

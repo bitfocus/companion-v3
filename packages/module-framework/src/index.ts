@@ -1,4 +1,4 @@
-export * from './bootstrap';
-export * from './manifest';
-export * from './module-api';
-export { literal, combineRgb, splitRgb, RgbComponents } from './util';
+export * from './bootstrap.js';
+export * from './manifest.js';
+export * from './module-api/index.js';
+export { literal, combineRgb, splitRgb, RgbComponents } from './util.js';

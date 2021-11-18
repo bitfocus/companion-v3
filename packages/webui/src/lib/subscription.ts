@@ -5,6 +5,7 @@ import { literal } from '@companion/core-shared/dist/util';
 import { Socket } from 'socket.io-client';
 import { useEffect, useState } from 'react';
 import { CollectionId } from '@companion/core-shared/dist/collections';
+import { socketEmit2 } from '../util';
 
 export type unsub = () => void;
 
@@ -21,7 +22,8 @@ function subscribeToCollection<T extends { _id: string }>(
 	onChange: (docs: T[]) => void,
 ): unsub {
 	const subId = shortid();
-	socket.emit(
+	socketEmit2(
+		socket,
 		SocketCommand.CollectionSubscribe,
 		literal<CollectionSubscribeMessage>({
 			id: subId,
@@ -29,7 +31,9 @@ function subscribeToCollection<T extends { _id: string }>(
 			query,
 			// TODO - forward options
 		}),
-	);
+	).catch((e) => {
+		console.error('CollectionSubscribe', e);
+	});
 
 	const fullData = new Map<string, T>();
 	socket.on(subId, (msg: SubscriptionEvent<T>) => {
@@ -56,8 +60,11 @@ function subscribeToCollection<T extends { _id: string }>(
 
 	return () => {
 		socket.off(subId);
-		socket.emit(SocketCommand.CollectionUnsubscribe, {
+
+		socketEmit2(socket, SocketCommand.CollectionUnsubscribe, {
 			id: subId,
+		}).catch((e) => {
+			console.error('CollectionUnsubscribe', e);
 		});
 	};
 }

@@ -3,7 +3,7 @@ import { LoginMessage, LogoutMessage, SocketCommand, UserInfoMessage } from '@co
 import { literal } from '@companion/core-shared/dist/util';
 import { AuthStatusContext, AuthStatusLink } from './BackendContext';
 import { Socket } from 'socket.io-client';
-import { CompanionContext, ICompanionContext } from './util';
+import { CompanionContext, ICompanionContext, socketEmit2 } from './util';
 import {
 	CollectionId,
 	IControlDefinition,
@@ -37,20 +37,25 @@ export function AuthComponentWrapper(props: React.PropsWithChildren<AuthComponen
 	const doLogin = useCallback(
 		(username: string, password: string): void => {
 			if (!userInfo) {
-				props.socket.emit(
+				socketEmit2(
+					props.socket,
 					SocketCommand.Login,
 					literal<LoginMessage>({
 						username,
 						password,
 					}),
-				);
+				).catch((e) => {
+					console.error(e);
+				});
 			}
 		},
 		[userInfo, props.socket],
 	);
 
 	const doLogout = useCallback((): void => {
-		props.socket.emit(SocketCommand.Logout, literal<LogoutMessage>({}));
+		socketEmit2(props.socket, SocketCommand.Logout, literal<LogoutMessage>({})).catch((e) => {
+			console.error(e);
+		});
 	}, [props.socket]);
 
 	const authValue = useMemo(() => {

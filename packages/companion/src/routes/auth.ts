@@ -3,46 +3,40 @@ import { literal } from '@companion/core-shared/dist/util.js';
 import { login, getUserInfo, logout } from '../auth.js';
 import { unsubscribeAllForSocket } from '../subscriptions.js';
 import * as SocketIO from 'socket.io';
+import { IServices, SocketContext } from './handlers.js';
+import { ICore } from '../core.js';
 
-export interface SocketAuthSessionWrapper {
-	authSessionId: string | null;
-}
-
-export function socketAuthHandler(socket: SocketIO.Socket, authSession: SocketAuthSessionWrapper) {
-	socket.on(SocketCommand.Login, async (msg: LoginMessage) => {
-		if (!authSession.authSessionId) {
-			try {
-				// TODO - race condition around authSession?
-				authSession.authSessionId = await login(msg.username, msg.password);
-				if (authSession) {
-					const userInfo = await getUserInfo(authSession.authSessionId);
-					if (userInfo) {
-						socket.emit(
-							SocketCommand.UserInfo,
-							literal<UserInfoMessage>({
-								info: userInfo,
-							}),
-						);
-					} else {
-						socket.emit(
-							SocketCommand.UserInfo,
-							literal<UserInfoMessage>({
-								info: {
-									name: 'Unknown',
-								},
-							}),
-						);
-					}
+export async function handleLoginCommand(
+	socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	_core: ICore,
+	_services: IServices,
+	msg: LoginMessage,
+): Promise<void> {
+	if (!socketContext.authSessionId) {
+		try {
+			// TODO - race condition around authSession?
+			socketContext.authSessionId = await login(msg.username, msg.password);
+			if (socketContext) {
+				const userInfo = await getUserInfo(socketContext.authSessionId);
+				if (userInfo) {
+					socket.emit(
+						SocketCommand.UserInfo,
+						literal<UserInfoMessage>({
+							info: userInfo,
+						}),
+					);
 				} else {
 					socket.emit(
 						SocketCommand.UserInfo,
 						literal<UserInfoMessage>({
-							error: 'Login failed',
+							info: {
+								name: 'Unknown',
+							},
 						}),
 					);
 				}
-			} catch (e) {
-				console.log('auth failed');
+			} else {
 				socket.emit(
 					SocketCommand.UserInfo,
 					literal<UserInfoMessage>({
@@ -50,20 +44,34 @@ export function socketAuthHandler(socket: SocketIO.Socket, authSession: SocketAu
 					}),
 				);
 			}
+		} catch (e) {
+			console.log('auth failed');
+			socket.emit(
+				SocketCommand.UserInfo,
+				literal<UserInfoMessage>({
+					error: 'Login failed',
+				}),
+			);
 		}
-	});
-	socket.on(SocketCommand.Logout, async (_msg: LogoutMessage) => {
-		if (authSession.authSessionId) {
-			// Clear the value
-			const oldAuthSessionId = authSession.authSessionId;
-			authSession.authSessionId = null;
-			// Then do the logout
-			await logout(oldAuthSessionId);
-		}
+	}
+}
+export async function handleLogoutCommand(
+	socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	_core: ICore,
+	_services: IServices,
+	_msg: LogoutMessage,
+): Promise<void> {
+	if (socketContext.authSessionId) {
+		// Clear the value
+		const oldAuthSessionId = socketContext.authSessionId;
+		socketContext.authSessionId = null;
+		// Then do the logout
+		await logout(oldAuthSessionId);
+	}
 
-		socket.emit(SocketCommand.UserInfo, literal<UserInfoMessage>({}));
+	socket.emit(SocketCommand.UserInfo, literal<UserInfoMessage>({}));
 
-		// Remove subscriptions
-		unsubscribeAllForSocket(socket);
-	});
+	// Remove subscriptions
+	unsubscribeAllForSocket(socket);
 }

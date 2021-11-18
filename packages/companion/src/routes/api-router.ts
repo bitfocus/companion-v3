@@ -1,55 +1,46 @@
-import { Router } from 'express';
 import { ICore } from '../core.js';
-import {
-	SocketCommand,
-	CollectionSubscribeMessage,
-	CollectionUnsubscribeMessage,
-	UserInfoMessage,
-} from '@companion/core-shared/dist/api.js';
+import { SocketCommand, UserInfoMessage } from '@companion/core-shared/dist/api.js';
 import { literal } from '@companion/core-shared/dist/util.js';
-import { SubscriptionEvent } from '@companion/core-shared/dist/subscription.js';
-import { socketSubscribe, socketUnsubscribe, unsubscribeAllForSocket } from '../subscriptions.js';
+import { unsubscribeAllForSocket } from '../subscriptions.js';
 import { getUserInfo } from '../auth.js';
 import * as SocketIO from 'socket.io';
-import { socketAuthHandler, SocketAuthSessionWrapper } from './auth.js';
-import { socketDeviceConnectionHandler } from './connections.js';
-import { socketControlDefinitionHandler } from './control-definition.js';
-import { socketSurfaceSpaceHandler } from './surface-space.js';
 import { SurfaceManager } from '../services/surfaces.js';
-import { socketSurfaceDeviceHandler } from './surface-device.js';
+import { IServices, SocketContext, SocketHandlers } from './handlers.js';
 
-export function apiRouter(core: ICore): Router {
-	const router = Router();
-	// router.use(bodyParser.json());
+// export function apiRouter(core: ICore): Router {
+// 	const router = Router();
+// 	// router.use(bodyParser.json());
 
-	router.get('/api/users', async (_req, res) => {
-		const items = await core.db.collection('workspaces').find().toArray();
-		res.json(items);
-	});
+// 	router.get('/api/users', async (_req, res) => {
+// 		const items = await core.db.collection('workspaces').find().toArray();
+// 		res.json(items);
+// 	});
 
-	router.get('/api/user/:userId', async (req, res) => {
-		const userId = req.params.userId;
-		const item = await core.db.collection('workspaces').findOne({ _id: userId });
-		res.json(item);
-	});
+// 	router.get('/api/user/:userId', async (req, res) => {
+// 		const userId = req.params.userId;
+// 		const item = await core.db.collection('workspaces').findOne({ _id: userId });
+// 		res.json(item);
+// 	});
 
-	router.post('/api/set-user', (_req, res) => {
-		res.send(`ok`);
-	});
+// 	router.post('/api/set-user', (_req, res) => {
+// 		res.send(`ok`);
+// 	});
 
-	return router;
-}
-
-// function assertNever(val: never): void {}
+// 	return router;
+// }
 
 export function socketHandler(core: ICore, surfaceManager: SurfaceManager): void {
+	const services: IServices = {
+		surfaceManager,
+	};
+
 	core.io.on('connection', (socket: SocketIO.Socket) => {
 		console.log('a user connected');
 
-		let authSession: SocketAuthSessionWrapper = { authSessionId: null };
+		let socketContext: SocketContext = { authSessionId: null };
 
 		// Send userInfo, to ensure the ui is in sync
-		getUserInfo(authSession.authSessionId)
+		getUserInfo(socketContext.authSessionId)
 			.then((info) => {
 				socket.emit(
 					SocketCommand.UserInfo,
@@ -66,29 +57,22 @@ export function socketHandler(core: ICore, surfaceManager: SurfaceManager): void
 			unsubscribeAllForSocket(socket);
 		});
 
-		socketAuthHandler(socket, authSession);
-		socketDeviceConnectionHandler(core, socket, authSession);
-		socketControlDefinitionHandler(core, socket, authSession);
-		socketSurfaceSpaceHandler(core, socket, authSession);
-		socketSurfaceDeviceHandler(core, socket, authSession, surfaceManager);
+		// Register command handlers
+		for (const [id, handler] of Object.entries(SocketHandlers)) {
+			if (handler) {
+				socket.on(id, async (msg, cb) => {
+					// console.log('got cmd', id, msg, cb);
+					if (!msg || !cb) return; // Ignore messages without correct structure
 
-		socket.on(SocketCommand.CollectionSubscribe, async (msg: CollectionSubscribeMessage) => {
-			const userInfo = await getUserInfo(authSession.authSessionId);
-
-			if (userInfo) {
-				socketSubscribe(core, socket, msg);
-			} else {
-				socket.emit(
-					msg.id,
-					literal<SubscriptionEvent<unknown>>({
-						event: 'error',
-						message: 'Unauthorised',
-					}),
-				);
+					try {
+						const res = await handler(socket, socketContext, core, services, msg as never);
+						cb(null, res);
+					} catch (e) {
+						console.error(`Command "${id}" errored: ${e}`);
+						cb(e, null);
+					}
+				});
 			}
-		});
-		socket.on(SocketCommand.CollectionUnsubscribe, (msg: CollectionUnsubscribeMessage) => {
-			socketUnsubscribe(core, socket, msg);
-		});
+		}
 	});
 }

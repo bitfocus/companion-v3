@@ -1,6 +1,6 @@
 import express from 'express';
 import path from 'path';
-import { apiRouter, socketHandler } from './routes/api-router.js';
+import { socketHandler } from './routes/api-router.js';
 import { staticsRouter } from './statics-router.js';
 import * as config from './config.js';
 import http from 'http';
@@ -125,7 +125,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	const surfaceManager = await startSurfaceManager(core);
 	await startModuleHost(core);
 
-	app.use(apiRouter(core));
+	// app.use(apiRouter(core));
 	socketHandler(core, surfaceManager);
 
 	app.use(await staticsRouter());

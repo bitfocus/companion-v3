@@ -52,9 +52,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		setScanning(true);
 		setScanError(null);
 
-		socketEmit2(context.socket, SocketCommand.SurfaceDeviceScan, {})
-			.then(([errorMsg]) => {
-				setScanError(errorMsg || null);
+		socketEmit2(context.socket, SocketCommand.SurfaceDeviceScan, null)
+			.then(() => {
+				// setScanError(errorMsg || null);
+				setScanError(null);
 				setScanning(false);
 			})
 			.catch((err) => {

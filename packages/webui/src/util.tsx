@@ -12,7 +12,7 @@ import {
 	IModule,
 	ISurfaceSpace,
 } from '@companion/core-shared/dist/collections';
-import { SocketCommand } from '@companion/core-shared/dist/api';
+import { SocketCommandFunc } from '@companion/core-shared/dist/api';
 
 export interface ICompanionContext {
 	socket: Socket;
@@ -41,21 +41,22 @@ export const CompanionContext = React.createContext<ICompanionContext>({
 	feedbacks: undefined,
 });
 
-export function socketEmit2(
+export function socketEmit2<T extends keyof SocketCommandFunc>(
 	socket: Socket,
-	name: SocketCommand,
-	msg: any,
+	name: T,
+	msg: Parameters<SocketCommandFunc[T]>[0],
 	timeout?: number,
 	timeoutMessage?: string,
-): Promise<any> {
-	const p = new Promise<unknown>((resolve, reject) => {
+): Promise<ReturnType<SocketCommandFunc[T]>> {
+	const p = new Promise<ReturnType<SocketCommandFunc[T]>>((resolve, reject) => {
 		console.log('send', name, msg);
 
 		socket.emit(name, msg, (err: Error | null, res: unknown | null) => {
 			if (err) {
 				reject(err);
 			} else if (res) {
-				resolve(res);
+				// TODO - can we validate this?
+				resolve(res as any);
 			} else {
 				reject('No response');
 			}

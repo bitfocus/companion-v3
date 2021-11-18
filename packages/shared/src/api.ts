@@ -5,11 +5,14 @@ export enum SocketCommand {
 	Login = 'LOGIN',
 	Logout = 'LOGOUT',
 	UserInfo = 'USER_INFO',
+
 	CollectionSubscribe = 'COLLECTION.SUBSCRIBE',
 	CollectionUnsubscribe = 'COLLECTION.UNSUBSCRIBE',
+
 	ConnectionCreate = 'CONNECTION.CREATE',
 	ConnectionDelete = 'CONNECTION.DELETE',
 	ConnectionEnabled = 'CONNECTION.ENABLED',
+
 	ControlDefinitionCreate = 'CONTROLDEFINITION.CREATE',
 	ControlDefinitionDelete = 'CONTROLDEFINITION.DELETE',
 	ControlDefinitionRenderLayerUpdate = 'CONTROLDEFINITION.RENDERLAYER.UPDATE',
@@ -27,6 +30,7 @@ export enum SocketCommand {
 	SurfaceSpacePageSlotCreate = 'SURFACESPACEPAGESLOT.CREATE',
 	SurfaceSpacePageSlotClear = 'SURFACESPACEPAGESLOT.CLEAR',
 	SurfaceSpacePageSlotUseControl = 'SURFACESPACEPAGESLOT.USECONTROL',
+
 	SurfaceDeviceScan = 'SURFACEDEVICE.SCAN',
 	SurfaceDeviceAttach = 'SURFACEDEVICE.ATTACH',
 	SurfaceDeviceDetach = 'SURFACEDEVICE.DETACH',
@@ -79,7 +83,7 @@ export interface UserInfoMessage {
 
 export interface ConnectionCreateMessage {
 	moduleId: string;
-	product: string;
+	product: string | undefined;
 }
 export interface ConnectionCreateMessageReply {
 	connectionId: string;
@@ -203,3 +207,46 @@ export interface SurfaceDeviceDetachMessage {
 	spaceId: string;
 	deviceId: string;
 }
+
+export type SocketCommandFunc = {
+	[SocketCommand.Login]: (data: LoginMessage) => void;
+	[SocketCommand.Logout]: (data: LogoutMessage) => void;
+	[SocketCommand.UserInfo]: (data: UserInfoMessage) => void;
+
+	[SocketCommand.CollectionSubscribe]: (data: CollectionSubscribeMessage) => void;
+	[SocketCommand.CollectionUnsubscribe]: (data: CollectionUnsubscribeMessage) => void;
+
+	[SocketCommand.ConnectionCreate]: (data: ConnectionCreateMessage) => ConnectionCreateMessageReply;
+	[SocketCommand.ConnectionDelete]: (data: ConnectionDeleteMessage) => ConnectionDeleteMessage;
+	[SocketCommand.ConnectionEnabled]: (data: ConnectionEnabledMessage) => ConnectionEnabledMessage;
+
+	[SocketCommand.ControlDefinitionCreate]: (
+		data: ControlDefinitionCreateMessage,
+	) => ControlDefinitionCreateMessageReply;
+	[SocketCommand.ControlDefinitionDelete]: (data: ControlDefinitionDeleteMessage) => ControlDefinitionDeleteMessage;
+	[SocketCommand.ControlDefinitionRenderLayerUpdate]: (data: ControlDefinitionRenderLayerUpdateMessage<any>) => void;
+	[SocketCommand.ControlDefinitionNameUpdate]: (data: ControlDefinitionNameUpdateMessage) => void;
+	[SocketCommand.ControlDefinitionActionAdd]: (data: ControlDefinitionActionAddMessage) => void;
+	[SocketCommand.ControlDefinitionActionRemove]: (data: ControlDefinitionActionRemoveMessage) => void;
+	[SocketCommand.ControlDefinitionActionSetDelay]: (data: ControlDefinitionActionSetDelayMessage) => void;
+	[SocketCommand.ControlDefinitionActionSetOption]: (data: ControlDefinitionActionSetOptionMessage) => void;
+	[SocketCommand.ControlDefinitionActionReorder]: (data: ControlDefinitionActionReorderMessage) => void;
+
+	[SocketCommand.SurfaceSpaceCreate]: (data: SurfaceSpaceCreateMessage) => SurfaceSpaceCreateMessageReply;
+	[SocketCommand.SurfaceSpaceDelete]: (data: SurfaceSpaceDeleteMessage) => SurfaceSpaceDeleteMessage;
+	[SocketCommand.SurfaceSpacePageCreate]: (data: SurfaceSpacePageCreateMessage) => SurfaceSpacePageCreateMessageReply;
+	[SocketCommand.SurfaceSpacePageDelete]: (data: SurfaceSpacePageDeleteMessage) => SurfaceSpacePageDeleteMessage;
+	[SocketCommand.SurfaceSpacePageSlotCreate]: (
+		data: SurfaceSpacePageSlotCreateMessage,
+	) => SurfaceSpacePageSlotCreateMessageReply;
+	[SocketCommand.SurfaceSpacePageSlotClear]: (
+		data: SurfaceSpacePageSlotClearMessage,
+	) => SurfaceSpacePageSlotClearMessage;
+	[SocketCommand.SurfaceSpacePageSlotUseControl]: (
+		data: SurfaceSpacePageSlotUseControlMessage,
+	) => SurfaceSpacePageSlotUseControlMessage;
+
+	[SocketCommand.SurfaceDeviceScan]: (data: null) => void;
+	[SocketCommand.SurfaceDeviceAttach]: (data: SurfaceDeviceAttachMessage) => void;
+	[SocketCommand.SurfaceDeviceDetach]: (data: SurfaceDeviceDetachMessage) => void;
+};

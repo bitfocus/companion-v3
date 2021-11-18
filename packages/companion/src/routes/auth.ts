@@ -9,7 +9,7 @@ import { ICore } from '../core.js';
 export async function handleLoginCommand(
 	socket: SocketIO.Socket,
 	socketContext: SocketContext,
-	_core: ICore,
+	core: ICore,
 	_services: IServices,
 	msg: LoginMessage,
 ): Promise<void> {
@@ -18,7 +18,7 @@ export async function handleLoginCommand(
 			// TODO - race condition around authSession?
 			socketContext.authSessionId = await login(msg.username, msg.password);
 			if (socketContext) {
-				const userInfo = await getUserInfo(socketContext.authSessionId);
+				const userInfo = await getUserInfo(core, socketContext.authSessionId);
 				if (userInfo) {
 					socket.emit(
 						SocketCommand.UserInfo,

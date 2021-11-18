@@ -40,7 +40,7 @@ export function socketHandler(core: ICore, surfaceManager: SurfaceManager): void
 		let socketContext: SocketContext = { authSessionId: null };
 
 		// Send userInfo, to ensure the ui is in sync
-		getUserInfo(socketContext.authSessionId)
+		getUserInfo(core, socketContext.authSessionId)
 			.then((info) => {
 				socket.emit(
 					SocketCommand.UserInfo,

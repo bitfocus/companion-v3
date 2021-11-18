@@ -14,7 +14,7 @@ export async function handleCollectionSubscribe(
 	_services: IServices,
 	msg: CollectionSubscribeMessage,
 ): Promise<void> {
-	const userInfo = await getUserInfo(socketContext.authSessionId);
+	const userInfo = await getUserInfo(core, socketContext.authSessionId);
 
 	if (userInfo) {
 		socketSubscribe(core, socket, msg);

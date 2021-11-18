@@ -11,7 +11,7 @@ import {
 	SurfaceSpacePageSlotUseControlMessage,
 } from '@companion/core-shared/dist/api.js';
 import * as SocketIO from 'socket.io';
-import { getUserInfo } from '../auth.js';
+import { verifyUserSession } from '../auth.js';
 import { ICore } from '../core.js';
 import Bson from 'bson';
 import { SurfaceType } from '@companion/core-shared/dist/collections/index.js';
@@ -25,55 +25,52 @@ export async function handleSurfaceSpaceCreate(
 	_services: IServices,
 	_msg: SurfaceSpaceCreateMessage,
 ): Promise<SurfaceSpaceCreateMessageReply> {
-	const userSession = await getUserInfo(socketContext.authSessionId);
-	if (userSession) {
-		const docId = new Bson.ObjectID().toHexString();
-		const pageId = new Bson.ObjectID().toHexString();
+	await verifyUserSession(core, socketContext.authSessionId);
 
-		const session = core.client.startSession();
-		try {
-			const commitResult: any = await session.withTransaction(async () => {
-				const res = await core.models.surfaceSpaces.insertOne(
-					{
-						_id: docId,
-						name: 'New space',
-						cachedSpec: {
-							// TODO - dynamic
-							type: SurfaceType.ButtonGrid,
-							deviceName: 'Button Grid',
-							width: 8,
-							height: 4,
-						},
-						pages: [
-							{
-								_id: pageId,
+	const docId = new Bson.ObjectID().toHexString();
+	const pageId = new Bson.ObjectID().toHexString();
 
-								name: 'New page',
-								controls: {},
-							},
-						],
+	const session = core.client.startSession();
+	try {
+		const commitResult: any = await session.withTransaction(async () => {
+			const res = await core.models.surfaceSpaces.insertOne(
+				{
+					_id: docId,
+					name: 'New space',
+					cachedSpec: {
+						// TODO - dynamic
+						type: SurfaceType.ButtonGrid,
+						deviceName: 'Button Grid',
+						width: 8,
+						height: 4,
 					},
-					{ session },
-				);
+					pages: [
+						{
+							_id: pageId,
 
-				if (res.insertedId !== docId) {
-					await session.abortTransaction();
-					return;
-				}
-			});
+							name: 'New page',
+							controls: {},
+						},
+					],
+				},
+				{ session },
+			);
 
-			if (commitResult) {
-				return {
-					id: docId,
-				};
-			} else {
-				throw new Error('Creation failed');
+			if (res.insertedId !== docId) {
+				await session.abortTransaction();
+				return;
 			}
-		} finally {
-			await session.endSession({});
+		});
+
+		if (commitResult) {
+			return {
+				id: docId,
+			};
+		} else {
+			throw new Error('Creation failed');
 		}
-	} else {
-		throw new Error('Not authorised');
+	} finally {
+		await session.endSession({});
 	}
 }
 
@@ -84,56 +81,53 @@ export async function handleSurfaceSpaceDelete(
 	_services: IServices,
 	msg: SurfaceSpaceDeleteMessage,
 ): Promise<SurfaceSpaceDeleteMessage> {
-	const userSession = await getUserInfo(socketContext.authSessionId);
-	if (userSession) {
-		const session = core.client.startSession();
-		try {
-			const commitResult: any = await session.withTransaction(async () => {
-				const delSpace = await core.models.surfaceSpaces.deleteOne(
-					{
-						_id: msg.id,
-					},
-					{ session },
-				);
+	await verifyUserSession(core, socketContext.authSessionId);
 
-				// Detach any devices
-				const updatedDevices = await core.models.surfaceDevices.updateMany(
-					{
-						surfaceSpaceId: msg.id,
-					},
-					{
-						$unset: {
-							surfaceSpaceId: 1,
-						},
-					},
-				);
+	const session = core.client.startSession();
+	try {
+		const commitResult: any = await session.withTransaction(async () => {
+			const delSpace = await core.models.surfaceSpaces.deleteOne(
+				{
+					_id: msg.id,
+				},
+				{ session },
+			);
 
-				if (updatedDevices.result.nModified === 0) {
-					if (!delSpace.deletedCount || delSpace.deletedCount === 0) {
-						// Nothing deleted
-						await session.abortTransaction();
-						return;
-					}
+			// Detach any devices
+			const updatedDevices = await core.models.surfaceDevices.updateMany(
+				{
+					surfaceSpaceId: msg.id,
+				},
+				{
+					$unset: {
+						surfaceSpaceId: 1,
+					},
+				},
+			);
+
+			if (updatedDevices.result.nModified === 0) {
+				if (!delSpace.deletedCount || delSpace.deletedCount === 0) {
+					// Nothing deleted
+					await session.abortTransaction();
+					return;
 				}
-
-				// await Promise.all([
-				// 	delPages,
-				// 	// TODO - more
-				// ]);
-			});
-
-			if (commitResult) {
-				return {
-					id: msg.id,
-				};
-			} else {
-				throw new Error('Deletion failed');
 			}
-		} finally {
-			await session.endSession({});
+
+			// await Promise.all([
+			// 	delPages,
+			// 	// TODO - more
+			// ]);
+		});
+
+		if (commitResult) {
+			return {
+				id: msg.id,
+			};
+		} else {
+			throw new Error('Deletion failed');
 		}
-	} else {
-		throw new Error('Not authorised');
+	} finally {
+		await session.endSession({});
 	}
 }
 
@@ -144,46 +138,43 @@ export async function handleSurfaceSpacePageCreate(
 	_services: IServices,
 	msg: SurfaceSpacePageCreateMessage,
 ): Promise<SurfaceSpacePageCreateMessageReply> {
-	const userSession = await getUserInfo(socketContext.authSessionId);
-	if (userSession) {
-		const pageId = new Bson.ObjectID().toHexString();
+	await verifyUserSession(core, socketContext.authSessionId);
 
-		const session = core.client.startSession();
-		try {
-			const commitResult: any = await session.withTransaction(async () => {
-				const ok = await core.models.surfaceSpaces.updateOne(
-					{ _id: msg.spaceId },
-					{
-						$push: {
-							pages: {
-								_id: pageId,
+	const pageId = new Bson.ObjectID().toHexString();
 
-								name: 'New page',
-								controls: {},
-							},
+	const session = core.client.startSession();
+	try {
+		const commitResult: any = await session.withTransaction(async () => {
+			const ok = await core.models.surfaceSpaces.updateOne(
+				{ _id: msg.spaceId },
+				{
+					$push: {
+						pages: {
+							_id: pageId,
+
+							name: 'New page',
+							controls: {},
 						},
 					},
-					{ session },
-				);
-				if (ok.modifiedCount !== 1) {
-					// Didn't find the space to update
-					await session.abortTransaction();
-					return;
-				}
-			});
-
-			if (commitResult) {
-				return {
-					id: pageId,
-				};
-			} else {
-				throw new Error('Creation failed');
+				},
+				{ session },
+			);
+			if (ok.modifiedCount !== 1) {
+				// Didn't find the space to update
+				await session.abortTransaction();
+				return;
 			}
-		} finally {
-			await session.endSession({});
+		});
+
+		if (commitResult) {
+			return {
+				id: pageId,
+			};
+		} else {
+			throw new Error('Creation failed');
 		}
-	} else {
-		throw new Error('Not authorised');
+	} finally {
+		await session.endSession({});
 	}
 }
 
@@ -194,35 +185,32 @@ export async function handleSurfaceSpacePageDelete(
 	_services: IServices,
 	msg: SurfaceSpacePageDeleteMessage,
 ): Promise<SurfaceSpacePageDeleteMessage> {
-	const userSession = await getUserInfo(socketContext.authSessionId);
-	if (userSession) {
-		const session = core.client.startSession();
-		try {
-			const commitResult: any = await session.withTransaction(async () => {
-				await core.models.surfaceSpaces.updateOne(
-					{ _id: msg.spaceId },
-					{
-						$pull: {
-							pages: { _id: msg.id },
-						},
-					},
-					{ session },
-				);
-			});
+	await verifyUserSession(core, socketContext.authSessionId);
 
-			if (commitResult) {
-				return {
-					id: msg.id,
-					spaceId: msg.spaceId,
-				};
-			} else {
-				throw new Error('Creation failed');
-			}
-		} finally {
-			await session.endSession({});
+	const session = core.client.startSession();
+	try {
+		const commitResult: any = await session.withTransaction(async () => {
+			await core.models.surfaceSpaces.updateOne(
+				{ _id: msg.spaceId },
+				{
+					$pull: {
+						pages: { _id: msg.id },
+					},
+				},
+				{ session },
+			);
+		});
+
+		if (commitResult) {
+			return {
+				id: msg.id,
+				spaceId: msg.spaceId,
+			};
+		} else {
+			throw new Error('Creation failed');
 		}
-	} else {
-		throw new Error('Not authorised');
+	} finally {
+		await session.endSession({});
 	}
 }
 
@@ -233,41 +221,38 @@ export async function handleSurfaceSpacePageSlotCreate(
 	_services: IServices,
 	msg: SurfaceSpacePageSlotCreateMessage,
 ): Promise<SurfaceSpacePageSlotCreateMessageReply> {
-	const userSession = await getUserInfo(socketContext.authSessionId);
-	if (userSession) {
-		const controlDefaults = createControlDefaults(msg.type);
+	await verifyUserSession(core, socketContext.authSessionId);
 
-		const session = core.client.startSession();
-		try {
-			const commitResult: any = await session.withTransaction(async () => {
-				const control = await core.models.controlDefinitions.insertOne(controlDefaults, { session });
+	const controlDefaults = createControlDefaults(msg.type);
 
-				await core.models.surfaceSpaces.updateOne(
-					{
-						_id: msg.spaceId,
-						'pages._id': msg.pageId,
+	const session = core.client.startSession();
+	try {
+		const commitResult: any = await session.withTransaction(async () => {
+			const control = await core.models.controlDefinitions.insertOne(controlDefaults, { session });
+
+			await core.models.surfaceSpaces.updateOne(
+				{
+					_id: msg.spaceId,
+					'pages._id': msg.pageId,
+				},
+				{
+					$set: {
+						[`pages.$.controls.${msg.slotId}`]: control.insertedId,
 					},
-					{
-						$set: {
-							[`pages.$.controls.${msg.slotId}`]: control.insertedId,
-						},
-					},
-					{ session },
-				);
-			});
+				},
+				{ session },
+			);
+		});
 
-			if (commitResult) {
-				return {
-					id: controlDefaults._id,
-				};
-			} else {
-				throw new Error('Creation failed');
-			}
-		} finally {
-			await session.endSession({});
+		if (commitResult) {
+			return {
+				id: controlDefaults._id,
+			};
+		} else {
+			throw new Error('Creation failed');
 		}
-	} else {
-		throw new Error('Not authorised');
+	} finally {
+		await session.endSession({});
 	}
 }
 
@@ -278,39 +263,36 @@ export async function handleSurfaceSpacePageSlotClear(
 	_services: IServices,
 	msg: SurfaceSpacePageSlotClearMessage,
 ): Promise<SurfaceSpacePageSlotClearMessage> {
-	const userSession = await getUserInfo(socketContext.authSessionId);
-	if (userSession) {
-		const session = core.client.startSession();
-		try {
-			const commitResult: any = await session.withTransaction(async () => {
-				await core.models.surfaceSpaces.updateOne(
-					{
-						_id: msg.spaceId,
-						'pages._id': msg.pageId,
-					},
-					{
-						$unset: {
-							[`pages.$.controls.${msg.slotId}`]: 1,
-						},
-					},
-					{ session },
-				);
+	await verifyUserSession(core, socketContext.authSessionId);
 
-				// TODO - delete the control if unused and the user oks it
-			});
+	const session = core.client.startSession();
+	try {
+		const commitResult: any = await session.withTransaction(async () => {
+			await core.models.surfaceSpaces.updateOne(
+				{
+					_id: msg.spaceId,
+					'pages._id': msg.pageId,
+				},
+				{
+					$unset: {
+						[`pages.$.controls.${msg.slotId}`]: 1,
+					},
+				},
+				{ session },
+			);
 
-			if (commitResult) {
-				return {
-					...msg,
-				};
-			} else {
-				throw new Error('Clearing failed');
-			}
-		} finally {
-			await session.endSession({});
+			// TODO - delete the control if unused and the user oks it
+		});
+
+		if (commitResult) {
+			return {
+				...msg,
+			};
+		} else {
+			throw new Error('Clearing failed');
 		}
-	} else {
-		throw new Error('Not authorised');
+	} finally {
+		await session.endSession({});
 	}
 }
 
@@ -321,53 +303,50 @@ export async function handleSurfaceSpacePageSlotUseControl(
 	_services: IServices,
 	msg: SurfaceSpacePageSlotUseControlMessage,
 ): Promise<SurfaceSpacePageSlotUseControlMessage> {
-	const userSession = await getUserInfo(socketContext.authSessionId);
-	if (userSession) {
-		const session = core.client.startSession();
-		try {
-			const commitResult: any = await session.withTransaction(async () => {
-				// Update the control to ensure it exists
-				const control = await core.models.controlDefinitions.updateOne(
-					{
-						_id: msg.controlId,
-					},
-					{
-						$set: {
-							touchedAt: Date.now(),
-						},
-					},
-					{ session },
-				);
-				if (control.modifiedCount === 0) {
-					await session.abortTransaction();
-					return;
-				}
+	await verifyUserSession(core, socketContext.authSessionId);
 
-				await core.models.surfaceSpaces.updateOne(
-					{
-						_id: msg.spaceId,
-						'pages._id': msg.pageId,
+	const session = core.client.startSession();
+	try {
+		const commitResult: any = await session.withTransaction(async () => {
+			// Update the control to ensure it exists
+			const control = await core.models.controlDefinitions.updateOne(
+				{
+					_id: msg.controlId,
+				},
+				{
+					$set: {
+						touchedAt: Date.now(),
 					},
-					{
-						$set: {
-							[`pages.$.controls.${msg.slotId}`]: msg.controlId,
-						},
-					},
-					{ session },
-				);
-			});
-
-			if (commitResult) {
-				return {
-					...msg,
-				};
-			} else {
-				throw new Error('Clearing failed');
+				},
+				{ session },
+			);
+			if (control.modifiedCount === 0) {
+				await session.abortTransaction();
+				return;
 			}
-		} finally {
-			await session.endSession({});
+
+			await core.models.surfaceSpaces.updateOne(
+				{
+					_id: msg.spaceId,
+					'pages._id': msg.pageId,
+				},
+				{
+					$set: {
+						[`pages.$.controls.${msg.slotId}`]: msg.controlId,
+					},
+				},
+				{ session },
+			);
+		});
+
+		if (commitResult) {
+			return {
+				...msg,
+			};
+		} else {
+			throw new Error('Clearing failed');
 		}
-	} else {
-		throw new Error('Not authorised');
+	} finally {
+		await session.endSession({});
 	}
 }

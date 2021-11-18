@@ -1,4 +1,5 @@
 import shortid from 'shortid';
+import { ICore } from './core';
 
 const authSesions = new Set<string>();
 
@@ -24,7 +25,7 @@ export async function logout(sessionId: string): Promise<void> {
 	// TODO - stop any subscriptions?
 }
 
-export async function getUserInfo(sessionId: string | null): Promise<UserSessionInfo | null> {
+export async function getUserInfo(_core: ICore, sessionId: string | null): Promise<UserSessionInfo | null> {
 	if (sessionId && authSesions.has(sessionId)) {
 		return {
 			name: 'Test User',
@@ -32,4 +33,12 @@ export async function getUserInfo(sessionId: string | null): Promise<UserSession
 	} else {
 		return null;
 	}
+}
+
+export async function verifyUserSession(core: ICore, sessionId: string | null): Promise<UserSessionInfo> {
+	const userSession = await getUserInfo(core, sessionId);
+	if (!userSession) {
+		throw new Error('Not authorised');
+	}
+	return userSession;
 }

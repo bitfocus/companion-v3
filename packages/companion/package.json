@@ -63,7 +63,7 @@
 		"read-pkg-up": "^7.0.1",
 		"respawn": "^2.6.0",
 		"semver": "^7.3.5",
-		"sharp": "^0.29.3",
+		"sharp": "^0.27.2",
 		"shortid": "^2.2.16",
 		"socket.io": "^3.1.2",
 		"threads": "^1.7.0",

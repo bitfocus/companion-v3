@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer'
 import React from 'react'
 import classnames from 'classnames'
 import { PREVIEW_BMP_HEADER } from '../Constants'

@@ -1,3 +1,4 @@
+/* eslint-disable import/first */
 import '@fontsource/roboto';
 import './App.scss';
 

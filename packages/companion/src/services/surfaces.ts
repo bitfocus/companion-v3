@@ -3,6 +3,9 @@ import { ModuleThread, spawn, Thread, Worker } from 'threads';
 import { SurfaceWorker } from '../workers/surface.js';
 import { SurfaceDeviceStatus } from '@companion/core-shared/dist/collections/index.js';
 import Bson from 'bson';
+import { createChildLogger } from '../logger.js';
+
+const logger = createChildLogger('services/surfaces');
 
 interface WrappedSurface {
 	readonly worker: ModuleThread<SurfaceWorker>;
@@ -51,7 +54,7 @@ export class SurfaceManager {
 
 	async scan(): Promise<void> {
 		const surfaces = await this.scanner.listDevices();
-		console.log(`Found ${surfaces.length} surfaces`);
+		logger.info(`Found ${surfaces.length} surfaces`);
 		const moduleName = 'elgato-stream-deck'; // TODO - dynamic
 
 		const session = this.core.client.startSession();
@@ -116,7 +119,7 @@ export class SurfaceManager {
 
 				setImmediate(() => {
 					this.openExisting(surfacesToOpen).catch((e) => {
-						console.error(`Open existing devices failed: ${e}`);
+						logger.error(`Open existing devices failed: ${e}`);
 					});
 				});
 			});
@@ -131,7 +134,7 @@ export class SurfaceManager {
 				try {
 					await this.open(surface.id, surface.path);
 				} catch (e) {
-					console.error(`Failed to open device: ${e}`);
+					logger.error(`Failed to open device: ${e}`);
 				}
 			}),
 		);
@@ -218,7 +221,7 @@ export class SurfaceManager {
 				try {
 					await Thread.terminate(worker);
 				} catch (e) {
-					console.error(`Failed to close worker for Device "${deviceId}": ${e}`);
+					logger.error(`Failed to close worker for Device "${deviceId}": ${e}`);
 				}
 			}
 

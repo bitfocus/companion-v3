@@ -9,7 +9,9 @@ import { IS_PACKAGED } from '../config.js';
 import { IModule } from '@companion/core-shared/dist/collections/index.js';
 import Mongo from 'mongodb';
 import { fileURLToPath } from 'url';
+import { createChildLogger } from '../logger.js';
 
+const logger = createChildLogger('services/module-registry');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export interface ModuleInfo {
@@ -23,14 +25,14 @@ async function readModuleInfo(modulePath: string, dirname: string, isSystem: boo
 		const rootPath = path.join(modulePath, dirname);
 		const statInfo = await fsp.stat(rootPath);
 		if (!statInfo.isDirectory()) {
-			console.error(`Module not a directory: ${rootPath}`);
+			logger.error(`Module not a directory: ${rootPath}`);
 			return undefined;
 		}
 
 		const manifestPath = path.join(rootPath, 'companion/manifest.json');
 		const manifestInfo = await fsp.stat(manifestPath);
 		if (!manifestInfo.isFile()) {
-			console.error(`Module missing manifest: ${rootPath}`);
+			logger.error(`Module missing manifest: ${rootPath}`);
 			return undefined;
 		}
 
@@ -45,7 +47,7 @@ async function readModuleInfo(modulePath: string, dirname: string, isSystem: boo
 			isSystem,
 		});
 	} catch (e) {
-		console.error(`Failed to read module info: ${e}`);
+		logger.error(`Failed to read module info: ${e}`);
 		return undefined;
 	}
 }
@@ -61,13 +63,13 @@ export class ModuleRegistry {
 	async rescanModules(db: Mongo.Collection<IModule>): Promise<void> {
 		const modules = await this.listModules();
 
-		console.log(`Discovered ${modules.length} modules:`);
+		logger.info(`Discovered ${modules.length} modules:`);
 
 		const writeOps: Array<Mongo.BulkWriteReplaceOneOperation<IModule>> = [];
 		const knownIds: string[] = [];
 
 		for (const m of modules) {
-			console.log(` - ${m.manifest.name}@${m.manifest.version} (${m.modulePath})`);
+			logger.info(` - ${m.manifest.name}@${m.manifest.version} (${m.modulePath})`);
 			const doc: IModule = {
 				_id: m.manifest.id, // TODO - ensure some uniqueness or something
 

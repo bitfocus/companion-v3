@@ -1,3 +1,5 @@
+import { logger } from './logger.js';
+
 import express from 'express';
 import path from 'path';
 import { socketHandler } from './routes/api-router.js';
@@ -16,20 +18,20 @@ import { startControlRenderer } from './services/renderer.js';
 import { startSurfaceManager } from './services/surfaces.js';
 import { startModuleHost } from './services/module-host.js';
 
-console.log(`*******************************************`);
-console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
-console.log(`config: ${JSON.stringify(config, null, 2)}`);
-console.log(`*******************************************`);
+logger.info(`*******************************************`);
+logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);
+logger.info(`config: ${JSON.stringify(config, null, 2)}`);
+logger.info(`*******************************************`);
 
 export async function startup(configPath: string, appPath: string): Promise<void> {
-	console.log('loading config from:', configPath);
+	logger.info(`loading config from: ${configPath}`);
 
 	// Ensure the config directory exists
 	fs.mkdirSync(configPath, { recursive: true });
 
 	let mongoUrl = process.env.MONGO_URL;
 	if (!mongoUrl) {
-		console.log('Starting embedded mongo server');
+		logger.info('Starting embedded mongo server');
 
 		const mongoPort = await getPort({ port: getPort.makeRange(27017, 28000) });
 		mongoUrl = await startMongo(configPath, path.join(appPath, '../..'), '127.0.0.1', mongoPort);
@@ -77,7 +79,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 
 	// Update the list of modules
 	await moduleFactory.rescanModules(core.models.modules).catch((e) => {
-		console.error(`Module scan failed: ${e}`);
+		logger.error(`Module scan failed: ${e}`);
 	});
 
 	// Hack: temporarily fake some actions
@@ -118,7 +120,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 				{ upsert: true },
 			);
 		})
-		.catch((e) => console.error(e));
+		.catch((e) => logger.error(e));
 
 	// start the various services
 	await startControlRenderer(core);
@@ -132,7 +134,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 
 	await new Promise<void>((resolve) => {
 		server.listen(config.SERVER_PORT, () => {
-			console.log(`App listening on port ${config.SERVER_PORT}!`);
+			logger.info(`App listening on port ${config.SERVER_PORT}!`);
 
 			resolve();
 		});

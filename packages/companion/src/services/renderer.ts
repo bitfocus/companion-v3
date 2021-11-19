@@ -1,8 +1,11 @@
+import { createChildLogger } from '../logger.js';
 import { pngBufferToString } from '@companion/core-shared/dist/collections/index.js';
 import { splitColors } from '@companion/core-shared/dist/color.js';
 import PQueue from 'p-queue';
 import sharp from 'sharp';
 import { ICore } from '../core.js';
+
+const logger = createChildLogger('services/renderer');
 
 class ControlRenderer {
 	private readonly core: ICore;
@@ -20,7 +23,7 @@ class ControlRenderer {
 		const stream = this.core.models.controlDefinitions.watch();
 
 		stream.on('end', () => {
-			console.log('Renderer stream closed');
+			logger.info('Renderer stream closed');
 		});
 
 		stream.on('change', (doc) => {
@@ -45,7 +48,7 @@ class ControlRenderer {
 				case 'dropDatabase':
 				case 'rename':
 				case 'invalidate':
-					console.log('Renderer stream closed');
+					logger.info('Renderer stream closed');
 					break;
 				// TODO
 				// default:
@@ -63,7 +66,7 @@ class ControlRenderer {
 	private deleteRender(controlId: string): void {
 		this.core.models.controlRenders
 			.deleteOne({ _id: controlId })
-			.catch((e) => console.error(`ControlRender "${controlId}" cleanup failed: ${e}`));
+			.catch((e) => logger.error(`ControlRender "${controlId}" cleanup failed: ${e}`));
 	}
 
 	private async renderControl(controlId: string): Promise<void> {
@@ -72,17 +75,17 @@ class ControlRenderer {
 			this.core.models.controlRenders.findOne({ _id: controlId }),
 		]);
 		if (!control) {
-			console.warn(`Skipping render of ${controlId}, as it no longer exists`);
+			logger.debug(`Skipping render of ${controlId}, as it no longer exists`);
 			return;
 		}
 
 		if (render && render.renderHash === control.renderHash) {
 			// TODO - consider variables
-			console.log(`Existing render of ${controlId} is still valid`);
+			logger.debug(`Existing render of ${controlId} is still valid`);
 			// return;
 		}
 
-		console.log(`Starting render of ${controlId}`);
+		logger.debug(`Starting render of ${controlId}`);
 		const start = Date.now();
 
 		const rawBg = splitColors(control.defaultLayer.backgroundColor, true);
@@ -194,9 +197,9 @@ class ControlRenderer {
 				},
 			);
 
-			console.log(`Completed render of ${controlId} in ${Date.now() - start}ms`);
+			logger.debug(`Completed render of ${controlId} in ${Date.now() - start}ms`);
 		} catch (e) {
-			console.error(`Saving render of ${controlId} failed`);
+			logger.error(`Saving render of ${controlId} failed`);
 		} finally {
 			await session.endSession({});
 		}

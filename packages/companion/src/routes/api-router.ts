@@ -6,6 +6,9 @@ import { getUserInfo } from '../auth.js';
 import * as SocketIO from 'socket.io';
 import { SurfaceManager } from '../services/surfaces.js';
 import { IServices, SocketContext, SocketHandlers } from './handlers.js';
+import { createChildLogger } from '../logger.js';
+
+const logger = createChildLogger('routes/api-router');
 
 // export function apiRouter(core: ICore): Router {
 // 	const router = Router();
@@ -35,7 +38,7 @@ export function socketHandler(core: ICore, surfaceManager: SurfaceManager): void
 	};
 
 	core.io.on('connection', (socket: SocketIO.Socket) => {
-		console.log('a user connected');
+		logger.info('a user connected');
 
 		let socketContext: SocketContext = { authSessionId: null };
 
@@ -68,7 +71,7 @@ export function socketHandler(core: ICore, surfaceManager: SurfaceManager): void
 						const res = await handler(socket, socketContext, core, services, msg as never);
 						cb(null, res);
 					} catch (e) {
-						console.error(`Command "${id}" errored: ${e}`);
+						logger.error(`Command "${id}" errored: ${e}`);
 						cb(e, null);
 					}
 				});

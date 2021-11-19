@@ -6,6 +6,9 @@ import getPort from 'get-port';
 import shortid from 'shortid';
 import path from 'path';
 import { HostApiVersion, isSupportedApiVersion } from '@companion/module-framework/dist/host-api/versions.js';
+import { createChildLogger } from '../logger.js';
+
+const logger = createChildLogger('services/module-host');
 
 interface ChildProcessInfo {
 	monitor: Respawn.RespawnMonitor;
@@ -42,19 +45,19 @@ export class ModuleHost {
 			},
 		});
 		this.socketServer.listen(this.socketPort);
-		console.log(`Module host listening on port: ${this.socketPort}`);
+		logger.debug(`Module host listening on port: ${this.socketPort}`);
 	}
 
 	async start(): Promise<void> {
 		const stream = this.core.models.deviceConnections.watch();
 
 		this.socketServer.on('connection', (socket: SocketIO.Socket) => {
-			console.log('A module connected');
+			logger.info('A module connected');
 			this.listenToModuleSocket(socket);
 		});
 
 		stream.on('end', () => {
-			console.log('Connections stream closed');
+			logger.warn('Connections stream closed');
 		});
 
 		stream.on('change', (doc) => {
@@ -77,7 +80,7 @@ export class ModuleHost {
 				case 'dropDatabase':
 				case 'rename':
 				case 'invalidate':
-					console.log('Connections stream closed');
+					logger.warn('Connections stream closed');
 					break;
 				// TODO
 				// default:
@@ -111,33 +114,33 @@ export class ModuleHost {
 	private listenToModuleSocket(socket: SocketIO.Socket): void {
 		socket.once('register', (apiVersion: HostApiVersion, connectionId: string, token: string) => {
 			if (!isSupportedApiVersion(apiVersion)) {
-				console.log(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`);
+				logger.warn(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`);
 				socket.disconnect(true);
 				return;
 			}
 
 			if (apiVersion !== HostApiVersion.v0) {
 				// Future: Temporary until version selection is implemented
-				console.log(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`);
+				logger.warn(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`);
 				socket.disconnect(true);
 				return;
 			}
 
 			const child = this.children.get(connectionId);
 			if (!child) {
-				console.log(`Got register for bad connectionId: "${connectionId}"`);
+				logger.warn(`Got register for bad connectionId: "${connectionId}"`);
 				socket.disconnect(true);
 				return;
 			}
 
 			if (child.socket) {
-				console.log(`Got register for already registered connectionId: "${connectionId}"`);
+				logger.warn(`Got register for already registered connectionId: "${connectionId}"`);
 				socket.disconnect(true);
 				return;
 			}
 
 			if (child.authToken !== token) {
-				console.log(`Got register with bad auth token for connectionId: "${connectionId}"`);
+				logger.warn(`Got register with bad auth token for connectionId: "${connectionId}"`);
 				socket.disconnect(true);
 				return;
 			}
@@ -155,7 +158,7 @@ export class ModuleHost {
 
 			// TODO - more params?
 
-			console.log(`Registered module client "${connectionId}"`);
+			logger.info(`Registered module client "${connectionId}"`);
 			socket.emit('registered');
 
 			// TODO - start pings
@@ -165,11 +168,11 @@ export class ModuleHost {
 	private async restartConnection(connectionId: string): Promise<void> {
 		const connection = await this.core.models.deviceConnections.findOne({ _id: connectionId });
 		if (connection) {
-			console.log(`Starting connection: "${connection.label}"(${connectionId})`);
+			logger.info(`Starting connection: "${connection.label}"(${connectionId})`);
 
 			const module = await this.core.models.modules.findOne({ _id: connection.moduleId });
 			if (!module) {
-				console.error(`Cannot restart connection of unknown module: "${connectionId}"`);
+				logger.error(`Cannot restart connection of unknown module: "${connectionId}"`);
 				await this.stopConnection(connectionId);
 				return;
 			}
@@ -188,7 +191,7 @@ export class ModuleHost {
 			} else {
 				const token = shortid();
 				const cmd = ['node', path.join(module.modulePath, module.manifest.entrypoint)];
-				console.log(`Connection "${connection.label}" command: ${JSON.stringify(cmd)}`);
+				logger.debug(`Connection "${connection.label}" command: ${JSON.stringify(cmd)}`);
 
 				const monitor = Respawn(cmd, {
 					name: `Connection "${connection.label}"(${connection._id})`,
@@ -204,19 +207,19 @@ export class ModuleHost {
 
 				// TODO - better event listeners
 				monitor.on('start', () => {
-					console.log(`Connection "${connection.label}" started`);
+					logger.info(`Connection "${connection.label}" started`);
 				});
 				monitor.on('stop', () => {
-					console.log(`Connection "${connection.label}" stopped`);
+					logger.info(`Connection "${connection.label}" stopped`);
 				});
 				monitor.on('crash', () => {
-					console.log(`Connection "${connection.label}" crashed`);
+					logger.warn(`Connection "${connection.label}" crashed`);
 				});
 				monitor.on('stdout', (data) => {
-					console.log(`Connection "${connection.label}" stdout`, data.toString());
+					logger.info(`Connection "${connection.label}" stdout`, data.toString());
 				});
 				monitor.on('stderr', (data) => {
-					console.log(`Connection "${connection.label}" stderr`, data.toString());
+					logger.info(`Connection "${connection.label}" stderr`, data.toString());
 				});
 
 				child = {
@@ -231,7 +234,7 @@ export class ModuleHost {
 
 			// TODO - timeout for first contact
 		} else {
-			console.warn(`Attempting to start missing connection: "${connectionId}"`);
+			logger.warn(`Attempting to start missing connection: "${connectionId}"`);
 			await this.stopConnection(connectionId);
 		}
 	}

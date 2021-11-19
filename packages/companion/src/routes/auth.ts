@@ -5,6 +5,9 @@ import { unsubscribeAllForSocket } from '../subscriptions.js';
 import * as SocketIO from 'socket.io';
 import { IServices, SocketContext } from './handlers.js';
 import { ICore } from '../core.js';
+import { createChildLogger } from '../logger.js';
+
+const logger = createChildLogger('routes/auth');
 
 export async function handleLoginCommand(
 	socket: SocketIO.Socket,
@@ -45,7 +48,7 @@ export async function handleLoginCommand(
 				);
 			}
 		} catch (e) {
-			console.log('auth failed');
+			logger.warn(`auth failed: ${e}`);
 			socket.emit(
 				SocketCommand.UserInfo,
 				literal<UserInfoMessage>({

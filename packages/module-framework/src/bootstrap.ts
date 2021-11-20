@@ -1,7 +1,7 @@
 import * as SocketIOClient from 'socket.io-client';
 import { ModuleApiV0 } from './module-api/index.js';
 import PTimeout from 'p-timeout';
-import { HostApiVersion } from './host-api/versions.js';
+import { HostApiVersion, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions.js';
 import { InstanceBaseShared } from './instance-base.js';
 
 let hasEntrypoint = false;
@@ -34,12 +34,18 @@ function runEntrypointInner(
 
 	let module: InstanceBaseShared<any> | undefined;
 
-	const socket = SocketIOClient.io(socketIoUrl, { reconnection: false, timeout: 5000, transports: ['websocket'] });
+	const socket: SocketIOClient.Socket<HostToModuleEventsInit, ModuleToHostEventsInit> = SocketIOClient.io(
+		socketIoUrl,
+		{
+			reconnection: false,
+			timeout: 5000,
+			transports: ['websocket'],
+		},
+	);
 	socket.on('connect', () => {
 		console.log(`Connected to module-host: ${socket.id}`);
 
-		socket.emit('register', apiVersion, connectionId, socketIoToken);
-		socket.once('registered', () => {
+		socket.emit('register', apiVersion, connectionId, socketIoToken, () => {
 			console.log(`Module-host accepted registration`);
 
 			module = new factory(socket, connectionId);
@@ -51,7 +57,6 @@ function runEntrypointInner(
 		process.exit(12);
 	});
 	socket.on('disconnect', async () => {
-		// TODO - does this get fired if the connection times out?
 		console.log(`Disconnected from module-host: ${socket.id}`);
 
 		if (module) {

@@ -83,44 +83,41 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	});
 
 	// Hack: temporarily fake some actions
-	core.models.deviceConnections
-		.find()
-		.forEach(async (connection) => {
-			await core.models.deviceConnectionActions.replaceOne(
-				{ _id: 'test1' },
-				{
-					_id: 'test1',
-					connectionId: connection._id,
-					actionId: 'test1',
-					rawAction: {
-						label: 'Test 1',
-						options: [],
-					},
+	await core.models.deviceConnections.find().forEach(async (connection) => {
+		await core.models.deviceConnectionActions.replaceOne(
+			{ _id: 'test1' },
+			{
+				_id: 'test1',
+				connectionId: connection._id,
+				actionId: 'test1',
+				rawAction: {
+					label: 'Test 1',
+					options: [],
 				},
-				{ upsert: true },
-			);
-			await core.models.deviceConnectionActions.replaceOne(
-				{ _id: 'test2' },
-				{
-					_id: 'test2',
-					connectionId: connection._id,
-					actionId: 'test2',
-					rawAction: {
-						label: 'Test 2',
-						options: [
-							{
-								id: 'one',
-								label: 'One',
-								type: 'textinput',
-								default: 'abc',
-							},
-						],
-					},
+			},
+			{ upsert: true },
+		);
+		await core.models.deviceConnectionActions.replaceOne(
+			{ _id: 'test2' },
+			{
+				_id: 'test2',
+				connectionId: connection._id,
+				actionId: 'test2',
+				rawAction: {
+					label: 'Test 2',
+					options: [
+						{
+							id: 'one',
+							label: 'One',
+							type: 'textinput',
+							default: 'abc',
+						},
+					],
 				},
-				{ upsert: true },
-			);
-		})
-		.catch((e) => logger.error(e));
+			},
+			{ upsert: true },
+		);
+	});
 
 	// start the various services
 	await startControlRenderer(core);

@@ -5,8 +5,14 @@ import * as SocketIO from 'socket.io';
 import getPort from 'get-port';
 import shortid from 'shortid';
 import path from 'path';
-import { HostApiVersion, isSupportedApiVersion } from '@companion/module-framework/dist/host-api/versions.js';
+import {
+	HostApiVersion,
+	isSupportedApiVersion,
+	ModuleToHostEventsInit,
+	HostToModuleEventsInit,
+} from '@companion/module-framework/dist/host-api/versions.js';
 import { createChildLogger } from '../logger.js';
+import { registerEventsV0 } from './module-host-versions/v0.js';
 
 const logger = createChildLogger('services/module-host');
 
@@ -22,7 +28,7 @@ export class ModuleHost {
 	private readonly core: ICore;
 	// Note: in a multi-node environment, this queue will need to be replaced with a proper distributed work queue
 	private readonly queue: PQueue;
-	private readonly socketServer: SocketIO.Server;
+	private readonly socketServer: SocketIO.Server<ModuleToHostEventsInit, HostToModuleEventsInit>;
 	private readonly socketPort: number;
 
 	private readonly children: Map<string, ChildProcessInfo>;
@@ -111,8 +117,8 @@ export class ModuleHost {
 		}
 	}
 
-	private listenToModuleSocket(socket: SocketIO.Socket): void {
-		socket.once('register', (apiVersion: HostApiVersion, connectionId: string, token: string) => {
+	private listenToModuleSocket(socket: SocketIO.Socket<ModuleToHostEventsInit, HostToModuleEventsInit>): void {
+		socket.once('register', (apiVersion: HostApiVersion, connectionId: string, token: string, cb: () => void) => {
 			if (!isSupportedApiVersion(apiVersion)) {
 				logger.warn(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`);
 				socket.disconnect(true);
@@ -153,13 +159,24 @@ export class ModuleHost {
 				}
 			});
 
+			// Bind the event listeners
+			switch (apiVersion) {
+				case HostApiVersion.v0:
+					registerEventsV0(socket, this.core, connectionId);
+					break;
+				default:
+					throw new Error('Supported, yet unsupported api version..');
+			}
+
 			// Register successful
 			child.socket = socket;
 
 			// TODO - more params?
 
 			logger.info(`Registered module client "${connectionId}"`);
-			socket.emit('registered');
+
+			// report success
+			cb();
 
 			// TODO - start pings
 		});
@@ -216,10 +233,10 @@ export class ModuleHost {
 					logger.warn(`Connection "${connection.label}" crashed`);
 				});
 				monitor.on('stdout', (data) => {
-					logger.info(`Connection "${connection.label}" stdout`, data.toString());
+					logger.info(`Connection "${connection.label}" stdout: ${data.toString()}`);
 				});
 				monitor.on('stderr', (data) => {
-					logger.info(`Connection "${connection.label}" stderr`, data.toString());
+					logger.info(`Connection "${connection.label}" stderr: ${data.toString()}`);
 				});
 
 				child = {

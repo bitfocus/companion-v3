@@ -6,9 +6,10 @@ import { CompanionFeedbackEvent, CompanionFeedbackResult, CompanionFeedbacks } f
 import { CompanionVariable } from './variable.js';
 import { CompanionPreset } from './preset.js';
 import { InstanceStatus, LogLevel } from './enums.js';
-import { HostApiCommands, LogMessageMessage, SetStatusMessage } from '../../host-api/v0.js';
+import { HostToModuleEventsV0, LogMessageMessage, ModuleToHostEventsV0, SetStatusMessage } from '../../host-api/v0.js';
 import { literal } from '../../util.js';
 import { InstanceBaseShared } from '../../instance-base.js';
+import { ResultCallback } from '../../host-api/versions.js';
 
 export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TConfig> {
 	#socket: SocketIOClient.Socket;
@@ -32,6 +33,22 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 		this.updateStatus(null, 'Initializing');
 		this.log(LogLevel.DEBUG, 'Initializing');
+	}
+
+	private async _socketEmit<T extends keyof ModuleToHostEventsV0>(
+		name: T,
+		msg: Parameters<ModuleToHostEventsV0[T]>[0],
+	): Promise<ReturnType<ModuleToHostEventsV0[T]>> {
+		return new Promise<ReturnType<ModuleToHostEventsV0[T]>>((resolve, reject) => {
+			const innerCb: ResultCallback<ReturnType<ModuleToHostEventsV0[T]>> = (
+				err: any,
+				res: ReturnType<ModuleToHostEventsV0[T]>,
+			): void => {
+				if (err) reject(err);
+				else resolve(res);
+			};
+			this.#socket.emit(name, msg, innerCb);
+		});
 	}
 
 	/**
@@ -69,9 +86,8 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		// TODO
 	}
 
-	setActionDefinitions(_actions: CompanionActions): Promise<void> {
-		// return this.system.setActionDefinitions(actions);
-		return Promise.resolve();
+	setActionDefinitions(actions: CompanionActions): Promise<void> {
+		return this._socketEmit('setActionDefinitions', actions);
 	}
 	setVariableDefinitions(_variables: CompanionVariable[]): Promise<void> {
 		// return this.system.setVariableDefinitions(variables);
@@ -94,24 +110,26 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	}
 
 	updateStatus(status: InstanceStatus | null, message?: string | null): void {
-		// return this.system.updateStatus(level, message);
-		this.#socket.emit(
-			HostApiCommands.SetStatus,
+		this._socketEmit(
+			'set-status',
 			literal<SetStatusMessage>({
 				status,
 				message: message ?? null,
 			}),
-		);
+		).catch((e) => {
+			console.error(`updateStatus failed: ${e}`);
+		});
 	}
 
 	log(level: LogLevel, message: string): void {
-		// return this.system.log(level, message);
-		this.#socket.emit(
-			HostApiCommands.LogMessage,
+		this._socketEmit(
+			'log-message',
 			literal<LogMessageMessage>({
 				level,
 				message,
 			}),
-		);
+		).catch((e) => {
+			console.error(`log failed: ${e}`);
+		});
 	}
 }

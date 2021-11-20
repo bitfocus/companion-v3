@@ -1,9 +1,14 @@
-import { InstanceStatus, LogLevel } from '../module-api/v0/index.js';
+import { CompanionActions, InstanceStatus, LogLevel } from '../module-api/v0/index.js';
+import { ResultCallback } from './versions.js';
 
-// TODO fill out more
-export enum HostApiCommands {
-	LogMessage = 'LOGMESSAGE',
-	SetStatus = 'STATUS',
+export interface ModuleToHostEventsV0 {
+	'log-message': (msg: LogMessageMessage) => void;
+	'set-status': (msg: SetStatusMessage) => void;
+	setActionDefinitions: (actions: CompanionActions) => void;
+}
+
+export interface HostToModuleEventsV0 {
+	registered2: () => void;
 }
 
 export interface LogMessageMessage {

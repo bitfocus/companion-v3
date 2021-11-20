@@ -26,6 +26,8 @@ export async function handleConnectionCreate(
 			label: 'new', // TODO
 			enabled: false,
 			// TODO - product?
+
+			moduleConfig: {},
 		});
 		return {
 			connectionId: conn.insertedId,

@@ -1,10 +1,13 @@
-import { CompanionAction } from '@companion/module-framework';
+import { CompanionAction, ConfigValue } from '@companion/module-framework';
 
 export interface IDeviceConnection {
 	_id: string;
 	moduleId: string;
 	label: string;
 	enabled: boolean;
+
+	/** Config blob of structure defined by the module */
+	moduleConfig: {[key: string]: ConfigValue}
 }
 
 export interface IDeviceConnectionAction {

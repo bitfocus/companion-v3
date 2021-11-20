@@ -12,7 +12,8 @@ import {
 	HostToModuleEventsInit,
 } from '@companion/module-framework/dist/host-api/versions.js';
 import { createChildLogger } from '../logger.js';
-import { registerEventsV0 } from './module-host-versions/v0.js';
+import { registerEventsV0 as setupSocketClientV0 } from './module-host-versions/v0.js';
+import { RegisterResult } from './module-host-versions/util.js';
 
 const logger = createChildLogger('services/module-host');
 
@@ -22,6 +23,7 @@ interface ChildProcessInfo {
 	authToken: string;
 
 	socket?: SocketIO.Socket;
+	doDestroy?: () => Promise<void>;
 }
 
 export class ModuleHost {
@@ -75,6 +77,7 @@ export class ModuleHost {
 					break;
 				}
 				case 'update': {
+					// TODO - avoid a restart depending on keys of changes
 					const docId = doc.documentKey._id;
 					this.queue.add(() => this.restartConnection(docId));
 					break;
@@ -104,6 +107,14 @@ export class ModuleHost {
 	private async stopConnection(connectionId: string): Promise<void> {
 		const child = this.children.get(connectionId);
 		if (child) {
+			if (child.doDestroy) {
+				try {
+					await child.doDestroy();
+				} catch (e) {
+					logger.error(`Destroy failed: ${e}`);
+				}
+			}
+
 			if (child.socket) {
 				child.socket.disconnect(true);
 				delete child.socket;
@@ -160,9 +171,10 @@ export class ModuleHost {
 			});
 
 			// Bind the event listeners
+			let registerResult: RegisterResult;
 			switch (apiVersion) {
 				case HostApiVersion.v0:
-					registerEventsV0(socket, this.core, connectionId);
+					registerResult = setupSocketClientV0(socket, this.core, connectionId);
 					break;
 				default:
 					throw new Error('Supported, yet unsupported api version..');
@@ -170,21 +182,27 @@ export class ModuleHost {
 
 			// Register successful
 			child.socket = socket;
-
-			// TODO - more params?
-
+			child.doDestroy = registerResult.doDestroy;
 			logger.info(`Registered module client "${connectionId}"`);
 
 			// report success
 			cb();
 
 			// TODO - start pings
+
+			// Init module
+			registerResult.doInit().catch((e) => {
+				// TODO - log error?
+
+				// Force restart the connetion, as it failed to initialise and will be broken
+				this.restartConnection(connectionId);
+			});
 		});
 	}
 
 	private async restartConnection(connectionId: string): Promise<void> {
 		const connection = await this.core.models.deviceConnections.findOne({ _id: connectionId });
-		if (connection) {
+		if (connection && connection.enabled) {
 			logger.info(`Starting connection: "${connection.label}"(${connectionId})`);
 
 			const module = await this.core.models.modules.findOne({ _id: connection.moduleId });

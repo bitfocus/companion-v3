@@ -1,8 +1,7 @@
 import * as SocketIOClient from 'socket.io-client';
 import { CompanionInputField } from './input.js';
-import { CompanionActionEvent, CompanionActions } from './action.js';
-import { CompanionUpgradeScript } from './upgrade.js';
-import { CompanionFeedbackEvent, CompanionFeedbackResult, CompanionFeedbacks } from './feedback.js';
+import { CompanionActions } from './action.js';
+import { CompanionFeedbacks } from './feedback.js';
 import { CompanionVariable } from './variable.js';
 import { CompanionPreset } from './preset.js';
 import { InstanceStatus, LogLevel } from './enums.js';
@@ -10,11 +9,66 @@ import { HostToModuleEventsV0, LogMessageMessage, ModuleToHostEventsV0, SetStatu
 import { literal } from '../../util.js';
 import { InstanceBaseShared } from '../../instance-base.js';
 import { ResultCallback } from '../../host-api/versions.js';
+import PQueue from 'p-queue';
+
+/**
+ * Signature for the handler functions
+ */
+type HandlerFunction<T extends (...args: any) => any> = (
+	// socket: SocketIOClient.Socket,
+	// logger: winston.Logger,
+	// socketContext: SocketContext,
+	data: Parameters<T>[0],
+) => Promise<ReturnType<T>>;
+
+type HandlerFunctionOrNever<T> = T extends (...args: any) => any ? HandlerFunction<T> : never;
+
+/** Map of handler functions */
+export type EventHandlers<T extends object> = {
+	[K in keyof T]: HandlerFunctionOrNever<T[K]>;
+};
+
+/** Subscribe to all the events defined in the handlers, and wrap with safety and logging */
+export function listenToEvents<T extends object>(
+	// self: InstanceBaseV0<any>,
+	socket: SocketIOClient.Socket<T>,
+	// core: ICore,
+	// connectionId: string,
+	handlers: EventHandlers<T>,
+): void {
+	// const logger = createChildLogger(`module/${connectionId}`);
+
+	for (const [event, handler] of Object.entries(handlers)) {
+		socket.on(event as any, async (msg: any, cb: ResultCallback<any>) => {
+			if (!msg || typeof msg !== 'object') {
+				console.warn(`Received malformed message object "${event}"`);
+				return; // Ignore messages without correct structure
+			}
+			if (cb && typeof cb !== 'function') {
+				console.warn(`Received malformed callback "${event}"`);
+				return; // Ignore messages without correct structure
+			}
+
+			try {
+				// Run it
+				const handler2 = handler as HandlerFunction<(msg: any) => any>;
+				const result = await handler2(msg);
+
+				if (cb) cb(null, result);
+			} catch (e: any) {
+				console.error(`Command failed: ${e}`);
+				if (cb) cb(e?.toString() ?? JSON.stringify(e), undefined);
+			}
+		});
+	}
+}
 
 export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TConfig> {
-	#socket: SocketIOClient.Socket;
-
+	readonly #socket: SocketIOClient.Socket;
 	public readonly id: string;
+
+	readonly #lifecycleQueue: PQueue;
+	#initialized: boolean;
 
 	/**
 	 * Create an instance of the module.
@@ -29,10 +83,18 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		this.#socket = socket;
 		this.id = id;
 
-		// TODO - subscribe to socket events
+		this.#lifecycleQueue = new PQueue({ concurrency: 1 });
+		this.#initialized = false;
+
+		// subscribe to socket events from host
+		listenToEvents<HostToModuleEventsV0>(socket, {
+			init: this._handleInit.bind(this),
+			destroy: this._handleDestroy.bind(this),
+			updateConfig: this._handleConfigUpdate.bind(this),
+		});
 
 		this.updateStatus(null, 'Initializing');
-		this.log(LogLevel.DEBUG, 'Initializing');
+		this.userLog(LogLevel.DEBUG, 'Initializing');
 	}
 
 	private async _socketEmit<T extends keyof ModuleToHostEventsV0>(
@@ -48,6 +110,32 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 				else resolve(res);
 			};
 			this.#socket.emit(name, msg, innerCb);
+		});
+	}
+
+	private async _handleInit(config: unknown): Promise<void> {
+		await this.#lifecycleQueue.add(async () => {
+			if (this.#initialized) throw new Error('Already initialized');
+
+			await this.init(config as TConfig);
+
+			this.#initialized = true;
+		});
+	}
+	private async _handleDestroy(): Promise<void> {
+		await this.#lifecycleQueue.add(async () => {
+			if (!this.#initialized) throw new Error('Not initialized');
+
+			await this.destroy();
+
+			this.#initialized = false;
+		});
+	}
+	private async _handleConfigUpdate(config: unknown): Promise<void> {
+		await this.#lifecycleQueue.add(async () => {
+			if (!this.#initialized) throw new Error('Not initialized');
+
+			await this.configUpdated(config as TConfig);
 		});
 	}
 
@@ -72,19 +160,15 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	 */
 	abstract getConfigFields(): CompanionInputField[];
 
-	/**
-	 * Executes the provided action.
-	 */
-	abstract executeAction(event: CompanionActionEvent): void;
+	// /**
+	//  * Executes the provided action.
+	//  */
+	// abstract executeAction(event: CompanionActionEvent): void;
 
-	/**
-	 * Processes a feedback state.
-	 */
-	abstract executeFeedback(event: CompanionFeedbackEvent): CompanionFeedbackResult;
-
-	protected addUpgradeScript(_fcn: CompanionUpgradeScript<TConfig>): void {
-		// TODO
-	}
+	// /**
+	//  * Processes a feedback state.
+	//  */
+	// abstract executeFeedback(event: CompanionFeedbackEvent): CompanionFeedbackResult;
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
 		return this._socketEmit('setActionDefinitions', actions);
@@ -121,7 +205,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		});
 	}
 
-	log(level: LogLevel, message: string): void {
+	userLog(level: LogLevel, message: string): void {
 		this._socketEmit(
 			'log-message',
 			literal<LogMessageMessage>({

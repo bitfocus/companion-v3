@@ -5,6 +5,11 @@ import { ResultCallback } from '@companion/module-framework/dist/host-api/versio
 import winston from 'winston';
 import crypto from 'crypto';
 
+export interface RegisterResult {
+	doInit: () => Promise<void>;
+	doDestroy: () => Promise<void>;
+}
+
 /**
  * Signature for the handler functions
  */
@@ -31,17 +36,19 @@ export function listenToEvents<T extends object>(
 	core: ICore,
 	connectionId: string,
 	handlers: EventHandlers<T>,
-): void {
+): () => void {
 	const logger = createChildLogger(`module/${connectionId}`);
 
+	const registeredListeners: { [key: string]: (...args: any[]) => any } = {};
+
 	for (const [event, handler] of Object.entries(handlers)) {
-		socket.on(event as any, async (msg: any, cb: ResultCallback<any>) => {
+		const func = async (msg: any, cb: ResultCallback<any>) => {
 			if (!msg || typeof msg !== 'object') {
-				logger.warn(`Received malformed message object`);
+				logger.warn(`Received malformed message object "${event}"`);
 				return; // Ignore messages without correct structure
 			}
 			if (cb && typeof cb !== 'function') {
-				logger.warn(`Received malformed callback`);
+				logger.warn(`Received malformed callback "${event}"`);
 				return; // Ignore messages without correct structure
 			}
 
@@ -55,8 +62,17 @@ export function listenToEvents<T extends object>(
 				logger.error(`Command failed: ${e}`);
 				if (cb) cb(e?.toString() ?? JSON.stringify(e), undefined);
 			}
-		});
+		};
+		socket.on(event as any, func);
+		registeredListeners[event] = func;
 	}
+
+	return () => {
+		// unsubscribe
+		for (const [event, func] of Object.entries(registeredListeners)) {
+			socket.off(event, func);
+		}
+	};
 }
 
 export function getHash(str: string): string {

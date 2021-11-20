@@ -8,7 +8,9 @@ export interface ModuleToHostEventsV0 {
 }
 
 export interface HostToModuleEventsV0 {
-	registered2: () => void;
+	init: (config: unknown) => void;
+	destroy: () => void;
+	updateConfig: (config: unknown) => void;
 }
 
 export interface LogMessageMessage {

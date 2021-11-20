@@ -15,7 +15,7 @@ export interface MockConfig {}
 class MockModule extends InstanceBaseV0<MockConfig> {
 	init(config: MockConfig): void | Promise<void> {
 		console.log(`module ${this.id} received init: ${JSON.stringify(config)}`);
-		this.log(LogLevel.INFO, `received init: ${JSON.stringify(config)}`);
+		this.userLog(LogLevel.INFO, `received init: ${JSON.stringify(config)}`);
 
 		this.setActionDefinitions({
 			fake: {
@@ -70,15 +70,15 @@ class MockModule extends InstanceBaseV0<MockConfig> {
 	}
 	destroy(): void | Promise<void> {
 		console.log(`module ${this.id} received destroy`);
-		this.log(LogLevel.INFO, 'received destroy');
+		this.userLog(LogLevel.INFO, 'received destroy');
 	}
 	configUpdated(config: MockConfig): void | Promise<void> {
 		console.log(`module ${this.id} received configUpdated: ${JSON.stringify(config)}`);
-		this.log(LogLevel.INFO, `received configUpdated: ${JSON.stringify(config)}`);
+		this.userLog(LogLevel.INFO, `received configUpdated: ${JSON.stringify(config)}`);
 	}
 	getConfigFields(): CompanionInputField[] {
 		console.log(`module ${this.id} received getConfigFields`);
-		this.log(LogLevel.INFO, 'received getConfigFields');
+		this.userLog(LogLevel.INFO, 'received getConfigFields');
 		return [
 			{
 				id: 'abc',
@@ -89,11 +89,11 @@ class MockModule extends InstanceBaseV0<MockConfig> {
 	}
 	executeAction(action: CompanionActionEvent): void {
 		console.log(`module ${this.id} received executeAction: ${action.type}`);
-		this.log(LogLevel.INFO, `received executeAction: ${action.type}`);
+		this.userLog(LogLevel.INFO, `received executeAction: ${action.type}`);
 	}
 	executeFeedback(feedback: CompanionFeedbackEvent): CompanionFeedbackResult {
 		console.log(`module ${this.id} received executeAction: ${feedback.type}`);
-		this.log(LogLevel.INFO, `received executeAction: ${feedback.type}`);
+		this.userLog(LogLevel.INFO, `received executeAction: ${feedback.type}`);
 		return {};
 	}
 }

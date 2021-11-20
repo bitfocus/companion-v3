@@ -17,6 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export interface ModuleInfo {
 	manifest: ModuleManifest;
 	modulePath: string;
+	helpPath: string | undefined;
 	isSystem: boolean;
 }
 
@@ -39,11 +40,18 @@ async function readModuleInfo(modulePath: string, dirname: string, isSystem: boo
 		const manifestBuffer = await fsp.readFile(manifestPath);
 		const manifestJson: ModuleManifest = JSON.parse(manifestBuffer.toString());
 
+		const rawHelpPath = path.join(rootPath, 'companion/HELP.md');
+		const helpExists = await fsp
+			.stat(rawHelpPath, {})
+			.then(() => true)
+			.catch(() => false);
+
 		// TODO - validate manifest against some json schema
 
 		return literal<ModuleInfo>({
 			manifest: manifestJson,
 			modulePath: rootPath,
+			helpPath: helpExists ? rawHelpPath : undefined,
 			isSystem,
 		});
 	} catch (e) {
@@ -76,9 +84,8 @@ export class ModuleRegistry {
 				manifest: m.manifest,
 
 				modulePath: m.modulePath,
+				helpPath: m.helpPath,
 				isSystem: m.isSystem,
-
-				hasHelp: true,
 			};
 			knownIds.push(doc._id);
 

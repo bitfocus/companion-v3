@@ -1,13 +1,14 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react';
 import { memo, useCallback, useContext, useRef, useState } from 'react';
 import { HelpModal, IHelpModalHandle } from './HelpModal';
-import { CompanionContext, MyErrorBoundary, socketEmit } from '../util';
+import { CompanionContext, MyErrorBoundary, socketEmit2 } from '../util';
 import { InstancesList } from './InstanceList';
 import { AddInstancesPanel } from './AddInstance';
 import { InstanceEditPanel } from './InstanceEditModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import shortid from 'shortid';
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { SocketCommand } from '@companion/core-shared/dist/api';
 
 export const InstancesPage = memo(function InstancesPage() {
 	const context = useContext(CompanionContext);
@@ -28,16 +29,14 @@ export const InstancesPage = memo(function InstancesPage() {
 	}, []);
 
 	const showHelp = useCallback(
-		(name: string) => {
-			socketEmit<[string, any]>(context.socket, 'instance_get_help_md', [name]).then(([err, result]) => {
-				if (err) {
+		(moduleId: string) => {
+			socketEmit2(context.socket, SocketCommand.ModuleFetchHelp, { moduleId: moduleId })
+				.then((msg) => {
+					helpModalRef.current?.show(msg.name, { markdown: msg.markdown, baseUrl: msg.baseUrl });
+				})
+				.catch((err) => {
 					context.notifier.current.show('Instance help', `Failed to get help text: ${err}`);
-					return;
-				}
-				if (result) {
-					helpModalRef.current?.show(name, result);
-				}
-			});
+				});
 		},
 		[context.socket, context.notifier],
 	);

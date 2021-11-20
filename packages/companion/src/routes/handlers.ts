@@ -26,6 +26,7 @@ import {
 	handleControlDefinitionRenderLayerUpdate,
 } from './control-definition.js';
 import { SurfaceManager } from '../services/surfaces.js';
+import { handleModuleFetchHelp } from './module.js';
 
 export interface SocketContext {
 	authSessionId: string | null;
@@ -54,6 +55,8 @@ export const SocketHandlers: SocketCommandHandlers = {
 
 	[SocketCommand.CollectionSubscribe]: handleCollectionSubscribe,
 	[SocketCommand.CollectionUnsubscribe]: handleCollectionUnsubscribe,
+
+	[SocketCommand.ModuleFetchHelp]: handleModuleFetchHelp,
 
 	[SocketCommand.ConnectionCreate]: handleConnectionCreate,
 	[SocketCommand.ConnectionDelete]: handleConnectionDelete,

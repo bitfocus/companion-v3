@@ -9,6 +9,8 @@ export enum SocketCommand {
 	CollectionSubscribe = 'COLLECTION.SUBSCRIBE',
 	CollectionUnsubscribe = 'COLLECTION.UNSUBSCRIBE',
 
+	ModuleFetchHelp = 'MODULE.FETCHHELP',
+
 	ConnectionCreate = 'CONNECTION.CREATE',
 	ConnectionDelete = 'CONNECTION.DELETE',
 	ConnectionEnabled = 'CONNECTION.ENABLED',
@@ -36,27 +38,6 @@ export enum SocketCommand {
 	SurfaceDeviceDetach = 'SURFACEDEVICE.DETACH',
 }
 
-// export type CommandTypes =
-// 	| [SocketCommand.Subscribe, SubscribeMessage, void]
-// 	| [SocketCommand.Unsubscribe, UnsubscribeMessage, void];
-
-// export interface CommandTypeMap {
-// 	[SocketCommand.CollectionSubscribe]: SubscribeMessage;
-// 	[SocketCommand.CollectionUnsubscribe]: UnsubscribeMessage;
-// 	[SocketCommand.Login]: LoginMessage;
-// 	[SocketCommand.Logout]: LogoutMessage;
-// 	[SocketCommand.UserInfo]: UserInfoMessage;
-// 	[SocketCommand.ConnectionCreate]: ConnectionCreateMessage;
-// }
-// export interface CommandReplyTypeMap {
-// 	[SocketCommand.CollectionSubscribe]: void;
-// 	[SocketCommand.CollectionUnsubscribe]: void;
-// 	[SocketCommand.Login]: void;
-// 	[SocketCommand.Logout]: void;
-// 	[SocketCommand.UserInfo]: void;
-// 	[SocketCommand.ConnectionCreate]: ConnectionCreateMessageReply;
-// }
-
 export interface CollectionSubscribeMessage {
 	id: string;
 
@@ -79,6 +60,16 @@ export interface UserInfoMessage {
 	info?: {
 		name: string;
 	};
+}
+
+export interface ModuleFetchHelpMessage {
+	moduleId: string;
+}
+export interface ModuleFetchHelpMessageReply {
+	moduleId: string;
+	name: string;
+	markdown: string;
+	baseUrl: string;
 }
 
 export interface ConnectionCreateMessage {
@@ -215,6 +206,8 @@ export type SocketCommandFunc = {
 
 	[SocketCommand.CollectionSubscribe]: (data: CollectionSubscribeMessage) => void;
 	[SocketCommand.CollectionUnsubscribe]: (data: CollectionUnsubscribeMessage) => void;
+
+	[SocketCommand.ModuleFetchHelp]: (data: ModuleFetchHelpMessage) => ModuleFetchHelpMessageReply;
 
 	[SocketCommand.ConnectionCreate]: (data: ConnectionCreateMessage) => ConnectionCreateMessageReply;
 	[SocketCommand.ConnectionDelete]: (data: ConnectionDeleteMessage) => ConnectionDeleteMessage;

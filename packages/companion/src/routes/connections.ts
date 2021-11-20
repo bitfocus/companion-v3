@@ -18,6 +18,7 @@ export async function handleConnectionCreate(
 	msg: ConnectionCreateMessage,
 ): Promise<ConnectionCreateMessageReply> {
 	await verifyUserSession(core, socketContext.authSessionId);
+
 	const module = await core.models.modules.findOne({ _id: msg.moduleId });
 	if (module && (!module.manifest.products || !msg.product || module.manifest.products.includes(msg.product))) {
 		const conn = await core.models.deviceConnections.insertOne({
@@ -45,6 +46,7 @@ export async function handleConnectionDelete(
 	msg: ConnectionDeleteMessage,
 ): Promise<ConnectionDeleteMessage> {
 	await verifyUserSession(core, socketContext.authSessionId);
+
 	const res = await core.models.deviceConnections.deleteOne({ _id: msg.connectionId });
 	if (res.deletedCount !== undefined && res.deletedCount > 0) {
 		return {

@@ -125,7 +125,7 @@ function InstancesTableRow({
 			<td>
 				{moduleInfo ? (
 					<>
-						{moduleInfo?.hasHelp ? (
+						{moduleInfo?.helpPath ? (
 							<div className='instance_help' onClick={doShowHelp} title='Help'>
 								<FontAwesomeIcon icon={faQuestionCircle} />
 							</div>

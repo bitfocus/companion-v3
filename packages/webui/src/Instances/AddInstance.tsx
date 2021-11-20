@@ -63,7 +63,7 @@ const AddInstancesInner = memo(function AddInstancesInner({
 						</CButton>
 						&nbsp;
 						{name}
-						{module.hasHelp ? (
+						{module.helpPath ? (
 							<div className='instance_help' onClick={() => showHelp(id)}>
 								<FontAwesomeIcon icon={faQuestionCircle} />
 							</div>

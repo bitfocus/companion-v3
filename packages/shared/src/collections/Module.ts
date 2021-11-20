@@ -6,7 +6,6 @@ export interface IModule {
 	manifest: ModuleManifest;
 
 	modulePath: string;
+	helpPath: string | undefined;
 	isSystem: boolean;
-
-	hasHelp: boolean;
 }

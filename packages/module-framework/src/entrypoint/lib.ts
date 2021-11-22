@@ -1,14 +1,27 @@
 import * as SocketIOClient from 'socket.io-client';
-import { ModuleApiV0 } from './module-api/index.js';
+// import { ModuleApiV0 } from '../module-api/index.js';
 import PTimeout from 'p-timeout';
-import { HostApiVersion, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions.js';
-import { InstanceBaseShared } from './instance-base.js';
+import { HostApiVersion, HostToModuleEventsInit, ModuleToHostEventsInit } from '../host-api/versions.js';
+import { InstanceBaseShared } from '../instance-base.js';
+import fs from 'fs';
+import { ModuleManifest } from '../manifest.js';
 
 let hasEntrypoint = false;
 
-/** Run the module entrypoint */
-export function runEntrypointV0(factory: new (internal: unknown, id: string) => ModuleApiV0.InstanceBaseV0<any>): void {
-	runEntrypointInner(factory, HostApiVersion.v0);
+export async function runEntrypoint(apiVersion: HostApiVersion) {
+	const modulePath = process.env.MODULE_FILE;
+	if (!modulePath) throw new Error('Module initialise is missing MODULE_FILE');
+
+	const mod = await import(modulePath);
+	// TODO - support commonjs?
+
+	if (typeof mod === 'function') {
+		runEntrypointInner(mod, apiVersion);
+	} else if (typeof mod.default === 'function') {
+		runEntrypointInner(mod.default, apiVersion);
+	} else {
+		throw new Error(`Module entrypoint is missing class export`);
+	}
 }
 
 function runEntrypointInner(
@@ -18,6 +31,15 @@ function runEntrypointInner(
 	// Ensure only called once per module
 	if (hasEntrypoint) throw new Error(`runEntrypoint can only be called once`);
 	hasEntrypoint = true;
+
+	const manifestPath = process.env.MODULE_MANIFEST;
+	if (!manifestPath) throw new Error('Module initialise is missing MODULE_MANIFEST');
+
+	// check manifest api field against apiVersion
+	const manifestBlob = fs.readFileSync(manifestPath);
+	const manifestJson: Partial<ModuleManifest> = JSON.parse(manifestBlob.toString());
+
+	if (manifestJson.api !== HostApiVersion.SocketIOv0) throw new Error(`Module manifest 'api' mismatch`);
 
 	console.log(`Starting up module class: ${factory.name}`);
 

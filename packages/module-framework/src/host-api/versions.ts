@@ -1,7 +1,7 @@
 import { assertNever } from '../util.js';
 
 export enum HostApiVersion {
-	v0 = 'v0',
+	SocketIOv0 = 'socket.io-v0',
 }
 
 export type ResultCallback<T> = (err: any, res: T) => void;
@@ -14,7 +14,7 @@ export type HostToModuleEventsInit = Record<never, never>;
 /** Check if a HostApiVersion is supported  */
 export function isSupportedApiVersion(version: HostApiVersion): boolean {
 	switch (version) {
-		case HostApiVersion.v0:
+		case HostApiVersion.SocketIOv0:
 			return true;
 		// Future:
 		// case HostApiVersion.v0:

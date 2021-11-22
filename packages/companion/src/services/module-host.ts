@@ -136,7 +136,7 @@ export class ModuleHost {
 				return;
 			}
 
-			if (apiVersion !== HostApiVersion.v0) {
+			if (apiVersion !== HostApiVersion.SocketIOv0) {
 				// Future: Temporary until version selection is implemented
 				logger.warn(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`);
 				socket.disconnect(true);
@@ -173,7 +173,7 @@ export class ModuleHost {
 			// Bind the event listeners
 			let registerResult: RegisterResult;
 			switch (apiVersion) {
-				case HostApiVersion.v0:
+				case HostApiVersion.SocketIOv0:
 					registerResult = setupSocketClientV0(socket, this.core, connectionId);
 					break;
 				default:
@@ -225,7 +225,11 @@ export class ModuleHost {
 				// TODO - regenerate the monitor
 			} else {
 				const token = shortid();
-				const cmd = ['node', path.join(module.modulePath, module.manifest.entrypoint)];
+				const cmd = [
+					'node',
+					// TODO - vary depending on module version
+					path.join(module.modulePath, 'node_modules/@companion/module-framework/dist/entrypoint/v0.js'),
+				];
 				logger.debug(`Connection "${connection.label}" command: ${JSON.stringify(cmd)}`);
 
 				const monitor = Respawn(cmd, {
@@ -234,10 +238,12 @@ export class ModuleHost {
 						CONNECTION_ID: connection._id,
 						SOCKETIO_URL: `ws://localhost:${this.socketPort}`,
 						SOCKETIO_TOKEN: token,
+						MODULE_FILE: path.join(module.modulePath, module.manifest.entrypoint),
+						MODULE_MANIFEST: path.join(module.modulePath, 'companion/manifest.json'),
 					},
 					maxRestarts: -1,
 					kill: 5000,
-					// cwd: '', // TODO
+					cwd: module.modulePath,
 				});
 
 				// TODO - better event listeners

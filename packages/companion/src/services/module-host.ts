@@ -14,13 +14,15 @@ import {
 import { createChildLogger } from '../logger.js';
 import { registerEventsV0 as setupSocketClientV0 } from './module-host-versions/v0.js';
 import { RegisterResult } from './module-host-versions/util.js';
+import { assertNever } from '@companion/module-framework';
 
 const logger = createChildLogger('services/module-host');
 
 interface ChildProcessInfo {
-	monitor: Respawn.RespawnMonitor;
+	readonly lifeCycleQueue: PQueue;
 
-	authToken: string;
+	monitor?: Respawn.RespawnMonitor;
+	authToken?: string;
 
 	socket?: SocketIO.Socket;
 	doDestroy?: () => Promise<void>;
@@ -28,7 +30,6 @@ interface ChildProcessInfo {
 
 export class ModuleHost {
 	private readonly core: ICore;
-	private readonly queue: PQueue;
 	private readonly socketServer: SocketIO.Server<ModuleToHostEventsInit, HostToModuleEventsInit>;
 	private readonly socketPort: number;
 
@@ -36,10 +37,6 @@ export class ModuleHost {
 
 	constructor(core: ICore, socketPort: number) {
 		this.core = core;
-		this.queue = new PQueue({
-			// TODO - is a PQueue appropriate?
-			concurrency: 4,
-		});
 		this.children = new Map();
 
 		this.socketPort = socketPort;
@@ -64,7 +61,8 @@ export class ModuleHost {
 		});
 
 		stream.on('end', () => {
-			logger.warn('Connections stream closed');
+			logger.warn('Connections stream closed. Aborting');
+			process.exit(9);
 		});
 
 		stream.on('change', (doc) => {
@@ -72,41 +70,53 @@ export class ModuleHost {
 				case 'insert':
 				case 'replace': {
 					const docId = doc.documentKey._id;
-					this.queue.add(() => this.restartConnection(docId));
+					this.queueRestartConnection(docId);
 					break;
 				}
 				case 'update': {
 					// TODO - avoid a restart depending on keys of changes
 					const docId = doc.documentKey._id;
-					this.queue.add(() => this.restartConnection(docId));
+					this.queueRestartConnection(docId);
 					break;
 				}
 				case 'delete':
-					this.queue.add(() => this.stopConnection(doc.documentKey._id));
+					this.queueStopConnection(doc.documentKey._id);
 					break;
 				case 'drop':
 				case 'dropDatabase':
 				case 'rename':
 				case 'invalidate':
-					logger.warn('Connections stream closed');
+					logger.error('Change stream lost database or collection. Aborting');
+					process.exit(9);
 					break;
-				// TODO
-				// default:
-				// 	assertNever(doc.operationType);
+				default:
+					assertNever(doc);
 			}
 		});
 
 		// Queue everything for validation
 		this.core.models.deviceConnections.find().forEach((doc) => {
 			const docId = doc._id;
-			this.queue.add(() => this.restartConnection(docId));
+
+			this.queueRestartConnection(docId);
 		});
 	}
 
-	private async stopConnection(connectionId: string): Promise<void> {
+	private async queueStopConnection(connectionId: string): Promise<void> {
 		const child = this.children.get(connectionId);
 		if (child) {
+			await child.lifeCycleQueue.add(async () => this.doStopConnectionInner(connectionId, true));
+		}
+	}
+
+	private async doStopConnectionInner(connectionId: string, allowDeleteIfEmpty: boolean): Promise<void> {
+		const child = this.children.get(connectionId);
+		if (child) {
+			// Ensure a new child cant register
+			delete child.authToken;
+
 			if (child.doDestroy) {
+				// Perform cleanup of the module and event listeners
 				try {
 					await child.doDestroy();
 				} catch (e) {
@@ -115,15 +125,21 @@ export class ModuleHost {
 			}
 
 			if (child.socket) {
+				// Stop the child connection
 				child.socket.disconnect(true);
 				delete child.socket;
 			}
 
-			// TODO - race safety
-			child.monitor.stop(() => {
-				// cleanup
+			if (child.monitor) {
+				// Stop the child process
+				const monitor = child.monitor;
+				await new Promise<void>((resolve) => monitor.stop(resolve));
+			}
+
+			if (allowDeleteIfEmpty && child.lifeCycleQueue.size === 0) {
+				// Delete the queue now that it is empty
 				this.children.delete(connectionId);
-			});
+			}
 		}
 	}
 
@@ -194,36 +210,43 @@ export class ModuleHost {
 				// TODO - log error?
 
 				// Force restart the connetion, as it failed to initialise and will be broken
-				this.restartConnection(connectionId);
+				this.queueRestartConnection(connectionId);
 			});
 		});
 	}
 
-	private async restartConnection(connectionId: string): Promise<void> {
-		const connection = await this.core.models.deviceConnections.findOne({ _id: connectionId });
-		if (connection && connection.enabled) {
-			logger.info(`Starting connection: "${connection.label}"(${connectionId})`);
+	private async queueRestartConnection(connectionId: string): Promise<void> {
+		let child = this.children.get(connectionId);
+		if (!child) {
+			// Create a new child entry
+			child = { lifeCycleQueue: new PQueue({ concurrency: 1 }) };
+			this.children.set(connectionId, child);
+		}
 
-			const module = await this.core.models.modules.findOne({ _id: connection.moduleId });
-			if (!module) {
-				logger.error(`Cannot restart connection of unknown module: "${connectionId}"`);
-				await this.stopConnection(connectionId);
-				return;
-			}
+		await child.lifeCycleQueue.add(async () => {
+			const connection = await this.core.models.deviceConnections.findOne({ _id: connectionId });
+			if (connection && connection.enabled) {
+				logger.info(`Starting connection: "${connection.label}"(${connectionId})`);
 
-			// TODO - look at the runtime and api fields to figure out how to handle this
+				const module = await this.core.models.modules.findOne({ _id: connection.moduleId });
+				if (!module) {
+					logger.error(`Cannot restart connection of unknown module: "${connectionId}"`);
+					await this.doStopConnectionInner(connectionId, true);
+					return;
+				}
 
-			let child = this.children.get(connection._id);
-			if (child) {
-				const child2 = child;
-				await new Promise<void>((resolve) => child2.monitor.stop(resolve));
+				// TODO - look at the runtime and api fields to figure out how to handle this
 
-				// Cleanup
-				delete child.socket;
+				const child = this.children.get(connection._id);
+				if (!child) {
+					logger.error(`Lost tracking object for connection : "${connectionId}"`);
+					return;
+				}
 
-				// TODO - regenerate the monitor
-			} else {
-				const token = shortid();
+				// stop any existing child process
+				await this.doStopConnectionInner(connectionId, false);
+
+				child.authToken = shortid();
 				const cmd = [
 					'node',
 					// TODO - vary depending on module version
@@ -236,7 +259,7 @@ export class ModuleHost {
 					env: {
 						CONNECTION_ID: connection._id,
 						SOCKETIO_URL: `ws://localhost:${this.socketPort}`,
-						SOCKETIO_TOKEN: token,
+						SOCKETIO_TOKEN: child.authToken,
 						MODULE_FILE: path.join(module.modulePath, module.manifest.entrypoint),
 						MODULE_MANIFEST: path.join(module.modulePath, 'companion/manifest.json'),
 					},
@@ -262,21 +285,17 @@ export class ModuleHost {
 					logger.info(`Connection "${connection.label}" stderr: ${data.toString()}`);
 				});
 
-				child = {
-					monitor: monitor,
-					authToken: token,
-				};
-				this.children.set(connection._id, child);
+				child.monitor = monitor;
+
+				// Start the child
+				child.monitor.start();
+
+				// TODO - timeout for first contact
+			} else {
+				logger.warn(`Attempting to start missing connection: "${connectionId}"`);
+				await this.doStopConnectionInner(connectionId, true);
 			}
-
-			// Start the child
-			child.monitor.start();
-
-			// TODO - timeout for first contact
-		} else {
-			logger.warn(`Attempting to start missing connection: "${connectionId}"`);
-			await this.stopConnection(connectionId);
-		}
+		});
 	}
 }
 

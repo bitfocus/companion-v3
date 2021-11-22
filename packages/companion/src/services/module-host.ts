@@ -57,16 +57,16 @@ export class ModuleHost {
 	async start(): Promise<void> {
 		watchCollection(this.core.models.deviceConnections, undefined, {
 			onInsert: (doc) => {
-				this.queueRestartConnection(doc.documentKey._id);
+				if (doc.documentKey) this.queueRestartConnection((doc.documentKey as any)._id);
 			},
 			onReplace: (doc) => {
-				this.queueRestartConnection(doc.documentKey._id);
+				if (doc.documentKey) this.queueRestartConnection((doc.documentKey as any)._id);
 			},
 			onUpdate: (doc) => {
-				this.queueRestartConnection(doc.documentKey._id);
+				if (doc.documentKey) this.queueRestartConnection((doc.documentKey as any)._id);
 			},
 			onDelete: (doc) => {
-				this.queueStopConnection(doc.documentKey._id);
+				if (doc.documentKey) this.queueStopConnection((doc.documentKey as any)._id);
 			},
 		});
 

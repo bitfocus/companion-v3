@@ -41,7 +41,7 @@ export class ControlRunner {
 
 			await this.core.models.deviceConnectionWorkTasks.bulkWrite(
 				actions.map((action) =>
-					literal<Mongo.BulkWriteInsertOneOperation<IDeviceConnectionWorkTask>>({
+					literal<Mongo.AnyBulkWriteOperation<IDeviceConnectionWorkTask>>({
 						insertOne: {
 							document: {
 								_id: generateDocumentId(),

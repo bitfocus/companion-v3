@@ -34,10 +34,10 @@ export interface ICore {
 }
 
 interface WatchCollectionCallbacks<T> {
-	onInsert: ((evt: Mongo.ChangeEventCR<T>) => void) | null;
-	onReplace: ((evt: Mongo.ChangeEventCR<T>) => void) | null;
-	onUpdate: ((evt: Mongo.ChangeEventUpdate<T>) => void) | null;
-	onDelete: ((evt: Mongo.ChangeEventDelete<T>) => void) | null;
+	onInsert: ((evt: Mongo.ChangeStreamDocument<T>) => void) | null;
+	onReplace: ((evt: Mongo.ChangeStreamDocument<T>) => void) | null;
+	onUpdate: ((evt: Mongo.ChangeStreamDocument<T>) => void) | null;
+	onDelete: ((evt: Mongo.ChangeStreamDocument<T>) => void) | null;
 }
 
 export function watchCollection<T extends object>(
@@ -74,7 +74,7 @@ export function watchCollection<T extends object>(
 				process.exit(9);
 				break;
 			default:
-				assertNever(doc);
+				assertNever(doc.operationType);
 		}
 	});
 }

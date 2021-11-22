@@ -56,7 +56,7 @@ function subscribeToDeletes<T extends { _id: string }>(collection: Mongo.Collect
 	if (!sub) {
 		const sub2 = new Subject<string>();
 
-		const stream = collection.watch({});
+		const stream = collection.watch();
 
 		stream.on('end', () => {
 			// TODO
@@ -75,7 +75,7 @@ function subscribeToDeletes<T extends { _id: string }>(collection: Mongo.Collect
 				// 	});
 				// 	break;
 				case 'delete':
-					sub2.next(doc.documentKey._id);
+					sub2.next((doc.documentKey as any)._id);
 					break;
 				case 'drop':
 				case 'dropDatabase':
@@ -155,7 +155,7 @@ function createBasicSubscription<T extends { _id: string }>(
 		throw new Error(`Can't have query`);
 	}
 
-	const stream = collection.watch({
+	const stream = collection.watch(undefined, {
 		fullDocument: 'updateLookup',
 	});
 
@@ -196,7 +196,7 @@ function createBasicSubscription<T extends { _id: string }>(
 		},
 		init: (client: SubscriptionEntry) => {
 			collection
-				.find(typeof msg.query === 'string' ? { _id: msg.query } : undefined)
+				.find(typeof msg.query === 'string' ? { _id: msg.query } : {})
 				.toArray()
 				.then((docs) => {
 					for (const doc of docs) {
@@ -207,7 +207,7 @@ function createBasicSubscription<T extends { _id: string }>(
 						client.messageName,
 						literal<SubscriptionEvent<T>>({
 							event: 'init',
-							docs: docs,
+							docs: docs as T[],
 						}),
 					);
 				});
@@ -223,7 +223,7 @@ function createBasicSubscription<T extends { _id: string }>(
 			case 'insert':
 			case 'replace':
 			case 'update':
-				subscriptionDocIds.add(doc.documentKey._id);
+				subscriptionDocIds.add((doc.documentKey as any)._id);
 				sendToAll({
 					event: 'change',
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -231,10 +231,10 @@ function createBasicSubscription<T extends { _id: string }>(
 				});
 				break;
 			case 'delete':
-				subscriptionDocIds.delete(doc.documentKey._id);
+				subscriptionDocIds.delete((doc.documentKey as any)._id);
 				sendToAll({
 					event: 'remove',
-					docId: doc.documentKey._id,
+					docId: (doc.documentKey as any)._id,
 				});
 				break;
 			case 'drop':

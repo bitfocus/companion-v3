@@ -127,7 +127,7 @@ async function handleSetActionDefinitions(
 ): Promise<void> {
 	logger.debug(`Updating actions for "${connectionId}"`);
 
-	const writeOps: Array<Mongo.BulkWriteOperation<IDeviceConnectionAction>> = [];
+	const writeOps: Array<Mongo.AnyBulkWriteOperation<IDeviceConnectionAction>> = [];
 	const knownIds: string[] = [];
 
 	for (const action of msg.actions) {

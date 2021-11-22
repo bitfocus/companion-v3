@@ -22,21 +22,21 @@ class ControlRenderer {
 	async start(): Promise<void> {
 		watchCollection(this.core.models.controlDefinitions, undefined, {
 			onInsert: (doc) => {
-				const docId = doc.documentKey._id;
-				this.queue.add(() => this.renderControl(docId));
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId));
 			},
 			onReplace: (doc) => {
-				const docId = doc.documentKey._id;
-				this.queue.add(() => this.renderControl(docId));
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId));
 			},
 			onUpdate: (doc) => {
-				if ('renderHash' in doc.updateDescription.updatedFields) {
-					const docId = doc.documentKey._id;
-					this.queue.add(() => this.renderControl(docId));
+				if (doc.updateDescription && 'renderHash' in doc.updateDescription.updatedFields) {
+					const docId = (doc.documentKey as any)._id;
+					if (docId) this.queue.add(() => this.renderControl(docId));
 				}
 			},
 			onDelete: (doc) => {
-				this.deleteRender(doc.documentKey._id);
+				if (doc.documentKey) this.deleteRender((doc.documentKey as any)._id);
 			},
 		});
 
@@ -59,7 +59,7 @@ class ControlRenderer {
 			this.core.models.controlRenders.findOne({ _id: controlId }),
 		]);
 		if (!control) {
-			logger.debug(`Skipping render of ${controlId}, as it no longer exists`);
+			logger.debug(`Skipping render of ${JSON.stringify(controlId)}, as it no longer exists`);
 			return;
 		}
 
@@ -177,7 +177,7 @@ class ControlRenderer {
 				},
 				{
 					upsert: true,
-					// session,
+					session,
 				},
 			);
 

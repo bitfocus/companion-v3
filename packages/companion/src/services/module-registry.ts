@@ -73,7 +73,7 @@ export class ModuleRegistry {
 
 		logger.info(`Discovered ${modules.length} modules:`);
 
-		const writeOps: Array<Mongo.BulkWriteReplaceOneOperation<IModule>> = [];
+		const writeOps: Array<Mongo.AnyBulkWriteOperation<IModule>> = [];
 		const knownIds: string[] = [];
 
 		for (const m of modules) {

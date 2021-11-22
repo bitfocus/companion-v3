@@ -16,6 +16,7 @@ import { generateDocumentId, ICore } from '../core.js';
 import { SurfaceType } from '@companion/core-shared/dist/collections/index.js';
 import { createControlDefaults } from './control-definition.js';
 import { IServices, SocketContext } from './handlers.js';
+import * as Mongo from 'mongodb';
 
 export async function handleSurfaceSpaceCreate(
 	_socket: SocketIO.Socket,
@@ -104,7 +105,7 @@ export async function handleSurfaceSpaceDelete(
 				},
 			);
 
-			if (updatedDevices.result.nModified === 0) {
+			if ((updatedDevices as Mongo.UpdateResult).modifiedCount === 0) {
 				if (!delSpace.deletedCount || delSpace.deletedCount === 0) {
 					// Nothing deleted
 					await session.abortTransaction();

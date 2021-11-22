@@ -38,7 +38,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		mongoUrl = await startMongo(configPath, path.join(appPath, '../..'), '127.0.0.1', mongoPort);
 	}
 
-	const client = new Mongo.MongoClient(mongoUrl, { useUnifiedTopology: true, w: 'majority', j: false });
+	const client = new Mongo.MongoClient(mongoUrl, { w: 'majority' });
 	await client.connect();
 
 	const database = client.db(process.env.MONGO_DB ?? 'companion3');

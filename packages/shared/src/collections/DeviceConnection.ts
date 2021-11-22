@@ -1,4 +1,4 @@
-import { CompanionAction, ConfigValue } from '@companion/module-framework';
+import { CompanionAction, ConfigValue, SomeCompanionInputField } from '@companion/module-framework';
 
 export interface IDeviceConnection {
 	_id: string;
@@ -16,6 +16,7 @@ export interface IDeviceConnectionAction {
 	actionId: string;
 	connectionId: string;
 
-	// TODO - should this type be better?
-	rawAction: CompanionAction;
+	name: string;
+	description?: string;
+	options: SomeCompanionInputField[]; // TODO - typed better?
 }

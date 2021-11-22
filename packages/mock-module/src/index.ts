@@ -19,7 +19,7 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 
 		this.setActionDefinitions({
 			fake: {
-				label: 'Fake action',
+				name: 'Fake action',
 				options: [],
 			},
 		});

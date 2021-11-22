@@ -28,7 +28,6 @@ interface ChildProcessInfo {
 
 export class ModuleHost {
 	private readonly core: ICore;
-	// Note: in a multi-node environment, this queue will need to be replaced with a proper distributed work queue
 	private readonly queue: PQueue;
 	private readonly socketServer: SocketIO.Server<ModuleToHostEventsInit, HostToModuleEventsInit>;
 	private readonly socketPort: number;

@@ -1,10 +1,9 @@
-import { CompanionActions, InstanceStatus, LogLevel } from '../module-api/v0/index.js';
-import { ResultCallback } from './versions.js';
+import { CompanionActions, InstanceStatus, LogLevel, SomeCompanionInputField } from '../module-api/v0/index.js';
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => void;
 	'set-status': (msg: SetStatusMessage) => void;
-	setActionDefinitions: (actions: CompanionActions) => void;
+	setActionDefinitions: (msg: SetActionDefinitionsMessage) => void;
 }
 
 export interface HostToModuleEventsV0 {
@@ -21,4 +20,13 @@ export interface LogMessageMessage {
 export interface SetStatusMessage {
 	status: InstanceStatus | null;
 	message: string | null;
+}
+
+export interface SetActionDefinitionsMessage {
+	actions: Array<{
+		id: string;
+		name: string;
+		description?: string;
+		options: SomeCompanionInputField[]; // TODO - versioned types?
+	}>;
 }

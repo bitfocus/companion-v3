@@ -1,11 +1,17 @@
 import * as SocketIOClient from 'socket.io-client';
 import { CompanionInputField } from './input.js';
-import { CompanionActions } from './action.js';
+import { CompanionAction, CompanionActions } from './action.js';
 import { CompanionFeedbacks } from './feedback.js';
 import { CompanionVariable } from './variable.js';
 import { CompanionPreset } from './preset.js';
 import { InstanceStatus, LogLevel } from './enums.js';
-import { HostToModuleEventsV0, LogMessageMessage, ModuleToHostEventsV0, SetStatusMessage } from '../../host-api/v0.js';
+import {
+	HostToModuleEventsV0,
+	LogMessageMessage,
+	ModuleToHostEventsV0,
+	SetActionDefinitionsMessage,
+	SetStatusMessage,
+} from '../../host-api/v0.js';
 import { literal } from '../../util.js';
 import { InstanceBaseShared } from '../../instance-base.js';
 import { ResultCallback } from '../../host-api/versions.js';
@@ -70,6 +76,8 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	readonly #lifecycleQueue: PQueue;
 	#initialized: boolean;
 
+	readonly #actionDefinitions: Map<string, CompanionAction>;
+
 	/**
 	 * Create an instance of the module.
 	 */
@@ -85,6 +93,8 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 		this.#lifecycleQueue = new PQueue({ concurrency: 1 });
 		this.#initialized = false;
+
+		this.#actionDefinitions = new Map();
 
 		// subscribe to socket events from host
 		listenToEvents<HostToModuleEventsV0>(socket, {
@@ -171,7 +181,25 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	// abstract executeFeedback(event: CompanionFeedbackEvent): CompanionFeedbackResult;
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
-		return this._socketEmit('setActionDefinitions', actions);
+		const hostActions: SetActionDefinitionsMessage['actions'] = [];
+
+		this.#actionDefinitions.clear();
+
+		for (const [actionId, action] of Object.entries(actions)) {
+			if (action) {
+				hostActions.push({
+					id: actionId,
+					name: action.name,
+					description: action.description,
+					options: action.options,
+				});
+
+				// Remember the definition locally
+				this.#actionDefinitions.set(actionId, action);
+			}
+		}
+
+		return this._socketEmit('setActionDefinitions', { actions: hostActions });
 	}
 	setVariableDefinitions(_variables: CompanionVariable[]): Promise<void> {
 		// return this.system.setVariableDefinitions(variables);

@@ -13,6 +13,7 @@ import { getHash, listenToEvents, RegisterResult } from './util.js';
 import Mongo from 'mongodb';
 import { ResultCallback } from '@companion/module-framework/dist/host-api/versions';
 import PTimeout from 'p-timeout';
+import { SetActionDefinitionsMessage } from '@companion/module-framework/src/host-api/v0';
 
 async function socketEmit<T extends keyof HostToModuleEventsV0>(
 	socket: SocketIO.Socket,
@@ -95,35 +96,35 @@ async function handleSetActionDefinitions(
 	logger: winston.Logger,
 	core: ICore,
 	connectionId: string,
-	actions: CompanionActions,
+	msg: SetActionDefinitionsMessage,
 ): Promise<void> {
 	logger.debug(`Updating actions`);
 
-	const writeOps: Array<Mongo.BulkWriteReplaceOneOperation<IDeviceConnectionAction>> = [];
+	const writeOps: Array<Mongo.BulkWriteOperation<IDeviceConnectionAction>> = [];
 	const knownIds: string[] = [];
 
-	for (const [actionId, action] of Object.entries(actions)) {
-		if (action) {
-			const doc: IDeviceConnectionAction = {
-				_id: getHash(`${connectionId}:${actionId}`),
-				connectionId: connectionId,
-				actionId: actionId,
+	for (const action of msg.actions) {
+		const doc: IDeviceConnectionAction = {
+			_id: getHash(`${connectionId}:${action.id}`),
+			connectionId: connectionId,
+			actionId: action.id,
 
-				// TODO - more conversion
-				rawAction: action,
-			};
-			knownIds.push(doc._id);
+			// TODO - more conversion
+			name: action.name,
+			description: action.description,
+			options: action.options,
+		};
+		knownIds.push(doc._id);
 
-			writeOps.push({
-				replaceOne: {
-					filter: {
-						_id: doc._id,
-					},
-					replacement: doc,
-					upsert: true,
+		writeOps.push({
+			replaceOne: {
+				filter: {
+					_id: doc._id,
 				},
-			});
-		}
+				replacement: doc,
+				upsert: true,
+			},
+		});
 	}
 
 	logger.debug(`Got ${writeOps.length} actions`);

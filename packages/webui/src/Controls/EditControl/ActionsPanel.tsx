@@ -228,11 +228,11 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 		return context.actions.find((a) => a.actionId === action.actionId && a.connectionId === action.connectionId);
 	}, [context.actions, action.actionId, action.connectionId]);
 
-	const options = actionSpec?.rawAction?.options ?? [];
+	const options = actionSpec?.options ?? [];
 
 	let name = '';
 	if (actionSpec) {
-		name = `${connectionLabel}: ${actionSpec.rawAction.label}`;
+		name = `${connectionLabel}: ${actionSpec.name}`;
 	} else {
 		name = `${connectionLabel}: Unknown action (${action.actionId})`;
 	}
@@ -305,7 +305,7 @@ function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownProps) {
 		return context.actions.map((action) => {
 			const connectionLabel = context.connections[action.connectionId]?.label ?? action.connectionId;
 			const value: ActionId = [action.connectionId, action.actionId];
-			return { value, label: `${connectionLabel}: ${action.rawAction.label}` };
+			return { value, label: `${connectionLabel}: ${action.name}` };
 		});
 	}, [context.actions, context.connections]);
 

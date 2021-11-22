@@ -1,14 +1,25 @@
 import { SomeCompanionInputField, InputValue } from './input.js';
 
 export interface CompanionAction {
-	label: string;
+	name: string;
+	description?: string;
 	options: SomeCompanionInputField[];
+	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo | null) => void;
+	subscribe?: (action: CompanionActionEvent) => void;
+	unsubscribe?: (action: CompanionActionEvent) => void;
 }
 export interface CompanionActionEvent {
-	type: string;
+	actionId: string;
 	options: { [key: string]: InputValue | undefined };
 }
 
+export interface CompanionActionEventInfo {
+	// TODO
+	// deviceId: string | undefined;
+	// page: number;
+	// bank: number;
+}
+
 export interface CompanionActions {
-	[id: string]: CompanionAction | undefined;
+	[actionId: string]: CompanionAction | undefined;
 }

@@ -7,6 +7,7 @@ import * as SocketIO from 'socket.io';
 import { SurfaceManager } from '../services/surfaces.js';
 import { IServices, SocketContext, SocketHandlers } from './handlers.js';
 import { createChildLogger } from '../logger.js';
+import { ControlRunner } from '../services/control-runner.js';
 
 const logger = createChildLogger('routes/api-router');
 
@@ -32,9 +33,10 @@ const logger = createChildLogger('routes/api-router');
 // 	return router;
 // }
 
-export function socketHandler(core: ICore, surfaceManager: SurfaceManager): void {
+export function socketHandler(core: ICore, surfaceManager: SurfaceManager, controlRunner: ControlRunner): void {
 	const services: IServices = {
 		surfaceManager,
+		controlRunner,
 	};
 
 	core.io.on('connection', (socket: SocketIO.Socket) => {

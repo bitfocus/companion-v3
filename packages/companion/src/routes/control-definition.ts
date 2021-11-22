@@ -11,8 +11,7 @@ import {
 import { rgba } from '@companion/core-shared/dist/color.js';
 import * as SocketIO from 'socket.io';
 import { verifyUserSession } from '../auth.js';
-import { ICore } from '../core.js';
-import Bson from 'bson';
+import { generateDocumentId, ICore } from '../core.js';
 import { ControlType, IControlDefinition } from '@companion/core-shared/dist/collections/index.js';
 import {
 	ControlDefinitionActionAddMessage,
@@ -24,7 +23,7 @@ export function createControlDefaults(type: ControlType): IControlDefinition {
 	// TODO - validate type
 
 	return {
-		_id: new Bson.ObjectID().toHexString(),
+		_id: generateDocumentId(),
 		description: 'New control',
 		controlType: type,
 		defaultLayer: {
@@ -34,10 +33,11 @@ export function createControlDefaults(type: ControlType): IControlDefinition {
 			textColor: rgba(255, 255, 255, 255),
 			backgroundColor: rgba(0, 0, 0, 255),
 		},
-		renderHash: new Bson.ObjectID().toHexString(),
+		renderHash: generateDocumentId(),
 		touchedAt: Date.now(),
 
 		downActions: [],
+		upActions: [],
 	};
 }
 
@@ -92,7 +92,7 @@ export async function handleControlDefinitionRenderLayerUpdate(
 		{
 			$set: {
 				[`defaultLayer.${msg.key}`]: msg.value,
-				renderHash: new Bson.ObjectID().toHexString(),
+				renderHash: generateDocumentId(),
 			},
 		},
 	);
@@ -137,7 +137,7 @@ export async function handleControlDefinitionActionAdd(
 		{
 			$push: {
 				downActions: {
-					id: new Bson.ObjectID().toHexString(),
+					id: generateDocumentId(),
 
 					connectionId: msg.connectionId,
 					actionId: msg.actionId,

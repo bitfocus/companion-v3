@@ -1,8 +1,7 @@
-import { ICore } from '../core.js';
+import { generateDocumentId, ICore } from '../core.js';
 import { ModuleThread, spawn, Thread, Worker } from 'threads';
 import { SurfaceWorker } from '../workers/surface.js';
 import { SurfaceDeviceStatus } from '@companion/core-shared/dist/collections/index.js';
-import Bson from 'bson';
 import { createChildLogger } from '../logger.js';
 
 const logger = createChildLogger('services/surfaces');
@@ -70,7 +69,7 @@ export class SurfaceManager {
 
 					if (!existing) {
 						// Create the new surface
-						const newId = new Bson.ObjectID().toHexString();
+						const newId = generateDocumentId();
 						updatedIds.add(newId);
 						updates.push(
 							this.core.models.surfaceDevices.insertOne({

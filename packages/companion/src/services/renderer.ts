@@ -3,7 +3,7 @@ import { pngBufferToString } from '@companion/core-shared/dist/collections/index
 import { splitColors } from '@companion/core-shared/dist/color.js';
 import PQueue from 'p-queue';
 import sharp from 'sharp';
-import { ICore } from '../core.js';
+import { ICore, watchCollection } from '../core.js';
 
 const logger = createChildLogger('services/renderer');
 
@@ -20,40 +20,24 @@ class ControlRenderer {
 	}
 
 	async start(): Promise<void> {
-		const stream = this.core.models.controlDefinitions.watch();
-
-		stream.on('end', () => {
-			logger.info('Renderer stream closed');
-		});
-
-		stream.on('change', (doc) => {
-			switch (doc.operationType) {
-				case 'insert':
-				case 'replace': {
+		watchCollection(this.core.models.controlDefinitions, undefined, {
+			onInsert: (doc) => {
+				const docId = doc.documentKey._id;
+				this.queue.add(() => this.renderControl(docId));
+			},
+			onReplace: (doc) => {
+				const docId = doc.documentKey._id;
+				this.queue.add(() => this.renderControl(docId));
+			},
+			onUpdate: (doc) => {
+				if ('renderHash' in doc.updateDescription.updatedFields) {
 					const docId = doc.documentKey._id;
 					this.queue.add(() => this.renderControl(docId));
-					break;
 				}
-				case 'update': {
-					if ('renderHash' in doc.updateDescription.updatedFields) {
-						const docId = doc.documentKey._id;
-						this.queue.add(() => this.renderControl(docId));
-					}
-					break;
-				}
-				case 'delete':
-					this.deleteRender(doc.documentKey._id);
-					break;
-				case 'drop':
-				case 'dropDatabase':
-				case 'rename':
-				case 'invalidate':
-					logger.info('Renderer stream closed');
-					break;
-				// TODO
-				// default:
-				// 	assertNever(doc.operationType);
-			}
+			},
+			onDelete: (doc) => {
+				this.deleteRender(doc.documentKey._id);
+			},
 		});
 
 		// Queue everything for validation

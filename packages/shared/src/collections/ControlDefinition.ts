@@ -25,6 +25,7 @@ export interface IControlDefinition {
 	// TODO - this needs to vary based on controlType
 	// TODO - this is the wrong placement for this. needs to be actionSets
 	downActions: IControlAction[];
+	upActions: IControlAction[];
 	// TODO - actions
 	// TODO - feedbacks
 }

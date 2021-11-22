@@ -6,6 +6,7 @@ import { CompanionVariable } from './variable.js';
 import { CompanionPreset } from './preset.js';
 import { InstanceStatus, LogLevel } from './enums.js';
 import {
+	ExecuteActionMessage,
 	HostToModuleEventsV0,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
@@ -101,6 +102,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			init: this._handleInit.bind(this),
 			destroy: this._handleDestroy.bind(this),
 			updateConfig: this._handleConfigUpdate.bind(this),
+			executeAction: this._handleExecuteAction.bind(this),
 		});
 
 		this.updateStatus(null, 'Initializing');
@@ -146,6 +148,15 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			if (!this.#initialized) throw new Error('Not initialized');
 
 			await this.configUpdated(config as TConfig);
+		});
+	}
+	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
+		const actionDefinition = this.#actionDefinitions.get(msg.actionId);
+		if (!actionDefinition) throw new Error(`Unknown action`);
+
+		await actionDefinition.callback({
+			actionId: msg.actionId,
+			options: msg.options,
 		});
 	}
 

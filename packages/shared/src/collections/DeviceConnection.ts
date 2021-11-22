@@ -1,4 +1,4 @@
-import { CompanionAction, ConfigValue, SomeCompanionInputField } from '@companion/module-framework';
+import { ConfigValue, InstanceStatus, SomeCompanionInputField } from '@companion/module-framework';
 
 export interface IDeviceConnection {
 	_id: string;
@@ -7,7 +7,14 @@ export interface IDeviceConnection {
 	enabled: boolean;
 
 	/** Config blob of structure defined by the module */
-	moduleConfig: {[key: string]: ConfigValue}
+	moduleConfig: { [key: string]: ConfigValue };
+}
+
+export interface IDeviceConnectionStatus {
+	_id: string; // connectionId
+
+	status: InstanceStatus | null; // TODO - decouple type
+	message: string | null;
 }
 
 export interface IDeviceConnectionAction {

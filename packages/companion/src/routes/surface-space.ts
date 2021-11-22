@@ -12,8 +12,7 @@ import {
 } from '@companion/core-shared/dist/api.js';
 import * as SocketIO from 'socket.io';
 import { verifyUserSession } from '../auth.js';
-import { ICore } from '../core.js';
-import Bson from 'bson';
+import { generateDocumentId, ICore } from '../core.js';
 import { SurfaceType } from '@companion/core-shared/dist/collections/index.js';
 import { createControlDefaults } from './control-definition.js';
 import { IServices, SocketContext } from './handlers.js';
@@ -27,8 +26,8 @@ export async function handleSurfaceSpaceCreate(
 ): Promise<SurfaceSpaceCreateMessageReply> {
 	await verifyUserSession(core, socketContext.authSessionId);
 
-	const docId = new Bson.ObjectID().toHexString();
-	const pageId = new Bson.ObjectID().toHexString();
+	const docId = generateDocumentId();
+	const pageId = generateDocumentId();
 
 	const session = core.client.startSession();
 	try {
@@ -140,7 +139,7 @@ export async function handleSurfaceSpacePageCreate(
 ): Promise<SurfaceSpacePageCreateMessageReply> {
 	await verifyUserSession(core, socketContext.authSessionId);
 
-	const pageId = new Bson.ObjectID().toHexString();
+	const pageId = generateDocumentId();
 
 	const session = core.client.startSession();
 	try {

@@ -4,16 +4,16 @@ export interface CompanionAction {
 	name: string;
 	description?: string;
 	options: SomeCompanionInputField[];
-	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo | null) => void;
-	subscribe?: (action: CompanionActionEvent) => void;
-	unsubscribe?: (action: CompanionActionEvent) => void;
+	callback: (action: CompanionActionEvent) => Promise<void> | void;
+	subscribe?: (action: CompanionActionInfo) => Promise<void> | void;
+	unsubscribe?: (action: CompanionActionInfo) => Promise<void> | void;
 }
-export interface CompanionActionEvent {
+export interface CompanionActionInfo {
 	actionId: string;
 	options: { [key: string]: InputValue | undefined };
 }
 
-export interface CompanionActionEventInfo {
+export interface CompanionActionEvent extends CompanionActionInfo {
 	// TODO
 	// deviceId: string | undefined;
 	// page: number;

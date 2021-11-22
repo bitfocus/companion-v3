@@ -1,23 +1,13 @@
 import { ControlDefinitionNameUpdateMessage, SocketCommand } from '@companion/core-shared/dist/api';
-import { CollectionId, IControlDefinition } from '@companion/core-shared/dist/collections';
+import { CollectionId, ControlType, IControlDefinition } from '@companion/core-shared/dist/collections';
 import { literal } from '@companion/core-shared/dist/util';
-import {
-	CDropdown,
-	CDropdownToggle,
-	CDropdownItem,
-	CDropdownMenu,
-	CButton,
-	CButtonGroup,
-	CRow,
-	CCol,
-} from '@coreui/react';
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import shortid from 'shortid';
+import { CButton, CRow, CCol } from '@coreui/react';
+import { useCallback, useContext, useRef } from 'react';
 import { TextInputField } from '../../Components';
 //   import { BankPreview, dataToButtonImage } from "../../Components/BankButton";
 import { GenericConfirmModal, IGenericConfirmModalHandle } from '../../Components/GenericConfirmModal';
 import { useCollectionOne } from '../../lib/subscription';
-import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit, socketEmit2 } from '../../util';
+import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit2 } from '../../util';
 import { ActionsPanel } from './ActionsPanel';
 import { ButtonStyleConfig } from './ButtonStyleConfig';
 //   import { ActionsPanel } from "./ActionsPanel";
@@ -179,7 +169,6 @@ export function EditControl({ controlId }: EditControlProps) {
 								/>
 							</CCol>
 						</CRow>
-
 						{/* <ButtonEditPreview page={page} bank={bank} /> */}
 						{/* <CDropdown className='mt-2' style={{ display: 'inline-block' }}>
 							<CButtonGroup> */}
@@ -206,16 +195,30 @@ export function EditControl({ controlId }: EditControlProps) {
 						&nbsp;
 						<CButton color='danger' hidden={!config.style} onClick={resetBank}>
 							Erase
-						</CButton>
+						</CButton>*/}
 						&nbsp;
 						<CButton
 							color='warning'
-							hidden={config.style !== 'png'}
-							onMouseDown={() => context.socket.emit('hot_press', page, bank, true)}
-							onMouseUp={() => context.socket.emit('hot_press', page, bank, false)}
+							hidden={control.controlType !== ControlType.Button}
+							onMouseDown={() =>
+								socketEmit2(context.socket, SocketCommand.ControlSimulatePress, {
+									controlId: control._id,
+									pressed: true,
+								}).catch((e) => {
+									console.error(`Press failed: ${e}`);
+								})
+							}
+							onMouseUp={() =>
+								socketEmit2(context.socket, SocketCommand.ControlSimulatePress, {
+									controlId: control._id,
+									pressed: false,
+								}).catch((e) => {
+									console.error(`Press failed: ${e}`);
+								})
+							}
 						>
 							Test actions
-						</CButton> */}
+						</CButton>
 					</div>
 
 					<hr />

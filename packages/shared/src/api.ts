@@ -25,6 +25,8 @@ export enum SocketCommand {
 	ControlDefinitionActionSetOption = 'CONTROLDEFINITION.ACTION.SET_OPTION',
 	ControlDefinitionActionReorder = 'CONTROLDEFINITION.ACTION.REORDER',
 
+	ControlSimulatePress = 'CONTROL.SIMULATE.PRESS',
+
 	SurfaceSpaceCreate = 'SURFACESPACE.CREATE',
 	SurfaceSpaceDelete = 'SURFACESPACE.DELETE',
 	SurfaceSpacePageCreate = 'SURFACESPACEPAGE.CREATE',
@@ -141,6 +143,11 @@ export interface ControlDefinitionNameUpdateMessage {
 	name: string;
 }
 
+export interface ControlSimulatePressMessage {
+	controlId: string;
+	pressed: boolean;
+}
+
 export interface SurfaceSpaceCreateMessage {
 	// TODO - make this much more complex..
 	type: SurfaceType;
@@ -224,6 +231,8 @@ export type SocketCommandFunc = {
 	[SocketCommand.ControlDefinitionActionSetDelay]: (data: ControlDefinitionActionSetDelayMessage) => void;
 	[SocketCommand.ControlDefinitionActionSetOption]: (data: ControlDefinitionActionSetOptionMessage) => void;
 	[SocketCommand.ControlDefinitionActionReorder]: (data: ControlDefinitionActionReorderMessage) => void;
+
+	[SocketCommand.ControlSimulatePress]: (data: ControlSimulatePressMessage) => void;
 
 	[SocketCommand.SurfaceSpaceCreate]: (data: SurfaceSpaceCreateMessage) => SurfaceSpaceCreateMessageReply;
 	[SocketCommand.SurfaceSpaceDelete]: (data: SurfaceSpaceDeleteMessage) => SurfaceSpaceDeleteMessage;

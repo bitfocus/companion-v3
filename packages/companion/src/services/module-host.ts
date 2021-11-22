@@ -1,5 +1,5 @@
 import PQueue from 'p-queue';
-import { ICore } from '../core.js';
+import { ICore, watchCollection } from '../core.js';
 import Respawn from 'respawn';
 import * as SocketIO from 'socket.io';
 import getPort from 'get-port';
@@ -14,7 +14,7 @@ import {
 import { createChildLogger } from '../logger.js';
 import { registerEventsV0 as setupSocketClientV0 } from './module-host-versions/v0.js';
 import { RegisterResult } from './module-host-versions/util.js';
-import { assertNever } from '@companion/module-framework';
+import { IDeviceConnectionWorkTask } from '../internal/connection-work.js';
 
 const logger = createChildLogger('services/module-host');
 
@@ -26,6 +26,8 @@ interface ChildProcessInfo {
 
 	socket?: SocketIO.Socket;
 	doDestroy?: () => Promise<void>;
+
+	doWorkTask?: (task: IDeviceConnectionWorkTask) => Promise<void>;
 }
 
 export class ModuleHost {
@@ -53,45 +55,44 @@ export class ModuleHost {
 	}
 
 	async start(): Promise<void> {
-		const stream = this.core.models.deviceConnections.watch();
+		watchCollection(this.core.models.deviceConnections, undefined, {
+			onInsert: (doc) => {
+				this.queueRestartConnection(doc.documentKey._id);
+			},
+			onReplace: (doc) => {
+				this.queueRestartConnection(doc.documentKey._id);
+			},
+			onUpdate: (doc) => {
+				this.queueRestartConnection(doc.documentKey._id);
+			},
+			onDelete: (doc) => {
+				this.queueStopConnection(doc.documentKey._id);
+			},
+		});
+
+		watchCollection(this.core.models.deviceConnectionWorkTasks, undefined, {
+			onInsert: (doc) => {
+				// Watch for new commands to be queued
+				if (doc.fullDocument) {
+					const child = this.children.get(doc.fullDocument?.connectionId);
+					if (child?.doWorkTask) {
+						child.doWorkTask(doc.fullDocument).catch((e) => {
+							logger.error(`Work task failed: ${e}`);
+						});
+						return;
+					}
+				}
+
+				logger.error(`Got worktask with no child to process`);
+			},
+			onReplace: null,
+			onUpdate: null,
+			onDelete: null,
+		});
 
 		this.socketServer.on('connection', (socket: SocketIO.Socket) => {
 			logger.info('A module connected');
 			this.listenToModuleSocket(socket);
-		});
-
-		stream.on('end', () => {
-			logger.warn('Connections stream closed. Aborting');
-			process.exit(9);
-		});
-
-		stream.on('change', (doc) => {
-			switch (doc.operationType) {
-				case 'insert':
-				case 'replace': {
-					const docId = doc.documentKey._id;
-					this.queueRestartConnection(docId);
-					break;
-				}
-				case 'update': {
-					// TODO - avoid a restart depending on keys of changes
-					const docId = doc.documentKey._id;
-					this.queueRestartConnection(docId);
-					break;
-				}
-				case 'delete':
-					this.queueStopConnection(doc.documentKey._id);
-					break;
-				case 'drop':
-				case 'dropDatabase':
-				case 'rename':
-				case 'invalidate':
-					logger.error('Change stream lost database or collection. Aborting');
-					process.exit(9);
-					break;
-				default:
-					assertNever(doc);
-			}
 		});
 
 		// Queue everything for validation
@@ -198,6 +199,7 @@ export class ModuleHost {
 			// Register successful
 			child.socket = socket;
 			child.doDestroy = registerResult.doDestroy;
+			child.doWorkTask = registerResult.doWorkTask;
 			logger.info(`Registered module client "${connectionId}"`);
 
 			// report success

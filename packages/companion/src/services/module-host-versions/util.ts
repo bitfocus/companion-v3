@@ -4,10 +4,12 @@ import { ICore } from '../../core.js';
 import { ResultCallback } from '@companion/module-framework/dist/host-api/versions.js';
 import winston from 'winston';
 import crypto from 'crypto';
+import { IDeviceConnectionWorkTask } from '../../internal/connection-work.js';
 
 export interface RegisterResult {
 	doInit: () => Promise<void>;
 	doDestroy: () => Promise<void>;
+	doWorkTask: (task: IDeviceConnectionWorkTask) => Promise<void>;
 }
 
 /**

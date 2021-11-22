@@ -1,13 +1,13 @@
-import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react';
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react';
 import { CompanionContext, socketEmit2 } from '../util';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 
 import { InstanceVariablesModal } from './InstanceVariablesModal';
-import { InstanceStatus } from '@companion/module-framework';
-import { IDeviceConnection } from '@companion/core-shared/dist/collections';
+import { CollectionId, IDeviceConnection, IDeviceConnectionStatus } from '@companion/core-shared/dist/collections';
 import { SocketCommand } from '@companion/core-shared/dist/api';
+import { useCollection } from '../lib/subscription';
 
 export function InstancesList({
 	showHelp,
@@ -17,19 +17,25 @@ export function InstancesList({
 	doConfigureInstance: (id: string) => void;
 }) {
 	const context = useContext(CompanionContext);
-	const [instanceStatus, setInstanceStatus] = useState<Record<string, [InstanceStatus, string]>>({});
+	// const [instanceStatus, setInstanceStatus] = useState<Record<string, [InstanceStatus, string]>>({});
+
+	const connectionStatuses = useCollection<IDeviceConnectionStatus>(
+		context.socket,
+		CollectionId.ConnectionStatuses,
+		true,
+	);
 
 	const deleteModalRef = useRef<ConfirmDeleteModalHandle>(null);
 	const variablesModalRef = useRef<any>();
 
-	useEffect(() => {
-		context.socket.on('instance_status', setInstanceStatus);
-		context.socket.emit('instance_status_get');
+	// useEffect(() => {
+	// 	context.socket.on('instance_status', setInstanceStatus);
+	// 	context.socket.emit('instance_status_get');
 
-		return () => {
-			context.socket.off('instance_status', setInstanceStatus);
-		};
-	}, [context.socket]);
+	// 	return () => {
+	// 		context.socket.off('instance_status', setInstanceStatus);
+	// 	};
+	// }, [context.socket]);
 
 	const doShowVariables = useCallback((instanceId) => {
 		variablesModalRef.current.show(instanceId);
@@ -62,7 +68,7 @@ export function InstancesList({
 								key={connecion._id}
 								id={connecion._id}
 								connection={connecion}
-								instanceStatus={instanceStatus[connecion._id]}
+								connectionStatus={connectionStatuses[connecion._id]}
 								showHelp={showHelp}
 								showVariables={doShowVariables}
 								deleteModalRef={deleteModalRef}
@@ -79,7 +85,7 @@ export function InstancesList({
 interface InstanceTableRowProps {
 	id: string;
 	connection: IDeviceConnection;
-	instanceStatus: [InstanceStatus, string];
+	connectionStatus: IDeviceConnectionStatus;
 	showVariables: (connectionId: string) => void;
 	showHelp: (moduleId: string) => void;
 	configureInstance: (connectionId: string) => void;
@@ -88,7 +94,7 @@ interface InstanceTableRowProps {
 function InstancesTableRow({
 	id,
 	connection,
-	instanceStatus,
+	connectionStatus,
 	showHelp,
 	showVariables,
 	configureInstance,
@@ -98,7 +104,7 @@ function InstancesTableRow({
 
 	const moduleInfo = context.modules[connection.moduleId];
 
-	const status = processModuleStatus(instanceStatus);
+	const status = processModuleStatus(connectionStatus);
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current?.show(id, connection.label);
@@ -179,37 +185,37 @@ function InstancesTableRow({
 	);
 }
 
-function processModuleStatus(status: [InstanceStatus | -1, string]) {
+function processModuleStatus(status: IDeviceConnectionStatus) {
 	if (status) {
-		switch (status[0]) {
-			case -1:
-				return {
-					title: '',
-					text: 'Disabled',
-					className: 'instance-status-disabled',
-				};
+		switch (status.status) {
+			// case -1 as any: // TODO
+			// 	return {
+			// 		title: '',
+			// 		text: 'Disabled',
+			// 		className: 'instance-status-disabled',
+			// 	};
 			case 0:
 				return {
-					title: status[1] ?? '',
+					title: status.message ?? '',
 					text: 'OK',
 					className: 'instance-status-ok',
 				};
 			case 1:
 				return {
-					title: status[1] ?? '',
-					text: status[1] ?? '',
+					title: status.message ?? '',
+					text: status.message ?? '',
 					className: 'instance-status-warn',
 				};
 			case 2:
 				return {
-					title: status[1] ?? '',
+					title: status.message ?? '',
 					text: 'ERROR',
 					className: 'instance-status-error',
 				};
 			case null:
 				return {
-					title: status[1] ?? '',
-					text: status[1] ?? '',
+					title: status.message ?? '',
+					text: status.message ?? '',
 					className: '',
 				};
 			default:

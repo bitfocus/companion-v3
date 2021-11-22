@@ -1,11 +1,9 @@
 import {
 	InstanceBaseV0,
-	CompanionActionEvent,
-	CompanionFeedbackEvent,
-	CompanionFeedbackResult,
 	LogLevel,
 	CompanionInputField,
 	combineRgb,
+	InstanceStatus,
 	// runEntrypointV0,
 } from '@companion/module-framework';
 
@@ -17,10 +15,15 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 		console.log(`module ${this.id} received init: ${JSON.stringify(config)}`);
 		this.userLog(LogLevel.INFO, `received init: ${JSON.stringify(config)}`);
 
+		this.updateStatus(InstanceStatus.OK, 'something something');
+
 		this.setActionDefinitions({
 			fake: {
 				name: 'Fake action',
 				options: [],
+				callback: (e) => {
+					console.log(`Execute action in module: ${JSON.stringify(e)}`);
+				},
 			},
 		});
 		this.setFeedbackDefinitions({
@@ -87,15 +90,4 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 			},
 		];
 	}
-	executeAction(action: CompanionActionEvent): void {
-		console.log(`module ${this.id} received executeAction: ${action.type}`);
-		this.userLog(LogLevel.INFO, `received executeAction: ${action.type}`);
-	}
-	executeFeedback(feedback: CompanionFeedbackEvent): CompanionFeedbackResult {
-		console.log(`module ${this.id} received executeAction: ${feedback.type}`);
-		this.userLog(LogLevel.INFO, `received executeAction: ${feedback.type}`);
-		return {};
-	}
 }
-
-// runEntrypointV0(MockModule);

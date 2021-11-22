@@ -1,4 +1,4 @@
-import { CompanionActions, InstanceStatus, LogLevel, SomeCompanionInputField } from '../module-api/v0/index.js';
+import { CompanionActions, InputValue, InstanceStatus, LogLevel, SomeCompanionInputField } from '../module-api/v0/index.js';
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => void;
@@ -8,8 +8,9 @@ export interface ModuleToHostEventsV0 {
 
 export interface HostToModuleEventsV0 {
 	init: (config: unknown) => void;
-	destroy: () => void;
+	destroy: (msg: Record<string, never>) => void;
 	updateConfig: (config: unknown) => void;
+	executeAction: (msg: ExecuteActionMessage) => void;
 }
 
 export interface LogMessageMessage {
@@ -29,4 +30,11 @@ export interface SetActionDefinitionsMessage {
 		description?: string;
 		options: SomeCompanionInputField[]; // TODO - versioned types?
 	}>;
+}
+
+export interface ExecuteActionMessage {
+	actionId: string
+	options: { [key: string]: InputValue | undefined };
+	
+	// TODO more over time
 }

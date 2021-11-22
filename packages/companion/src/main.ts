@@ -17,6 +17,7 @@ import { startMongo } from './mongo.js';
 import { startControlRenderer } from './services/renderer.js';
 import { startSurfaceManager } from './services/surfaces.js';
 import { startModuleHost } from './services/module-host.js';
+import { startControlRunner } from './services/control-runner.js';
 
 logger.info(`*******************************************`);
 logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -61,6 +62,8 @@ export async function startup(configPath: string, appPath: string): Promise<void
 			controlRenders: database.collection(CollectionId.ControlRenders),
 			deviceConnections: database.collection(CollectionId.Connections),
 			deviceConnectionActions: database.collection(CollectionId.ConnectionActions),
+			deviceConnectionStatuses: database.collection(CollectionId.ConnectionStatuses),
+			deviceConnectionWorkTasks: database.collection(CollectionId.ConnectionWorkQueue),
 			modules: database.collection(CollectionId.Modules),
 			surfaceDevices: database.collection(CollectionId.SurfaceDevices),
 			surfaceSpaces: database.collection(CollectionId.SurfaceSpaces),
@@ -74,6 +77,8 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		core.models.modules.deleteMany({}),
 		core.models.controlRenders.deleteMany({}),
 		core.models.deviceConnectionActions.deleteMany({}),
+		core.models.deviceConnectionWorkTasks.deleteMany({}),
+		core.models.deviceConnectionStatuses.deleteMany({}),
 		// TODO add more here
 	]);
 
@@ -82,51 +87,16 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		logger.error(`Module scan failed: ${e}`);
 	});
 
-	// Hack: temporarily fake some actions
-	// await core.models.deviceConnections.find().forEach(async (connection) => {
-	// 	await core.models.deviceConnectionActions.replaceOne(
-	// 		{ _id: 'test1' },
-	// 		{
-	// 			_id: 'test1',
-	// 			connectionId: connection._id,
-	// 			actionId: 'test1',
-	// 			rawAction: {
-	// 				label: 'Test 1',
-	// 				options: [],
-	// 			},
-	// 		},
-	// 		{ upsert: true },
-	// 	);
-	// 	await core.models.deviceConnectionActions.replaceOne(
-	// 		{ _id: 'test2' },
-	// 		{
-	// 			_id: 'test2',
-	// 			connectionId: connection._id,
-	// 			actionId: 'test2',
-	// 			rawAction: {
-	// 				label: 'Test 2',
-	// 				options: [
-	// 					{
-	// 						id: 'one',
-	// 						label: 'One',
-	// 						type: 'textinput',
-	// 						default: 'abc',
-	// 					},
-	// 				],
-	// 			},
-	// 		},
-	// 		{ upsert: true },
-	// 	);
-	// });
-
 	// start the various services
+	const controlRunner = await startControlRunner(core);
 	await startControlRenderer(core);
 	const surfaceManager = await startSurfaceManager(core);
 	await startModuleHost(core);
 
 	// app.use(apiRouter(core));
-	socketHandler(core, surfaceManager);
+	socketHandler(core, surfaceManager, controlRunner);
 
+	// serve status ui assets
 	app.use(await staticsRouter());
 
 	await new Promise<void>((resolve) => {

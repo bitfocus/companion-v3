@@ -1,5 +1,4 @@
 import { IDeviceConnectionAction } from '@companion/core-shared/src/collections';
-import { CompanionActions } from '@companion/module-framework';
 import {
 	HostToModuleEventsV0,
 	LogMessageMessage,
@@ -14,6 +13,8 @@ import Mongo from 'mongodb';
 import { ResultCallback } from '@companion/module-framework/dist/host-api/versions';
 import PTimeout from 'p-timeout';
 import { SetActionDefinitionsMessage } from '@companion/module-framework/src/host-api/v0';
+import { IDeviceConnectionWorkTask } from '../../internal/connection-work.js';
+import { assertNever } from '@companion/module-framework/src/util.js';
 
 async function socketEmit<T extends keyof HostToModuleEventsV0>(
 	socket: SocketIO.Socket,
@@ -56,7 +57,7 @@ export function registerEventsV0(
 		// Cleanup the system once the module is destroyed
 
 		try {
-			await socketEmit(socket, 'destroy', undefined);
+			await socketEmit(socket, 'destroy', {});
 		} catch (e) {
 			console.warn(`Destroy for "${connectionId}" errored: ${e}`);
 		}
@@ -67,10 +68,26 @@ export function registerEventsV0(
 		// TODO - wait for any in progress commands to be completed?
 
 		// Cleanup any db collections
-		await core.models.deviceConnectionActions.deleteMany({ connectionId: connectionId });
+		await Promise.allSettled([
+			core.models.deviceConnectionActions.deleteMany({ connectionId: connectionId }),
+			core.models.deviceConnectionStatuses.deleteOne({ _id: connectionId }),
+		]);
+	};
+	const doWorkTask = async (task: IDeviceConnectionWorkTask) => {
+		switch (task.task.type) {
+			case 'action:execute':
+				await socketEmit(socket, 'executeAction', task.task);
+				break;
+			case 'action2':
+				// TMP
+				break;
+			default:
+				assertNever(task.task);
+				break;
+		}
 	};
 
-	return { doInit, doDestroy };
+	return { doInit, doDestroy, doWorkTask };
 }
 
 async function handleLogMessage(
@@ -84,12 +101,22 @@ async function handleLogMessage(
 }
 async function handleSetStatus(
 	_socket: SocketIO.Socket,
-	_logger: winston.Logger,
-	_core: ICore,
-	_connectionId: string,
-	_msg: SetStatusMessage,
+	logger: winston.Logger,
+	core: ICore,
+	connectionId: string,
+	msg: SetStatusMessage,
 ): Promise<void> {
-	// TODO
+	logger.debug(`Updating status for  "${connectionId}"`);
+
+	await core.models.deviceConnectionStatuses.replaceOne(
+		{ _id: connectionId },
+		{
+			_id: connectionId,
+			status: msg.status,
+			message: msg.message,
+		},
+		{ upsert: true },
+	);
 }
 async function handleSetActionDefinitions(
 	_socket: SocketIO.Socket,
@@ -98,7 +125,7 @@ async function handleSetActionDefinitions(
 	connectionId: string,
 	msg: SetActionDefinitionsMessage,
 ): Promise<void> {
-	logger.debug(`Updating actions`);
+	logger.debug(`Updating actions for "${connectionId}"`);
 
 	const writeOps: Array<Mongo.BulkWriteOperation<IDeviceConnectionAction>> = [];
 	const knownIds: string[] = [];

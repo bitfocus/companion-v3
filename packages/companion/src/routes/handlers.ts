@@ -27,6 +27,8 @@ import {
 } from './control-definition.js';
 import { SurfaceManager } from '../services/surfaces.js';
 import { handleModuleFetchHelp } from './module.js';
+import { ControlRunner } from '../services/control-runner.js';
+import { handleControlSimulatePress } from './control-runner.js';
 
 export interface SocketContext {
 	authSessionId: string | null;
@@ -34,6 +36,7 @@ export interface SocketContext {
 
 export interface IServices {
 	surfaceManager: SurfaceManager;
+	controlRunner: ControlRunner;
 }
 
 type HandlerFunction<T extends keyof SocketCommandFunc> = (
@@ -71,6 +74,8 @@ export const SocketHandlers: SocketCommandHandlers = {
 	[SocketCommand.ControlDefinitionActionSetDelay]: handleControlDefinitionActionSetDelay,
 	[SocketCommand.ControlDefinitionActionSetOption]: handleControlDefinitionActionSetOption,
 	[SocketCommand.ControlDefinitionActionReorder]: handleControlDefinitionActionReorder,
+
+	[SocketCommand.ControlSimulatePress]: handleControlSimulatePress,
 
 	[SocketCommand.SurfaceSpaceCreate]: handleSurfaceSpaceCreate,
 	[SocketCommand.SurfaceSpaceDelete]: handleSurfaceSpaceDelete,

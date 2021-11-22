@@ -8,7 +8,9 @@ export * from './SurfaceSpace.js';
 export enum CollectionId {
 	Modules = 'modules',
 	Connections = 'connections',
+	ConnectionWorkQueue = 'connectionWorkQueue',
 	ConnectionActions = 'connectionActions',
+	ConnectionStatuses = 'connectionStatuses',
 	ControlDefinitions = 'controlDefinitions',
 	ControlRenders = 'controlRenders',
 	SurfaceDevices = 'surfaceDevices',

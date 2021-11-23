@@ -20,6 +20,19 @@ export class ControlRunner {
 		const control = await this.core.models.controlDefinitions.findOne({ _id: controlId });
 		if (!control) throw new Error(`Unknown control`);
 
+		this.core.models.controlStatus
+			.replaceOne(
+				{ _id: controlId },
+				{
+					_id: controlId,
+					pressed: pressed,
+				},
+				{ upsert: true },
+			)
+			.catch((e) => {
+				logger.warn(`Failed to update Status of control ${controlId}: ${e}`);
+			});
+
 		let actions: IControlAction[] | undefined;
 		if (control.controlType === ControlType.Button) {
 			if (pressed) {

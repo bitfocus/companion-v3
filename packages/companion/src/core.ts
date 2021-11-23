@@ -13,6 +13,7 @@ import * as SocketIO from 'socket.io';
 import { IDeviceConnectionWorkTask } from './internal/connection-work.js';
 import { assertNever } from '@companion/module-framework';
 import Bson from 'bson';
+import { IControlStatus } from './internal/control-status.js';
 
 export interface ICore {
 	client: Mongo.MongoClient;
@@ -25,6 +26,7 @@ export interface ICore {
 		surfaceSpaces: Mongo.Collection<ISurfaceSpace>;
 
 		controlRenders: Mongo.Collection<IControlRender>;
+		controlStatus: Mongo.Collection<IControlStatus>;
 		deviceConnectionStatuses: Mongo.Collection<IDeviceConnectionStatus>;
 		deviceConnectionActions: Mongo.Collection<IDeviceConnectionAction>;
 		deviceConnectionWorkTasks: Mongo.Collection<IDeviceConnectionWorkTask>;

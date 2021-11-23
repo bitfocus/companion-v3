@@ -39,6 +39,24 @@ class ControlRenderer {
 				if (doc.documentKey) this.deleteRender((doc.documentKey as any)._id);
 			},
 		});
+		watchCollection(this.core.models.controlStatus, undefined, {
+			onInsert: (doc) => {
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId));
+			},
+			onReplace: (doc) => {
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId));
+			},
+			onUpdate: (doc) => {
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId));
+			},
+			onDelete: (doc) => {
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId));
+			},
+		});
 
 		// Queue everything for validation
 		this.core.models.controlDefinitions.find().forEach((doc) => {
@@ -54,9 +72,10 @@ class ControlRenderer {
 	}
 
 	private async renderControl(controlId: string): Promise<void> {
-		const [control, render] = await Promise.all([
+		const [control, render, status] = await Promise.all([
 			this.core.models.controlDefinitions.findOne({ _id: controlId }),
 			this.core.models.controlRenders.findOne({ _id: controlId }),
+			this.core.models.controlStatus.findOne({ _id: controlId }),
 		]);
 		if (!control) {
 			logger.debug(`Skipping render of ${JSON.stringify(controlId)}, as it no longer exists`);
@@ -129,7 +148,7 @@ class ControlRenderer {
 			});
 		}
 
-		const img = sharp({
+		let img = sharp({
 			create: {
 				width: imageDimension,
 				height: imageDimension,
@@ -142,6 +161,32 @@ class ControlRenderer {
 				},
 			},
 		}).composite(imageLayers);
+
+		if (status?.pressed) {
+			const borderSize = 2;
+
+			const tmpImg = await img.toBuffer();
+			img = sharp(tmpImg, {
+				raw: {
+					width: imageDimension,
+					height: imageDimension,
+					channels: 4,
+				},
+			})
+				.extract({
+					left: borderSize,
+					top: borderSize,
+					width: imageDimension - borderSize * 2,
+					height: imageDimension - borderSize * 2,
+				})
+				.extend({
+					top: borderSize,
+					bottom: borderSize,
+					left: borderSize,
+					right: borderSize,
+					background: '#FFC600',
+				});
+		}
 
 		const buffer = await img.toFormat('png').toBuffer();
 		const pngStr = pngBufferToString(buffer);
@@ -165,7 +210,6 @@ class ControlRenderer {
 				return;
 			}
 
-			// TODO - this is incredibly slow...
 			await this.core.models.controlRenders.replaceOne(
 				{
 					_id: controlId,

@@ -60,6 +60,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		models: {
 			controlDefinitions: database.collection(CollectionId.ControlDefinitions),
 			controlRenders: database.collection(CollectionId.ControlRenders),
+			controlStatus: database.collection(CollectionId.ControlStatus),
 			deviceConnections: database.collection(CollectionId.Connections),
 			deviceConnectionActions: database.collection(CollectionId.ConnectionActions),
 			deviceConnectionStatuses: database.collection(CollectionId.ConnectionStatuses),
@@ -76,6 +77,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	await Promise.all([
 		core.models.modules.deleteMany({}),
 		core.models.controlRenders.deleteMany({}),
+		core.models.controlStatus.deleteMany({}),
 		core.models.deviceConnectionActions.deleteMany({}),
 		core.models.deviceConnectionWorkTasks.deleteMany({}),
 		core.models.deviceConnectionStatuses.deleteMany({}),

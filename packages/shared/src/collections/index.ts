@@ -13,6 +13,7 @@ export enum CollectionId {
 	ConnectionStatuses = 'connectionStatuses',
 	ControlDefinitions = 'controlDefinitions',
 	ControlRenders = 'controlRenders',
+	ControlStatus = 'controlStatus',
 	SurfaceDevices = 'surfaceDevices',
 	SurfaceSpaces = 'surfaceSpaces',
 }

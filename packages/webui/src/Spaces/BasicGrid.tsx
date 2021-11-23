@@ -15,7 +15,7 @@ export interface SpaceBasicGridProps {
 }
 
 export function SpaceBasicGrid({ spec, page, doSelectSlot }: SpaceBasicGridProps) {
-	const dim = 72; // pixels
+	const dim = 72 + 2; // pixels
 
 	const style: CSSProperties = {
 		//
@@ -55,15 +55,11 @@ function SpaceGridBox({ slotId, controlId, onClick }: SpaceGridBoxProps) {
 
 	const doOnClick = useCallback(() => onClick(slotId), [onClick, slotId]);
 
-	const [render, renderMissing] = useCollectionOne<IControlRender>(
-		context.socket,
-		CollectionId.ControlRenders,
-		controlId ?? null,
-	);
+	const [render] = useCollectionOne<IControlRender>(context.socket, CollectionId.ControlRenders, controlId ?? null);
 
 	return (
 		<div className='space-grid-box' onClick={doOnClick}>
-			<div>{render ? <img src={render.pngStr} /> : slotId}</div>
+			<div>{render ? <img src={render.pngStr} alt='Button' /> : slotId}</div>
 		</div>
 	);
 }

@@ -27,3 +27,16 @@ export interface IDeviceConnectionAction {
 	description?: string;
 	options: SomeCompanionInputField[]; // TODO - typed better?
 }
+
+export interface IDeviceConnectionFeedback {
+	_id: string;
+
+	feedbackId: string;
+	connectionId: string;
+
+	name: string;
+	description?: string;
+	options: SomeCompanionInputField[]; // TODO - typed better?
+
+	// TODO - more properties
+}

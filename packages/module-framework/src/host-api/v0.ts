@@ -1,9 +1,17 @@
-import { CompanionActions, InputValue, InstanceStatus, LogLevel, SomeCompanionInputField } from '../module-api/v0/index.js';
+import {
+	CompanionActions,
+	CompanionFeedbackButtonStyleResult,
+	InputValue,
+	InstanceStatus,
+	LogLevel,
+	SomeCompanionInputField,
+} from '../module-api/v0/index.js';
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => void;
 	'set-status': (msg: SetStatusMessage) => void;
 	setActionDefinitions: (msg: SetActionDefinitionsMessage) => void;
+	setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void;
 }
 
 export interface HostToModuleEventsV0 {
@@ -32,9 +40,20 @@ export interface SetActionDefinitionsMessage {
 	}>;
 }
 
+export interface SetFeedbackDefinitionsMessage {
+	feedbacks: Array<{
+		id: string;
+		name: string;
+		description?: string;
+		options: SomeCompanionInputField[]; // TODO - versioned types?
+		type: 'boolean' | 'advanced';
+		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult>; // TODO - better
+	}>;
+}
+
 export interface ExecuteActionMessage {
-	actionId: string
+	actionId: string;
 	options: { [key: string]: InputValue | undefined };
-	
+
 	// TODO more over time
 }

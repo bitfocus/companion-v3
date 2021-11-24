@@ -1,7 +1,7 @@
 import * as SocketIOClient from 'socket.io-client';
 import { CompanionInputField } from './input.js';
 import { CompanionAction, CompanionActions } from './action.js';
-import { CompanionFeedbacks } from './feedback.js';
+import { CompanionFeedbacks, CompanionFeedback } from './feedback.js';
 import { CompanionVariable } from './variable.js';
 import { CompanionPreset } from './preset.js';
 import { InstanceStatus, LogLevel } from './enums.js';
@@ -11,6 +11,7 @@ import {
 	LogMessageMessage,
 	ModuleToHostEventsV0,
 	SetActionDefinitionsMessage,
+	SetFeedbackDefinitionsMessage,
 	SetStatusMessage,
 } from '../../host-api/v0.js';
 import { literal } from '../../util.js';
@@ -78,6 +79,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	#initialized: boolean;
 
 	readonly #actionDefinitions: Map<string, CompanionAction>;
+	readonly #feedbackDefinitions: Map<string, CompanionFeedback>;
 
 	/**
 	 * Create an instance of the module.
@@ -96,6 +98,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		this.#initialized = false;
 
 		this.#actionDefinitions = new Map();
+		this.#feedbackDefinitions = new Map();
 
 		// subscribe to socket events from host
 		listenToEvents<HostToModuleEventsV0>(socket, {
@@ -216,9 +219,28 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		// return this.system.setVariableDefinitions(variables);
 		return Promise.resolve();
 	}
-	setFeedbackDefinitions(_feedbacks: CompanionFeedbacks): Promise<void> {
-		// return this.system.setFeedbackDefinitions(feedbacks);
-		return Promise.resolve();
+	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
+		const hostFeedbacks: SetFeedbackDefinitionsMessage['feedbacks'] = [];
+
+		this.#actionDefinitions.clear();
+
+		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
+			if (feedback) {
+				hostFeedbacks.push({
+					id: feedbackId,
+					name: feedback.name,
+					description: feedback.description,
+					options: feedback.options,
+					type: feedback.type,
+					defaultStyle: 'defaultStyle' in feedback ? feedback.defaultStyle : undefined,
+				});
+
+				// Remember the definition locally
+				this.#feedbackDefinitions.set(feedbackId, feedback);
+			}
+		}
+
+		return this._socketEmit('setFeedbackDefinitions', { feedbacks: hostFeedbacks });
 	}
 	setPresetDefinitions(_presets: CompanionPreset[]): Promise<void> {
 		// return this.system.setPresetDefinitions(presets);

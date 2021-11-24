@@ -124,6 +124,9 @@ export function createSubscription(core: ICore, msg: CollectionSubscribeMessage)
 		case CollectionId.ConnectionActions: {
 			return createBasicSubscription(core.models.deviceConnectionActions, msg);
 		}
+		case CollectionId.ConnectionFeedbacks: {
+			return createBasicSubscription(core.models.deviceConnectionFeedbacks, msg);
+		}
 		case CollectionId.ConnectionStatuses: {
 			return createBasicSubscription(core.models.deviceConnectionStatuses, msg);
 		}

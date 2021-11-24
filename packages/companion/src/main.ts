@@ -63,6 +63,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 			controlStatus: database.collection(CollectionId.ControlStatus),
 			deviceConnections: database.collection(CollectionId.Connections),
 			deviceConnectionActions: database.collection(CollectionId.ConnectionActions),
+			deviceConnectionFeedbacks: database.collection(CollectionId.ConnectionFeedbacks),
 			deviceConnectionStatuses: database.collection(CollectionId.ConnectionStatuses),
 			deviceConnectionWorkTasks: database.collection(CollectionId.ConnectionWorkQueue),
 			modules: database.collection(CollectionId.Modules),
@@ -79,6 +80,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 		core.models.controlRenders.deleteMany({}),
 		core.models.controlStatus.deleteMany({}),
 		core.models.deviceConnectionActions.deleteMany({}),
+		core.models.deviceConnectionFeedbacks.deleteMany({}),
 		core.models.deviceConnectionWorkTasks.deleteMany({}),
 		core.models.deviceConnectionStatuses.deleteMany({}),
 		// TODO add more here

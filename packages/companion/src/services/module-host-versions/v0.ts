@@ -1,8 +1,9 @@
-import { IDeviceConnectionAction } from '@companion/core-shared/src/collections';
+import { IDeviceConnectionAction, IDeviceConnectionFeedback } from '@companion/core-shared/src/collections';
 import {
 	HostToModuleEventsV0,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
+	SetFeedbackDefinitionsMessage,
 	SetStatusMessage,
 } from '@companion/module-framework/dist/host-api/v0';
 import * as SocketIO from 'socket.io';
@@ -44,6 +45,7 @@ export function registerEventsV0(
 		'log-message': handleLogMessage,
 		'set-status': handleSetStatus,
 		setActionDefinitions: handleSetActionDefinitions,
+		setFeedbackDefinitions: handleSetFeedbackDefinitions,
 	});
 
 	const doInit = async () => {
@@ -70,6 +72,7 @@ export function registerEventsV0(
 		// Cleanup any db collections
 		await Promise.allSettled([
 			core.models.deviceConnectionActions.deleteMany({ connectionId: connectionId }),
+			core.models.deviceConnectionFeedbacks.deleteMany({ connectionId: connectionId }),
 			core.models.deviceConnectionStatuses.deleteOne({ _id: connectionId }),
 		]);
 	};
@@ -172,4 +175,60 @@ async function handleSetActionDefinitions(
 	]);
 
 	logger.debug(`Updated actions`);
+}
+
+async function handleSetFeedbackDefinitions(
+	_socket: SocketIO.Socket,
+	logger: winston.Logger,
+	core: ICore,
+	connectionId: string,
+	msg: SetFeedbackDefinitionsMessage,
+): Promise<void> {
+	logger.debug(`Updating feedbacks for "${connectionId}"`);
+
+	const writeOps: Array<Mongo.AnyBulkWriteOperation<IDeviceConnectionFeedback>> = [];
+	const knownIds: string[] = [];
+
+	for (const feedback of msg.feedbacks) {
+		const doc: IDeviceConnectionFeedback = {
+			_id: getHash(`${connectionId}:${feedback.id}`),
+			connectionId: connectionId,
+			feedbackId: feedback.id,
+
+			// TODO - more conversion
+			name: feedback.name,
+			description: feedback.description,
+			options: feedback.options,
+		};
+		knownIds.push(doc._id);
+
+		writeOps.push({
+			replaceOne: {
+				filter: {
+					_id: doc._id,
+				},
+				replacement: doc,
+				upsert: true,
+			},
+		});
+	}
+
+	logger.debug(`Got ${writeOps.length} feedbacks`);
+
+	// TODO - block concurrent operations?
+	await core.models.deviceConnectionFeedbacks.bulkWrite([
+		...writeOps,
+		{
+			deleteMany: {
+				filter: {
+					connectionId: connectionId,
+					_id: {
+						$nin: knownIds,
+					},
+				},
+			},
+		},
+	]);
+
+	logger.debug(`Updated feedbacks`);
 }

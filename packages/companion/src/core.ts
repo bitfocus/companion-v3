@@ -4,6 +4,7 @@ import {
 	IControlRender,
 	IDeviceConnection,
 	IDeviceConnectionAction,
+	IDeviceConnectionFeedback,
 	IDeviceConnectionStatus,
 	IModule,
 	ISurfaceDevice,
@@ -29,6 +30,7 @@ export interface ICore {
 		controlStatus: Mongo.Collection<IControlStatus>;
 		deviceConnectionStatuses: Mongo.Collection<IDeviceConnectionStatus>;
 		deviceConnectionActions: Mongo.Collection<IDeviceConnectionAction>;
+		deviceConnectionFeedbacks: Mongo.Collection<IDeviceConnectionFeedback>;
 		deviceConnectionWorkTasks: Mongo.Collection<IDeviceConnectionWorkTask>;
 	};
 	io: SocketIO.Server;

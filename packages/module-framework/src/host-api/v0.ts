@@ -12,6 +12,7 @@ export interface ModuleToHostEventsV0 {
 	'set-status': (msg: SetStatusMessage) => void;
 	setActionDefinitions: (msg: SetActionDefinitionsMessage) => void;
 	setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void;
+	setPropertyDefinitions: (msg: SetPropertyDefinitionsMessage) => void;
 }
 
 export interface HostToModuleEventsV0 {
@@ -48,6 +49,18 @@ export interface SetFeedbackDefinitionsMessage {
 		options: SomeCompanionInputField[]; // TODO - versioned types?
 		type: 'boolean' | 'advanced';
 		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult>; // TODO - better
+	}>;
+}
+
+export interface SetPropertyDefinitionsMessage {
+	properties: Array<{
+		id: string;
+		name: string;
+		description?: string;
+		instanceIds: Array<{ id: string | number; label: string }> | null;
+
+		hasSubscribe: boolean;
+		readonly: boolean;
 	}>;
 }
 

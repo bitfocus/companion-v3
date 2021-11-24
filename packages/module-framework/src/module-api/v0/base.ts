@@ -12,12 +12,14 @@ import {
 	ModuleToHostEventsV0,
 	SetActionDefinitionsMessage,
 	SetFeedbackDefinitionsMessage,
+	SetPropertyDefinitionsMessage,
 	SetStatusMessage,
 } from '../../host-api/v0.js';
 import { literal } from '../../util.js';
 import { InstanceBaseShared } from '../../instance-base.js';
 import { ResultCallback } from '../../host-api/versions.js';
 import PQueue from 'p-queue';
+import { CompanionProperties, CompanionProperty, CompanionPropertyValue } from './property.js';
 
 /**
  * Signature for the handler functions
@@ -80,6 +82,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 	readonly #actionDefinitions: Map<string, CompanionAction>;
 	readonly #feedbackDefinitions: Map<string, CompanionFeedback>;
+	readonly #propertyDefinitions: Map<string, CompanionProperty>;
 
 	/**
 	 * Create an instance of the module.
@@ -99,6 +102,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 		this.#actionDefinitions = new Map();
 		this.#feedbackDefinitions = new Map();
+		this.#propertyDefinitions = new Map();
 
 		// subscribe to socket events from host
 		listenToEvents<HostToModuleEventsV0>(socket, {
@@ -222,7 +226,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
 		const hostFeedbacks: SetFeedbackDefinitionsMessage['feedbacks'] = [];
 
-		this.#actionDefinitions.clear();
+		this.#feedbackDefinitions.clear();
 
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (feedback) {
@@ -244,6 +248,36 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	}
 	setPresetDefinitions(_presets: CompanionPreset[]): Promise<void> {
 		// return this.system.setPresetDefinitions(presets);
+		return Promise.resolve();
+	}
+	setPropertiesDefinitions(properties: CompanionProperties): Promise<void> {
+		const hostProperties: SetPropertyDefinitionsMessage['properties'] = [];
+
+		this.#propertyDefinitions.clear();
+
+		for (const [propertyId, property] of Object.entries(properties)) {
+			if (property) {
+				hostProperties.push({
+					id: propertyId,
+					name: property.name,
+					description: property.description,
+					instanceIds: property.instanceIds,
+
+					hasSubscribe: !!property.subscribe,
+					readonly: !property.setValue,
+				});
+
+				// Remember the definition locally
+				this.#propertyDefinitions.set(propertyId, property);
+			}
+		}
+
+		return this._socketEmit('setPropertyDefinitions', { properties: hostProperties });
+	}
+
+	updatePropertyValues(
+		_values: Array<{ propertyId: string; instanceId: string | null; value: CompanionPropertyValue }>,
+	): Promise<void> {
 		return Promise.resolve();
 	}
 

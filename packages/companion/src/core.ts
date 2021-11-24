@@ -5,6 +5,7 @@ import {
 	IDeviceConnection,
 	IDeviceConnectionAction,
 	IDeviceConnectionFeedback,
+	IDeviceConnectionProperty,
 	IDeviceConnectionStatus,
 	IModule,
 	ISurfaceDevice,
@@ -31,6 +32,7 @@ export interface ICore {
 		deviceConnectionStatuses: Mongo.Collection<IDeviceConnectionStatus>;
 		deviceConnectionActions: Mongo.Collection<IDeviceConnectionAction>;
 		deviceConnectionFeedbacks: Mongo.Collection<IDeviceConnectionFeedback>;
+		deviceConnectionProperties: Mongo.Collection<IDeviceConnectionProperty>;
 		deviceConnectionWorkTasks: Mongo.Collection<IDeviceConnectionWorkTask>;
 	};
 	io: SocketIO.Server;

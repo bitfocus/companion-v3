@@ -33,11 +33,11 @@ export interface CompanionFeedbackBase {
 export interface CompanionFeedbackBoolean extends CompanionFeedbackBase {
 	type: 'boolean';
 	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>;
-	callback?: (feedback: CompanionFeedbackBooleanEvent) => boolean;
+	callback: (feedback: CompanionFeedbackBooleanEvent) => boolean;
 }
 export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase {
 	type: 'advanced';
-	callback?: (feedback: CompanionFeedbackAdvancedEvent) => CompanionFeedbackButtonStyleResult;
+	callback: (feedback: CompanionFeedbackAdvancedEvent) => CompanionFeedbackButtonStyleResult;
 }
 
 export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced;

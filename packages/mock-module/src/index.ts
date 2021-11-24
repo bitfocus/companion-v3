@@ -28,9 +28,12 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 		});
 		this.setFeedbackDefinitions({
 			fake: {
-				label: 'Fake feedback',
+				name: 'Fake feedback',
 				description: 'Fake thing',
 				options: [],
+				type: 'boolean',
+				defaultStyle: {},
+				callback: () => false,
 			},
 		});
 		this.setPresetDefinitions([
@@ -70,6 +73,35 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 				description: 'something fake',
 			},
 		]);
+		this.setPropertiesDefinitions({
+			one: {
+				name: 'No instances',
+				instanceIds: null,
+				setValue: async () => undefined,
+			},
+			two: {
+				name: 'Reaonly',
+				instanceIds: null,
+			},
+			three: {
+				name: 'all the options',
+				instanceIds: [
+					{
+						id: '/ch/1',
+						label: 'Channel 1',
+					},
+					{
+						id: '/ch/2',
+						label: 'Channel 2',
+					},
+					{
+						id: '/ch/3',
+						label: 'Channel 3',
+					},
+				],
+				setValue: async () => undefined,
+			},
+		});
 	}
 	destroy(): void | Promise<void> {
 		console.log(`module ${this.id} received destroy`);

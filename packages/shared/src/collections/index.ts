@@ -11,6 +11,7 @@ export enum CollectionId {
 	ConnectionWorkQueue = 'connectionWorkQueue',
 	ConnectionActions = 'connectionActions',
 	ConnectionFeedbacks = 'connectionFeedbacks',
+	ConnectionProperties = 'connectionProperties',
 	ConnectionStatuses = 'connectionStatuses',
 	ControlDefinitions = 'controlDefinitions',
 	ControlRenders = 'controlRenders',

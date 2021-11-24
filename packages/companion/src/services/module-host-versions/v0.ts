@@ -13,9 +13,13 @@ import { getHash, listenToEvents, RegisterResult } from './util.js';
 import Mongo from 'mongodb';
 import { ResultCallback } from '@companion/module-framework/dist/host-api/versions';
 import PTimeout from 'p-timeout';
-import { SetActionDefinitionsMessage } from '@companion/module-framework/src/host-api/v0';
+import {
+	SetActionDefinitionsMessage,
+	SetPropertyDefinitionsMessage,
+} from '@companion/module-framework/src/host-api/v0';
 import { IDeviceConnectionWorkTask } from '../../internal/connection-work.js';
 import { assertNever } from '@companion/module-framework/src/util.js';
+import { IDeviceConnectionProperty } from '@companion/core-shared/dist/collections';
 
 async function socketEmit<T extends keyof HostToModuleEventsV0>(
 	socket: SocketIO.Socket,
@@ -46,6 +50,7 @@ export function registerEventsV0(
 		'set-status': handleSetStatus,
 		setActionDefinitions: handleSetActionDefinitions,
 		setFeedbackDefinitions: handleSetFeedbackDefinitions,
+		setPropertyDefinitions: handleSetPropertyDefinitions,
 	});
 
 	const doInit = async () => {
@@ -73,6 +78,7 @@ export function registerEventsV0(
 		await Promise.allSettled([
 			core.models.deviceConnectionActions.deleteMany({ connectionId: connectionId }),
 			core.models.deviceConnectionFeedbacks.deleteMany({ connectionId: connectionId }),
+			core.models.deviceConnectionProperties.deleteMany({ connectionId: connectionId }),
 			core.models.deviceConnectionStatuses.deleteOne({ _id: connectionId }),
 		]);
 	};
@@ -231,4 +237,62 @@ async function handleSetFeedbackDefinitions(
 	]);
 
 	logger.debug(`Updated feedbacks`);
+}
+
+async function handleSetPropertyDefinitions(
+	_socket: SocketIO.Socket,
+	logger: winston.Logger,
+	core: ICore,
+	connectionId: string,
+	msg: SetPropertyDefinitionsMessage,
+): Promise<void> {
+	logger.debug(`Updating properties for "${connectionId}"`);
+
+	const writeOps: Array<Mongo.AnyBulkWriteOperation<IDeviceConnectionProperty>> = [];
+	const knownIds: string[] = [];
+
+	for (const property of msg.properties) {
+		const doc: IDeviceConnectionProperty = {
+			_id: getHash(`${connectionId}:${property.id}`),
+			connectionId: connectionId,
+			propertyId: property.id,
+
+			name: property.name,
+			description: property.description,
+			instanceIds: property.instanceIds,
+
+			hasSubscribe: property.hasSubscribe,
+			readonly: property.readonly,
+		};
+		knownIds.push(doc._id);
+
+		writeOps.push({
+			replaceOne: {
+				filter: {
+					_id: doc._id,
+				},
+				replacement: doc,
+				upsert: true,
+			},
+		});
+	}
+
+	logger.debug(`Got ${writeOps.length} properties`);
+
+	// TODO - block concurrent operations?
+	await core.models.deviceConnectionProperties.bulkWrite([
+		...writeOps,
+		{
+			deleteMany: {
+				filter: {
+					connectionId: connectionId,
+					_id: {
+						$nin: knownIds,
+					},
+				},
+			},
+		},
+	]);
+
+	logger.debug(`Updated properties`);
 }

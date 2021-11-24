@@ -40,3 +40,19 @@ export interface IDeviceConnectionFeedback {
 
 	// TODO - more properties
 }
+
+export type IDeviceConnectionPropertyInstanceId = string | number;
+export interface IDeviceConnectionProperty {
+	_id: string;
+
+	propertyId: string;
+	connectionId: string;
+
+	name: string;
+	description?: string;
+
+	instanceIds: Array<{ id: IDeviceConnectionPropertyInstanceId; label: string }> | null; // TODO - typed better?
+
+	hasSubscribe: boolean;
+	readonly: boolean;
+}

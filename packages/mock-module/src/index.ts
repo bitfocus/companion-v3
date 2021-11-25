@@ -69,12 +69,6 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 				],
 			},
 		]);
-		this.setVariableDefinitions([
-			{
-				name: 'fake',
-				description: 'something fake',
-			},
-		]);
 		this.setPropertiesDefinitions({
 			one: {
 				name: 'No instances',

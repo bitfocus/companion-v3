@@ -2,7 +2,6 @@ import * as SocketIOClient from 'socket.io-client';
 import { CompanionInputField } from './input.js';
 import { CompanionAction, CompanionActions } from './action.js';
 import { CompanionFeedbacks, CompanionFeedback } from './feedback.js';
-import { CompanionVariable } from './variable.js';
 import { CompanionPreset } from './preset.js';
 import { InstanceStatus, LogLevel } from './enums.js';
 import {
@@ -224,10 +223,6 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 		return this._socketEmit('setActionDefinitions', { actions: hostActions });
 	}
-	setVariableDefinitions(_variables: CompanionVariable[]): Promise<void> {
-		// return this.system.setVariableDefinitions(variables);
-		return Promise.resolve();
-	}
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
 		const hostFeedbacks: SetFeedbackDefinitionsMessage['feedbacks'] = [];
 
@@ -287,9 +282,6 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		return Promise.resolve();
 	}
 
-	variableChanged(_variableId: string, _value: string): void {
-		// return this.system.variableChanged(variableId, value);
-	}
 	checkFeedbacks(_feedbackId?: string): void {
 		// return this.system.checkFeedbacks(feedbackId);
 	}

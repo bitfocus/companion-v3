@@ -6,6 +6,7 @@ import {
 	ControlDefinitionCreateMessageReply,
 	ControlDefinitionDeleteMessage,
 	ControlDefinitionNameUpdateMessage,
+	ControlDefinitionPropertyActionAddMessage,
 	ControlDefinitionRenderLayerUpdateMessage,
 } from '@companion/core-shared/dist/api.js';
 import { rgba } from '@companion/core-shared/dist/color.js';
@@ -18,6 +19,11 @@ import {
 	ControlDefinitionActionRemoveMessage,
 } from '@companion/core-shared/src/api';
 import { IServices, SocketContext } from './handlers.js';
+import {
+	InternalSetPropertyActionId,
+	InternalSetPropertyActionOptions,
+} from '@companion/core-shared/dist/internal/actions.js';
+import { literal } from '@companion/module-framework';
 
 export function createControlDefaults(type: ControlType): IControlDefinition {
 	// TODO - validate type
@@ -149,6 +155,52 @@ export async function handleControlDefinitionActionAdd(
 	);
 	if (res.modifiedCount === 0) {
 		throw new Error('Not found');
+	}
+}
+
+export async function handleControlDefinitionPropertyActionAdd(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionPropertyActionAddMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+	// TODO - verify action is valid
+
+	const property = await core.models.deviceConnectionProperties.findOne({
+		connectionId: msg.connectionId,
+		propertyId: msg.propertyId,
+	});
+	if (!property) {
+		throw new Error('Property not found');
+	}
+	if (!property.valueInput) {
+		throw new Error('Property is not writable');
+	}
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{ _id: msg.controlId },
+		{
+			$push: {
+				downActions: {
+					id: generateDocumentId(),
+
+					connectionId: null as any, // TODO
+					actionId: InternalSetPropertyActionId,
+					delay: 0,
+					options: literal<InternalSetPropertyActionOptions>({
+						connectionId: msg.connectionId,
+						propertyId: msg.propertyId,
+						instanceId: property.instanceIds ? property.instanceIds[0].id : null,
+						value: 'default' in property.valueInput ? property.valueInput.default : null,
+					}) as any, // TODO
+				},
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Control not found');
 	}
 }
 

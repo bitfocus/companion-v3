@@ -4,6 +4,8 @@ import {
 	CompanionInputField,
 	combineRgb,
 	InstanceStatus,
+	literal,
+	CompanionInputFieldTextInput,
 	// runEntrypointV0,
 } from '@companion/module-framework';
 
@@ -78,6 +80,11 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 				name: 'No instances',
 				instanceIds: null,
 				setValue: async () => undefined,
+				valueField: literal<CompanionInputFieldTextInput>({
+					id: '',
+					label: '',
+					type: 'textinput',
+				}),
 			},
 			two: {
 				name: 'Reaonly',
@@ -100,6 +107,11 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 					},
 				],
 				setValue: async () => undefined,
+				valueField: literal<CompanionInputFieldTextInput>({
+					id: '',
+					label: '',
+					type: 'textinput',
+				}),
 			},
 		});
 	}

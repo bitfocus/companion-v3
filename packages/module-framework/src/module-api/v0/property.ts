@@ -1,7 +1,9 @@
+import { SomeCompanionInputField } from './input.js';
+
 export type CompanionPropertyInstanceId = string | number;
 export type CompanionPropertyValue = string | number | boolean;
 
-export interface CompanionProperty {
+export interface CompanionReadOnlyProperty {
 	name: string;
 	description?: string;
 	/**
@@ -11,9 +13,12 @@ export interface CompanionProperty {
 	 */
 	instanceIds: Array<{ id: CompanionPropertyInstanceId; label: string }> | null;
 
-	setValue?: (info: CompanionPropertyEvent) => Promise<void> | void;
 	subscribe?: (info: CompanionPropertySubscribeInfo) => Promise<void> | void;
 	unsubscribe?: (info: CompanionPropertySubscribeInfo) => Promise<void> | void;
+}
+export interface CompanionProperty extends CompanionReadOnlyProperty {
+	valueField: SomeCompanionInputField;
+	setValue: (info: CompanionPropertyEvent) => Promise<void> | void;
 }
 
 export interface CompanionPropertySubscribeInfo {
@@ -32,5 +37,5 @@ export interface CompanionPropertyEvent {
 }
 
 export interface CompanionProperties {
-	[actionId: string]: CompanionProperty | undefined;
+	[actionId: string]: CompanionProperty | CompanionReadOnlyProperty | undefined;
 }

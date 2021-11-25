@@ -19,7 +19,12 @@ import { literal } from '../../util.js';
 import { InstanceBaseShared } from '../../instance-base.js';
 import { ResultCallback } from '../../host-api/versions.js';
 import PQueue from 'p-queue';
-import { CompanionProperties, CompanionProperty, CompanionPropertyValue } from './property.js';
+import {
+	CompanionProperties,
+	CompanionProperty,
+	CompanionPropertyValue,
+	CompanionReadOnlyProperty,
+} from './property.js';
 
 /**
  * Signature for the handler functions
@@ -82,7 +87,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 	readonly #actionDefinitions: Map<string, CompanionAction>;
 	readonly #feedbackDefinitions: Map<string, CompanionFeedback>;
-	readonly #propertyDefinitions: Map<string, CompanionProperty>;
+	readonly #propertyDefinitions: Map<string, CompanionProperty | CompanionReadOnlyProperty>;
 
 	/**
 	 * Create an instance of the module.
@@ -263,8 +268,9 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 					description: property.description,
 					instanceIds: property.instanceIds,
 
+					valueField: 'valueField' in property ? property.valueField : null,
+
 					hasSubscribe: !!property.subscribe,
-					readonly: !property.setValue,
 				});
 
 				// Remember the definition locally

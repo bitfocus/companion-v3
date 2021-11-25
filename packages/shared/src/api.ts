@@ -20,6 +20,7 @@ export enum SocketCommand {
 	ControlDefinitionRenderLayerUpdate = 'CONTROLDEFINITION.RENDERLAYER.UPDATE',
 	ControlDefinitionNameUpdate = 'CONTROLDEFINITION.NAME.UPDATE',
 	ControlDefinitionActionAdd = 'CONTROLDEFINITION.ACTION.ADD',
+	ControlDefinitionPropertyActionAdd = 'CONTROLDEFINITION.ACTION.ADD_PROPERTY',
 	ControlDefinitionActionRemove = 'CONTROLDEFINITION.ACTION.REMOVE',
 	ControlDefinitionActionSetDelay = 'CONTROLDEFINITION.ACTION.SET_DELAY',
 	ControlDefinitionActionSetOption = 'CONTROLDEFINITION.ACTION.SET_OPTION',
@@ -106,6 +107,11 @@ export interface ControlDefinitionActionAddMessage {
 	controlId: string;
 	connectionId: string;
 	actionId: string;
+}
+export interface ControlDefinitionPropertyActionAddMessage {
+	controlId: string;
+	connectionId: string;
+	propertyId: string;
 }
 
 export interface ControlDefinitionActionRemoveMessage {
@@ -227,6 +233,7 @@ export type SocketCommandFunc = {
 	[SocketCommand.ControlDefinitionRenderLayerUpdate]: (data: ControlDefinitionRenderLayerUpdateMessage<any>) => void;
 	[SocketCommand.ControlDefinitionNameUpdate]: (data: ControlDefinitionNameUpdateMessage) => void;
 	[SocketCommand.ControlDefinitionActionAdd]: (data: ControlDefinitionActionAddMessage) => void;
+	[SocketCommand.ControlDefinitionPropertyActionAdd]: (data: ControlDefinitionPropertyActionAddMessage) => void;
 	[SocketCommand.ControlDefinitionActionRemove]: (data: ControlDefinitionActionRemoveMessage) => void;
 	[SocketCommand.ControlDefinitionActionSetDelay]: (data: ControlDefinitionActionSetDelayMessage) => void;
 	[SocketCommand.ControlDefinitionActionSetOption]: (data: ControlDefinitionActionSetOptionMessage) => void;

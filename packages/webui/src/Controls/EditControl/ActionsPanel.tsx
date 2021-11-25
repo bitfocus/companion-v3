@@ -9,7 +9,7 @@ import { ActionTableRowOption } from './Table';
 import { useDrag, useDrop } from 'react-dnd';
 import { GenericConfirmModal, IGenericConfirmModalHandle } from '../../Components/GenericConfirmModal';
 import { IControlAction } from '@companion/core-shared/dist/collections';
-import { InputValue } from '@companion/module-framework';
+import { assertNever, InputValue } from '@companion/module-framework';
 import { literal } from '@companion/core-shared/dist/util';
 import {
 	ControlDefinitionActionAddMessage,
@@ -17,9 +17,14 @@ import {
 	ControlDefinitionActionReorderMessage,
 	ControlDefinitionActionSetDelayMessage,
 	ControlDefinitionActionSetOptionMessage,
+	ControlDefinitionPropertyActionAddMessage,
 	SocketCommand,
 } from '@companion/core-shared/dist/api';
-
+import {
+	GenerateInternalSetPropertyActionv0,
+	InternalSetPropertyActionId,
+	InternalSetPropertyActionOptions,
+} from '@companion/core-shared/dist/internal/actions';
 export interface ActionsPanelProps {
 	controlId: string;
 	dragId: string;
@@ -86,16 +91,30 @@ export function ActionsPanel({ controlId, dragId, addPlaceholder, actions }: Act
 	);
 
 	const addAction = useCallback(
-		(connectionId: string, actionId: string) => {
-			socketEmit2(
-				context.socket,
-				SocketCommand.ControlDefinitionActionAdd,
-				literal<ControlDefinitionActionAddMessage>({
-					controlId,
-					connectionId: connectionId,
-					actionId: actionId,
-				}),
-			);
+		(item: ActionSelectId) => {
+			if (item.type === 'action') {
+				socketEmit2(
+					context.socket,
+					SocketCommand.ControlDefinitionActionAdd,
+					literal<ControlDefinitionActionAddMessage>({
+						controlId,
+						connectionId: item.connectionId,
+						actionId: item.itemId,
+					}),
+				);
+			} else if (item.type === 'property') {
+				socketEmit2(
+					context.socket,
+					SocketCommand.ControlDefinitionPropertyActionAdd,
+					literal<ControlDefinitionPropertyActionAddMessage>({
+						controlId,
+						connectionId: item.connectionId,
+						propertyId: item.itemId,
+					}),
+				);
+			} else {
+				assertNever(item.type);
+			}
 		},
 		[context.socket, controlId],
 	);
@@ -225,8 +244,20 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	const connectionLabel = connection?.label ?? action.connectionId;
 
 	const actionSpec = useMemo(() => {
-		return context.actions.find((a) => a.actionId === action.actionId && a.connectionId === action.connectionId);
-	}, [context.actions, action.actionId, action.connectionId]);
+		// TODO - this is going to invalidate way more than necessary now for non-property actions
+		if (action.connectionId === null && action.actionId === InternalSetPropertyActionId) {
+			const options = (action.options as unknown) as InternalSetPropertyActionOptions;
+			const property = context.properties.find(
+				(property) =>
+					property.propertyId === options.propertyId && property.connectionId === options.connectionId,
+			);
+			return property ? GenerateInternalSetPropertyActionv0(property, options) : undefined;
+		} else {
+			return context.actions.find(
+				(a) => a.actionId === action.actionId && a.connectionId === action.connectionId,
+			);
+		}
+	}, [context.actions, action.actionId, action.connectionId, context.properties, action.options]);
 
 	const options = actionSpec?.options ?? [];
 
@@ -289,30 +320,52 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	);
 }
 
-type ActionId = [connectionId: string, actionId: string];
+interface ActionSelectId {
+	type: 'action' | 'property';
+	connectionId: string;
+	itemId: string;
+}
 interface ActionOption {
 	label: string;
-	value: ActionId;
+	value: ActionSelectId;
 }
 interface AddActionDropdownProps {
-	onSelect: (connectionId: string, actionId: string) => void;
+	onSelect: (item: ActionSelectId) => void;
 	placeholder: string;
 }
 function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownProps) {
 	const context = useContext(CompanionContext);
 
 	const options = useMemo(() => {
-		return context.actions.map((action) => {
+		const connectionActions = context.actions.map((action) => {
 			const connectionLabel = context.connections[action.connectionId]?.label ?? action.connectionId;
-			const value: ActionId = [action.connectionId, action.actionId];
+			const value: ActionSelectId = {
+				type: 'action',
+				connectionId: action.connectionId,
+				itemId: action.actionId,
+			};
 			return { value, label: `${connectionLabel}: ${action.name}` };
 		});
-	}, [context.actions, context.connections]);
+
+		const propertyActions = context.properties
+			.filter((property) => !!property.valueInput)
+			.map((property) => {
+				const connectionLabel = context.connections[property.connectionId]?.label ?? property.connectionId;
+				const value: ActionSelectId = {
+					type: 'property',
+					connectionId: property.connectionId,
+					itemId: property.propertyId,
+				};
+				return { value, label: `${connectionLabel}: Set ${property.name}` };
+			});
+
+		return [...connectionActions, ...propertyActions];
+	}, [context.actions, context.connections, context.properties]);
 
 	const innerChange = useCallback(
 		(e: ActionOption | null) => {
 			if (e?.value) {
-				onSelect(e.value[0], e.value[1]);
+				onSelect(e.value);
 			}
 		},
 		[onSelect],

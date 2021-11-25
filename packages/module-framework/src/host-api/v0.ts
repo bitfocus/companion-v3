@@ -59,8 +59,9 @@ export interface SetPropertyDefinitionsMessage {
 		description?: string;
 		instanceIds: Array<{ id: string | number; label: string }> | null;
 
+		valueField: SomeCompanionInputField | null;
+
 		hasSubscribe: boolean;
-		readonly: boolean;
 	}>;
 }
 

@@ -23,6 +23,7 @@ import {
 	handleControlDefinitionCreate,
 	handleControlDefinitionDelete,
 	handleControlDefinitionNameUpdate,
+	handleControlDefinitionPropertyActionAdd,
 	handleControlDefinitionRenderLayerUpdate,
 } from './control-definition.js';
 import { SurfaceManager } from '../services/surfaces.js';
@@ -70,6 +71,7 @@ export const SocketHandlers: SocketCommandHandlers = {
 	[SocketCommand.ControlDefinitionRenderLayerUpdate]: handleControlDefinitionRenderLayerUpdate,
 	[SocketCommand.ControlDefinitionNameUpdate]: handleControlDefinitionNameUpdate,
 	[SocketCommand.ControlDefinitionActionAdd]: handleControlDefinitionActionAdd,
+	[SocketCommand.ControlDefinitionPropertyActionAdd]: handleControlDefinitionPropertyActionAdd,
 	[SocketCommand.ControlDefinitionActionRemove]: handleControlDefinitionActionRemove,
 	[SocketCommand.ControlDefinitionActionSetDelay]: handleControlDefinitionActionSetDelay,
 	[SocketCommand.ControlDefinitionActionSetOption]: handleControlDefinitionActionSetOption,

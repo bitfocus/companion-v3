@@ -9,6 +9,8 @@ import {
 	IControlDefinition,
 	IDeviceConnection,
 	IDeviceConnectionAction,
+	IDeviceConnectionFeedback,
+	IDeviceConnectionProperty,
 	IModule,
 	ISurfaceSpace,
 } from '@companion/core-shared/dist/collections';
@@ -25,7 +27,8 @@ export interface ICompanionContext {
 	variableDefinitions: Record<string, unknown[]>;
 	variableValues: Record<string, string>;
 	actions: IDeviceConnectionAction[];
-	feedbacks: unknown | undefined;
+	properties: IDeviceConnectionProperty[];
+	feedbacks: IDeviceConnectionFeedback[];
 }
 export const CompanionContext = React.createContext<ICompanionContext>({
 	socket: io({ autoConnect: false }),
@@ -38,7 +41,8 @@ export const CompanionContext = React.createContext<ICompanionContext>({
 	variableDefinitions: {},
 	variableValues: {},
 	actions: [],
-	feedbacks: undefined,
+	properties: [],
+	feedbacks: [],
 });
 
 export function socketEmit2<T extends keyof SocketCommandFunc>(

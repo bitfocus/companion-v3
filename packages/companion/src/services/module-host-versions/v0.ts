@@ -261,8 +261,9 @@ async function handleSetPropertyDefinitions(
 			description: property.description,
 			instanceIds: property.instanceIds,
 
+			valueInput: property.valueField,
+
 			hasSubscribe: property.hasSubscribe,
-			readonly: property.readonly,
 		};
 		knownIds.push(doc._id);
 

@@ -53,6 +53,7 @@ export interface IDeviceConnectionProperty {
 
 	instanceIds: Array<{ id: IDeviceConnectionPropertyInstanceId; label: string }> | null; // TODO - typed better?
 
+	valueInput: SomeCompanionInputField | null;
+
 	hasSubscribe: boolean;
-	readonly: boolean;
 }

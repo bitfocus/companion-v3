@@ -9,6 +9,8 @@ import {
 	IControlDefinition,
 	IDeviceConnection,
 	IDeviceConnectionAction,
+	IDeviceConnectionFeedback,
+	IDeviceConnectionProperty,
 	IModule,
 	ISurfaceSpace,
 } from '@companion/core-shared/dist/collections';
@@ -70,12 +72,22 @@ export function AuthComponentWrapper(props: React.PropsWithChildren<AuthComponen
 	const modules = useCollection<IModule>(props.socket, CollectionId.Modules, !!userInfo);
 	const connections = useCollection<IDeviceConnection>(props.socket, CollectionId.Connections, !!userInfo);
 	const actions = useCollection<IDeviceConnectionAction>(props.socket, CollectionId.ConnectionActions, !!userInfo);
+	const properties = useCollection<IDeviceConnectionProperty>(
+		props.socket,
+		CollectionId.ConnectionProperties,
+		!!userInfo,
+	);
+	const feedbacks = useCollection<IDeviceConnectionFeedback>(
+		props.socket,
+		CollectionId.ConnectionFeedbacks,
+		!!userInfo,
+	);
 	const controls = useCollection<IControlDefinition>(props.socket, CollectionId.ControlDefinitions, !!userInfo);
 	const spaces = useCollection<ISurfaceSpace>(props.socket, CollectionId.SurfaceSpaces, !!userInfo);
 
-	const actions2 = useMemo(() => {
-		return Object.values(actions);
-	}, [actions]);
+	const actions2 = useMemo(() => Object.values(actions), [actions]);
+	const properties2 = useMemo(() => Object.values(properties), [properties]);
+	const feedbacks2 = useMemo(() => Object.values(feedbacks), [feedbacks]);
 
 	const contextValue: ICompanionContext = {
 		socket: props.socket,
@@ -88,7 +100,8 @@ export function AuthComponentWrapper(props: React.PropsWithChildren<AuthComponen
 		variableDefinitions: {},
 		variableValues: {},
 		actions: actions2,
-		feedbacks: undefined,
+		properties: properties2,
+		feedbacks: feedbacks2,
 	};
 
 	return (

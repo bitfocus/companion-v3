@@ -240,9 +240,6 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	});
 	preview(drop(ref));
 
-	const connection = context.connections[action.connectionId];
-	const connectionLabel = connection?.label ?? action.connectionId;
-
 	const actionSpec = useMemo(() => {
 		// TODO - this is going to invalidate way more than necessary now for non-property actions
 		if (action.connectionId === null && action.actionId === InternalSetPropertyActionId) {
@@ -261,11 +258,25 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 
 	const options = actionSpec?.options ?? [];
 
-	let name = '';
-	if (actionSpec) {
-		name = `${connectionLabel}: ${actionSpec.name}`;
+	let actionName = '';
+	if (action.connectionId === null) {
+		// Property, so needs some faking
+		const connection = context.connections[`${action.options.connectionId}`];
+		const connectionLabel = connection?.label ?? action.options.connectionId;
+		if (actionSpec) {
+			actionName = `${connectionLabel}: Set ${actionSpec.name}`;
+		} else {
+			actionName = `${connectionLabel}: Unknown property (${action.options.propertyId})`;
+		}
 	} else {
-		name = `${connectionLabel}: Unknown action (${action.actionId})`;
+		// Traditional action
+		const connection = context.connections[action.connectionId];
+		const connectionLabel = connection?.label ?? action.connectionId;
+		if (actionSpec) {
+			actionName = `${connectionLabel}: ${actionSpec.name}`;
+		} else {
+			actionName = `${connectionLabel}: Unknown action (${action.actionId})`;
+		}
 	}
 
 	return (
@@ -275,7 +286,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 			</td>
 			<td>
 				<div className='editor-grid'>
-					<div className='cell-name'>{name}</div>
+					<div className='cell-name'>{actionName}</div>
 
 					<div className='cell-delay'>
 						<CForm>

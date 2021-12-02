@@ -71,21 +71,21 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 		]);
 		this.setPropertiesDefinitions({
 			one: {
-				name: 'No instances',
+				name: 'Prop No instances',
 				instanceIds: null,
 				setValue: async () => undefined,
 				valueField: literal<CompanionInputFieldTextInput>({
 					id: '',
-					label: '',
+					label: 'Thing',
 					type: 'textinput',
 				}),
 			},
 			two: {
-				name: 'Reaonly',
+				name: 'Prop Reaonly',
 				instanceIds: null,
 			},
 			three: {
-				name: 'all the options',
+				name: 'Prop all the options',
 				instanceIds: [
 					{
 						id: '/ch/1',
@@ -103,7 +103,7 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 				setValue: async () => undefined,
 				valueField: literal<CompanionInputFieldTextInput>({
 					id: '',
-					label: '',
+					label: 'Fader %',
 					type: 'textinput',
 				}),
 			},

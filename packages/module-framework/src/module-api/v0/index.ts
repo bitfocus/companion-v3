@@ -5,5 +5,5 @@ export * from './enums.js';
 export * from './feedback.js';
 export * from './input.js';
 export * from './preset.js';
+export * from './property.js';
 export * from './upgrade.js';
-export * from './variable.js';

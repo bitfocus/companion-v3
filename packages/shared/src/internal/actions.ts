@@ -51,6 +51,7 @@ export function GenerateInternalSetPropertyActionv0(
 
 	const fields: SomeCompanionInputField[] = [];
 
+	// If the module wants instances, then expose that in the ui
 	if (property.instanceIds) {
 		fields.push(
 			literal<CompanionInputFieldDropdown>({
@@ -65,20 +66,12 @@ export function GenerateInternalSetPropertyActionv0(
 		);
 	}
 
+	// Tidy up the input field passed from the module
 	fields.push({
 		...property.valueInput,
 		id: 'value',
-		label: 'Value',
+		label: property.valueInput.label || 'Value',
 	});
-
-	// // TODO - dynamic field type based on normal props
-	// fields.push(
-	// 	literal<CompanionInputFieldTextInput>({
-	// 		id: 'value',
-	// 		label: 'Value',
-	// 		type: 'textinput',
-	// 	}),
-	// );
 
 	return {
 		name: property.name,

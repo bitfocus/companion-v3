@@ -1,17 +1,7 @@
-import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react';
-import React, { useCallback, useContext, useState } from 'react';
-import { CompanionContext, socketEmit, socketEmit2 } from '../../util';
-import {
-	AlignmentInputField,
-	CheckboxInputField,
-	ColorInputField,
-	DropdownInputField,
-	PNGInputField,
-	TextWithVariablesInputField,
-} from '../../Components';
-import { FONT_SIZES } from '../../Constants';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { CRow, CCol, CForm } from '@coreui/react';
+import React, { useCallback, useContext } from 'react';
+import { CompanionContext, socketEmit2 } from '../../util';
+import { AlignmentInputField, ColorInputField, TextWithVariablesInputField } from '../../Components';
 import { IButtonControlRenderLayer } from '@companion/core-shared/dist/collections';
 import { ControlDefinitionRenderLayerUpdateMessage, SocketCommand } from '@companion/core-shared/dist/api';
 import { literal } from '@companion/core-shared/dist/util';
@@ -26,7 +16,7 @@ export interface ButtonStyleConfigProps {
 export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConfigProps) {
 	const context = useContext(CompanionContext);
 
-	const [pngError, setPngError] = useState<string | null>(null);
+	// const [pngError, setPngError] = useState<string | null>(null);
 	// const clearPng = useCallback(() => context.socket.emit('bank_clear_png', page, bank), [context.socket, page, bank]);
 	// const setPng = useCallback(
 	// 	(data) => {
@@ -81,13 +71,13 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 		<CCol sm={12} className='p-0 mt-5'>
 			<h4>Button style</h4>
 
-			{pngError ? (
+			{/* {pngError ? (
 				<CAlert color='warning' closeButton>
 					{pngError}
 				</CAlert>
 			) : (
 				''
-			)}
+			)} */}
 
 			<CForm inline>
 				<CRow form className='button-style-form'>

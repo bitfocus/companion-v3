@@ -13,6 +13,7 @@ export interface IControlDefinition {
 
 	// Rendering
 	defaultLayer: IButtonControlRenderLayer;
+	overlayLayers: IButtonControlOverlayLayer[];
 
 	// Changed when the render is invalidated, to trigger a re-render
 	renderHash: string;
@@ -26,10 +27,27 @@ export interface IControlDefinition {
 	// TODO - this is the wrong placement for this. needs to be actionSets
 	downActions: IControlAction[];
 	upActions: IControlAction[];
-	// TODO - actions
-	// TODO - feedbacks
 }
 
+export interface IButtonControlOverlayBaseLayer {
+	id: string;
+	name: string;
+	disabled: boolean;
+}
+export type IButtonControlOverlayLayer = IButtonControlOverlayFeedbackLayer | IButtonControlOverlayExpressionLayer;
+export interface IButtonControlOverlayFeedbackLayer extends IButtonControlOverlayBaseLayer {
+	type: 'advanced';
+
+	feedback: IControlFeedback;
+}
+export interface IButtonControlOverlayExpressionLayer extends IButtonControlOverlayBaseLayer {
+	type: 'expression';
+
+	style: Partial<IButtonControlRenderLayer>;
+
+	// TODO - AND/OR expressions
+	condition: IControlFeedback[];
+}
 export interface IButtonControlRenderLayer {
 	text: string;
 	textSize: number | 'auto';
@@ -48,5 +66,14 @@ export interface IControlAction {
 	actionId: string;
 
 	delay: number;
+	options: { [key: string]: InputValue | undefined };
+}
+
+export interface IControlFeedback {
+	id: string;
+
+	connectionId: string;
+	feedbackId: string;
+
 	options: { [key: string]: InputValue | undefined };
 }

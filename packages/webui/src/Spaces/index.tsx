@@ -10,7 +10,6 @@ import { ISurfaceSpace, ISurfaceSpacePage, SurfaceType } from '@companion/core-s
 import { SpacePages } from './Pages';
 import { SpaceBasicGrid } from './BasicGrid';
 import { SlotEditor } from './SlotEditor';
-// import { InstanceVariables } from "./Variables";
 
 export function SpacesPage() {
 	const context = useContext(CompanionContext);
@@ -19,6 +18,8 @@ export function SpacesPage() {
 
 	const [tabResetToken, setTabResetToken] = useState(shortid());
 	const [activeTab, setActiveTab] = useState('list');
+
+	console.log(tabResetToken); // HACK
 
 	const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null);
 
@@ -87,7 +88,7 @@ export function SpacesPage() {
 			// 	setCurrentSpaceId(id);
 			// }
 		},
-		[spacePages, doSelectSlot],
+		[doSelectSlot],
 	);
 
 	return (

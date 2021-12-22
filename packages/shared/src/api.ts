@@ -18,6 +18,12 @@ export enum SocketCommand {
 	ControlDefinitionCreate = 'CONTROLDEFINITION.CREATE',
 	ControlDefinitionDelete = 'CONTROLDEFINITION.DELETE',
 	ControlDefinitionRenderLayerUpdate = 'CONTROLDEFINITION.RENDERLAYER.UPDATE',
+	ControlDefinitionRenderLayerAddExpression = 'CONTROLDEFINITION.RENDERLAYER.ADD.EXPRESSION',
+	ControlDefinitionRenderLayerAddFeedback = 'CONTROLDEFINITION.RENDERLAYER.ADD.FEEDBACK',
+	ControlDefinitionRenderLayerRemove = 'CONTROLDEFINITION.RENDERLAYER.REMOVE',
+	ControlDefinitionRenderLayerNameUpdate = 'CONTROLDEFINITION.RENDERLAYER.NAME.UPDATE',
+	ControlDefinitionRenderLayerEnabledUpdate = 'CONTROLDEFINITION.RENDERLAYER.ENABLED.UPDATE',
+	ControlDefinitionRenderLayerFeedbackOptionUpdate = 'CONTROLDEFINITION.RENDERLAYER.FEEDBACK.OPTION.UPDATE',
 	ControlDefinitionNameUpdate = 'CONTROLDEFINITION.NAME.UPDATE',
 	ControlDefinitionActionAdd = 'CONTROLDEFINITION.ACTION.ADD',
 	ControlDefinitionPropertyActionAdd = 'CONTROLDEFINITION.ACTION.ADD_PROPERTY',
@@ -144,6 +150,37 @@ export interface ControlDefinitionRenderLayerUpdateMessage<T extends keyof IButt
 	value: IButtonControlRenderLayer[T];
 }
 
+export interface ControlDefinitionRenderLayerAddFeedbackMessage {
+	controlId: string;
+
+	connectionId: string;
+	feedbackId: string;
+}
+export interface ControlDefinitionRenderLayerAddExpressionMessage {
+	controlId: string;
+}
+export interface ControlDefinitionRenderLayerRemoveMessage {
+	controlId: string;
+	layerId: string;
+}
+export interface ControlDefinitionRenderLayerNameUpdateMessage {
+	controlId: string;
+	layerId: string;
+	name: string;
+}
+export interface ControlDefinitionRenderLayerEnabledUpdateMessage {
+	controlId: string;
+	layerId: string;
+	enabled: boolean;
+}
+export interface ControlDefinitionRenderLayerFeedbackOptionUpdateMessage {
+	controlId: string;
+	layerId: string;
+
+	option: string;
+	value: InputValue;
+}
+
 export interface ControlDefinitionNameUpdateMessage {
 	controlId: string;
 	name: string;
@@ -231,6 +268,22 @@ export type SocketCommandFunc = {
 	) => ControlDefinitionCreateMessageReply;
 	[SocketCommand.ControlDefinitionDelete]: (data: ControlDefinitionDeleteMessage) => ControlDefinitionDeleteMessage;
 	[SocketCommand.ControlDefinitionRenderLayerUpdate]: (data: ControlDefinitionRenderLayerUpdateMessage<any>) => void;
+	[SocketCommand.ControlDefinitionRenderLayerAddExpression]: (
+		data: ControlDefinitionRenderLayerAddExpressionMessage,
+	) => void;
+	[SocketCommand.ControlDefinitionRenderLayerAddFeedback]: (
+		data: ControlDefinitionRenderLayerAddFeedbackMessage,
+	) => void;
+	[SocketCommand.ControlDefinitionRenderLayerRemove]: (data: ControlDefinitionRenderLayerRemoveMessage) => void;
+	[SocketCommand.ControlDefinitionRenderLayerNameUpdate]: (
+		data: ControlDefinitionRenderLayerNameUpdateMessage,
+	) => void;
+	[SocketCommand.ControlDefinitionRenderLayerEnabledUpdate]: (
+		data: ControlDefinitionRenderLayerEnabledUpdateMessage,
+	) => void;
+	[SocketCommand.ControlDefinitionRenderLayerFeedbackOptionUpdate]: (
+		data: ControlDefinitionRenderLayerFeedbackOptionUpdateMessage,
+	) => void;
 	[SocketCommand.ControlDefinitionNameUpdate]: (data: ControlDefinitionNameUpdateMessage) => void;
 	[SocketCommand.ControlDefinitionActionAdd]: (data: ControlDefinitionActionAddMessage) => void;
 	[SocketCommand.ControlDefinitionPropertyActionAdd]: (data: ControlDefinitionPropertyActionAddMessage) => void;

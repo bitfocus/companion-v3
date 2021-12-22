@@ -37,6 +37,26 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 				defaultStyle: {},
 				callback: () => false,
 			},
+			advanced: {
+				name: 'Fake advanced feedback',
+				description: 'Fake thing',
+				options: [
+					{
+						id: 'test',
+						type: 'checkbox',
+						label: 'Enable',
+						default: true,
+					},
+				],
+				type: 'advanced',
+				callback: (fb) => {
+					if (fb.options.test) {
+						return { text: 'haha!' };
+					} else {
+						return {};
+					}
+				},
+			},
 		});
 		this.setPresetDefinitions([
 			{

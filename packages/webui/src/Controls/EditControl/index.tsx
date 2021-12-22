@@ -1,8 +1,30 @@
-import { ControlDefinitionNameUpdateMessage, SocketCommand } from '@companion/core-shared/dist/api';
-import { CollectionId, ControlType, IControlDefinition } from '@companion/core-shared/dist/collections';
+import {
+	ControlDefinitionNameUpdateMessage,
+	ControlDefinitionRenderLayerAddExpressionMessage,
+	ControlDefinitionRenderLayerAddFeedbackMessage,
+	SocketCommand,
+} from '@companion/core-shared/dist/api';
+import {
+	CollectionId,
+	ControlType,
+	IButtonControlOverlayLayer,
+	IControlDefinition,
+} from '@companion/core-shared/dist/collections';
 import { literal } from '@companion/core-shared/dist/util';
-import { CButton, CRow, CCol } from '@coreui/react';
-import { useCallback, useContext, useRef } from 'react';
+import {
+	CButton,
+	CRow,
+	CCol,
+	CTabs,
+	CNav,
+	CNavItem,
+	CNavLink,
+	CTabContent,
+	CTabPane,
+	CButtonGroup,
+} from '@coreui/react';
+import { RefObject, useCallback, useContext, useMemo, useRef } from 'react';
+import { FeedbackOverlayLayerPanel, ExpressionOverlayLayerPanel } from './FeedbacksPanel';
 import { TextInputField } from '../../Components';
 //   import { BankPreview, dataToButtonImage } from "../../Components/BankButton";
 import { GenericConfirmModal, IGenericConfirmModalHandle } from '../../Components/GenericConfirmModal';
@@ -10,6 +32,10 @@ import { useCollectionOne } from '../../lib/subscription';
 import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit2 } from '../../util';
 import { ActionsPanel } from './ActionsPanel';
 import { ButtonStyleConfig } from './ButtonStyleConfig';
+import Select from 'react-select';
+import { assertNever } from '@companion/module-framework';
+import { faEye, faEyeSlash, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 //   import { ActionsPanel } from "./ActionsPanel";
 //   import { ButtonStyleConfig } from "./ButtonStyleConfig";
 //   import { FeedbacksPanel } from "./FeedbackPanel";
@@ -20,7 +46,7 @@ export interface EditControlProps {
 export function EditControl({ controlId }: EditControlProps) {
 	const context = useContext(CompanionContext);
 
-	const resetModalRef = useRef<IGenericConfirmModalHandle>(null);
+	const confirmModal = useRef<IGenericConfirmModalHandle>(null);
 
 	// const [config, setConfig] = useState(null);
 	// const [configError, setConfigError] = useState(null);
@@ -148,11 +174,35 @@ export function EditControl({ controlId }: EditControlProps) {
 		[context.socket, control, controlId],
 	);
 
+	const addFeedbackLayer = useCallback(
+		(val: AdvancedFeedbackSelectId) => {
+			socketEmit2(
+				context.socket,
+				SocketCommand.ControlDefinitionRenderLayerAddFeedback,
+				literal<ControlDefinitionRenderLayerAddFeedbackMessage>({
+					controlId,
+					connectionId: val.connectionId,
+					feedbackId: val.feedbackId,
+				}),
+			);
+		},
+		[context.socket, controlId],
+	);
+	const addExpressionLayer = useCallback(() => {
+		socketEmit2(
+			context.socket,
+			SocketCommand.ControlDefinitionRenderLayerAddExpression,
+			literal<ControlDefinitionRenderLayerAddExpressionMessage>({
+				controlId,
+			}),
+		);
+	}, [context.socket, controlId]);
+
 	const dataReady = !loadFailed && !!control;
 
 	return (
 		<KeyReceiver onKeyUp={() => null} tabIndex={0} className='edit-button-panel'>
-			<GenericConfirmModal ref={resetModalRef} />
+			<GenericConfirmModal ref={confirmModal} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadFailed ? 'Control not found' : null} />
 			{control ? (
@@ -225,68 +275,53 @@ export function EditControl({ controlId }: EditControlProps) {
 
 					<ButtonStyleConfig controlId={controlId} layerId={'default'} layer={control.defaultLayer} />
 
-					<h4 className='mt-3'>Down actions</h4>
-					<ActionsPanel
-						controlId={controlId}
-						actions={control.downActions ?? []}
-						dragId={'downAction'}
-						addPlaceholder='+ Add key down action'
-					/>
+					{/* TODO - use CAccordion once newer CoreUI */}
+					<CTabs activeTab='actions'>
+						<CNav variant='tabs'>
+							<CNavItem>
+								<CNavLink data-tab='actions'>Actions</CNavLink>
+							</CNavItem>
+							<CNavItem>
+								<CNavLink data-tab='feedback'>Feedback</CNavLink>
+							</CNavItem>
+						</CNav>
+						<CTabContent fade={false}>
+							<CTabPane data-tab='actions'>
+								<h4 className='mt-3'>Down actions</h4>
+								<ActionsPanel
+									controlId={controlId}
+									actions={control.downActions ?? []}
+									dragId={'downAction'}
+									addPlaceholder='+ Add key down action'
+								/>
+							</CTabPane>
+							<CTabPane data-tab='feedback'>
+								<h4 className='mt-3'>Draw layers</h4>
 
-					{/* {config.style === 'png' ? (
-						<>
-							<h4 className='mt-3'>Press/on actions</h4>
-							<ActionsPanel
-								page={page}
-								bank={bank}
-								dragId={'downAction'}
-								addCommand='bank_action_add'
-								getCommand='bank_actions_get'
-								updateOption='bank_update_action_option'
-								orderCommand='bank_update_action_option_order'
-								setDelay='bank_update_action_delay'
-								deleteCommand='bank_action_delete'
-								addPlaceholder='+ Add key down/on action'
-								loadStatusKey={'downActions'}
-								setLoadStatus={addLoadStatus}
-								reloadToken={reloadTablesToken}
-							/>
+								<table className='table render-layer-table'>
+									<tbody>
+										{(control.overlayLayers || []).map((layer, i) => (
+											<tr key={layer.id}>
+												<td>
+													<OverlayLayerPanelHeader
+														layer={layer}
+														confirmModal={confirmModal}
+														controlId={controlId}
+													/>
+													{OverlayLayerPanel(controlId, i, layer)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
 
-							<h4 className='mt-3'>Release/off actions</h4>
-							<ActionsPanel
-								page={page}
-								bank={bank}
-								dragId={'releaseAction'}
-								addCommand='bank_addReleaseAction'
-								getCommand='bank_release_actions_get'
-								updateOption='bank_release_action_update_option'
-								orderCommand='bank_release_action_update_option_order'
-								setDelay='bank_update_release_action_delay'
-								deleteCommand='bank_release_action_delete'
-								addPlaceholder='+ Add key up/off action'
-								loadStatusKey={'releaseActions'}
-								setLoadStatus={addLoadStatus}
-								reloadToken={reloadTablesToken}
-							/>
-
-							<h4 className='mt-3'>Feedback</h4>
-							<FeedbacksPanel
-								page={page}
-								bank={bank}
-								dragId={'feedback'}
-								addCommand='bank_addFeedback'
-								getCommand='bank_get_feedbacks'
-								updateOption='bank_update_feedback_option'
-								orderCommand='bank_update_feedback_order'
-								deleteCommand='bank_delFeedback'
-								loadStatusKey={'downActions'}
-								setLoadStatus={addLoadStatus}
-								reloadToken={reloadTablesToken}
-							/>
-						</>
-					) : (
-						''
-					)} */}
+								<AddAdvancedFeedbackDropdown onSelect={addFeedbackLayer} />
+								<CButton color='primary' onClick={addExpressionLayer}>
+									Add expression layer
+								</CButton>
+							</CTabPane>
+						</CTabContent>
+					</CTabs>
 
 					<hr />
 
@@ -300,6 +335,93 @@ export function EditControl({ controlId }: EditControlProps) {
 			)}
 		</KeyReceiver>
 	);
+}
+
+interface OverlayLayerPanelHeaderProps {
+	controlId: string;
+	layer: IButtonControlOverlayLayer;
+	confirmModal: RefObject<IGenericConfirmModalHandle>;
+}
+
+function OverlayLayerPanelHeader({ controlId, layer, confirmModal }: OverlayLayerPanelHeaderProps) {
+	const context = useContext(CompanionContext);
+	const doDelete = useCallback(() => {
+		confirmModal.current?.show(
+			'Delete layer',
+			`Are you sure you want to delete the layer "${layer.name}"?`,
+			'Delete',
+			() => {
+				socketEmit2(context.socket, SocketCommand.ControlDefinitionRenderLayerRemove, {
+					controlId: controlId,
+					layerId: layer.id,
+				}).catch((e) => {
+					console.error(`Failed to remove layer`, e);
+				});
+			},
+		);
+	}, [context.socket, confirmModal, controlId, layer.name, layer.id]);
+	const setName = useCallback(
+		(value: string) => {
+			socketEmit2(context.socket, SocketCommand.ControlDefinitionRenderLayerNameUpdate, {
+				controlId: controlId,
+				layerId: layer.id,
+				name: value,
+			}).catch((e) => {
+				console.error(`Failed to update layer`, e);
+			});
+		},
+		[context.socket, controlId, layer.id],
+	);
+	const setEnableDisable = useCallback(() => {
+		socketEmit2(context.socket, SocketCommand.ControlDefinitionRenderLayerEnabledUpdate, {
+			controlId: controlId,
+			layerId: layer.id,
+			enabled: !!layer.disabled,
+		}).catch((e) => {
+			console.error(`Failed to update layer`, e);
+		});
+	}, [context.socket, controlId, layer.id, layer.disabled]);
+
+	return (
+		<div>
+			<CRow form>
+				<CCol className='fieldtype-textinput' xs={10}>
+					<TextInputField
+						definition={{ default: '', tooltip: 'Layer name' }}
+						setValue={setName}
+						setValid={undefined}
+						value={layer.name}
+					/>
+				</CCol>
+				<CCol xs={2}>
+					<CButtonGroup>
+						<CButton
+							color='warning'
+							onClick={setEnableDisable}
+							title={layer.disabled ? 'Enable layer' : 'Disable layer'}
+						>
+							<FontAwesomeIcon icon={layer.disabled ? faEyeSlash : faEye} />
+						</CButton>
+						<CButton color='danger' onClick={doDelete} title='Remove layer'>
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>
+					</CButtonGroup>
+				</CCol>
+			</CRow>
+		</div>
+	);
+}
+
+function OverlayLayerPanel(controlId: string, index: number, layer: IButtonControlOverlayLayer) {
+	switch (layer.type) {
+		case 'advanced':
+			return <FeedbackOverlayLayerPanel key={layer.id} controlId={controlId} layer={layer} index={index} />;
+		case 'expression':
+			return <ExpressionOverlayLayerPanel key={layer.id} controlId={controlId} layer={layer} index={index} />;
+		default:
+			assertNever(layer);
+			return <div>Not supported..</div>;
+	}
 }
 
 //   function ButtonEditPreview({ page, bank }) {
@@ -332,3 +454,60 @@ export function EditControl({ controlId }: EditControlProps) {
 
 //     return <BankPreview fixedSize preview={previewImage} right={true} />;
 //   }
+
+interface AdvancedFeedbackSelectId {
+	connectionId: string;
+	feedbackId: string;
+}
+interface AddAdvancedFeedbackDropdownProps {
+	onSelect: (val: AdvancedFeedbackSelectId) => void;
+}
+interface AdvancedFeedbackOption {
+	label: string;
+	value: AdvancedFeedbackSelectId;
+}
+
+function AddAdvancedFeedbackDropdown({ onSelect }: AddAdvancedFeedbackDropdownProps) {
+	const context = useContext(CompanionContext);
+
+	const options = useMemo(() => {
+		const feedbacks: AdvancedFeedbackOption[] = [];
+		for (const feedback of context.feedbacks) {
+			if (feedback.type === 'advanced') {
+				const connectionLabel = context.connections[feedback.connectionId]?.label ?? feedback.connectionId;
+
+				const value: AdvancedFeedbackSelectId = {
+					connectionId: feedback.connectionId,
+					feedbackId: feedback.feedbackId,
+				};
+				feedbacks.push({
+					value: value,
+					label: `${connectionLabel}: ${feedback.name}`,
+				});
+			}
+		}
+		return feedbacks;
+	}, [context.feedbacks, context.connections]);
+
+	const innerChange = useCallback(
+		(e: AdvancedFeedbackOption | null) => {
+			if (e && e.value) {
+				onSelect(e.value);
+			}
+		},
+		[onSelect],
+	);
+
+	return (
+		<Select<AdvancedFeedbackOption>
+			menuPlacement='auto'
+			isClearable={false}
+			isSearchable={true}
+			isMulti={false}
+			options={options}
+			placeholder='+ Add feedback layer'
+			value={null}
+			onChange={innerChange}
+		/>
+	);
+}

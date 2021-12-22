@@ -5,7 +5,7 @@ import React, { useCallback, useContext, useMemo, useRef } from 'react';
 import { NumberInputField } from '../../Components';
 import { CompanionContext, MyErrorBoundary, socketEmit2 } from '../../util';
 import Select from 'react-select';
-import { ActionTableRowOption } from './Table';
+import { OptionEditorControl } from './Table';
 import { useDrag, useDrop } from 'react-dnd';
 import { GenericConfirmModal, IGenericConfirmModalHandle } from '../../Components/GenericConfirmModal';
 import { IControlAction } from '@companion/core-shared/dist/collections';
@@ -314,9 +314,9 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 						<CForm>
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
-									<ActionTableRowOption
+									<OptionEditorControl
 										option={opt}
-										actionId={action.id}
+										itemId={action.id}
 										value={(action.options || {})[opt.id]}
 										setValue={setValue}
 									/>

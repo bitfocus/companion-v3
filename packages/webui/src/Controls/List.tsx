@@ -97,16 +97,12 @@ function ControlsTableRow({ control, confirmModalRef, editControl }: ControlsTab
 		);
 	}, [confirmModalRef, context.socket, control._id]);
 
-	const [render, renderMissing] = useCollectionOne<IControlRender>(
-		context.socket,
-		CollectionId.ControlRenders,
-		control._id,
-	);
+	const [render] = useCollectionOne<IControlRender>(context.socket, CollectionId.ControlRenders, control._id);
 
 	let controlPreview: ReactElement | string = 'Unsupported control type';
 	switch (control.controlType) {
 		case ControlType.Button:
-			controlPreview = render ? <img src={render.pngStr} /> : 'Loading';
+			controlPreview = render ? <img src={render.pngStr} alt='' /> : 'Loading';
 			break;
 		default:
 		// TODO - ensure unreachable

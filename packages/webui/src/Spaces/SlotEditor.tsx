@@ -73,10 +73,10 @@ export function SlotEditor({ spaceId, pageId, slotId, controlId }: SlotEditorPro
 
 	return (
 		<div>
-			<p>Space {spaceId}</p>
+			{/* <p>Space {spaceId}</p>
 			<p>Page {pageId}</p>
 			<p>Slot {slotId}</p>
-			<p>Control {controlId}</p>
+			<p>Control {controlId}</p> */}
 
 			<GenericConfirmModal ref={confirmRef} />
 

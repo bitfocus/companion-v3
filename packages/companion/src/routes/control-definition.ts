@@ -7,13 +7,24 @@ import {
 	ControlDefinitionDeleteMessage,
 	ControlDefinitionNameUpdateMessage,
 	ControlDefinitionPropertyActionAddMessage,
+	ControlDefinitionRenderLayerAddExpressionMessage,
+	ControlDefinitionRenderLayerAddFeedbackMessage,
+	ControlDefinitionRenderLayerEnabledUpdateMessage,
+	ControlDefinitionRenderLayerFeedbackOptionUpdateMessage,
+	ControlDefinitionRenderLayerNameUpdateMessage,
+	ControlDefinitionRenderLayerRemoveMessage,
 	ControlDefinitionRenderLayerUpdateMessage,
 } from '@companion/core-shared/dist/api.js';
 import { rgba } from '@companion/core-shared/dist/color.js';
 import * as SocketIO from 'socket.io';
 import { verifyUserSession } from '../auth.js';
 import { generateDocumentId, ICore } from '../core.js';
-import { ControlType, IControlDefinition } from '@companion/core-shared/dist/collections/index.js';
+import {
+	ControlType,
+	IButtonControlOverlayExpressionLayer,
+	IButtonControlOverlayFeedbackLayer,
+	IControlDefinition,
+} from '@companion/core-shared/dist/collections/index.js';
 import {
 	ControlDefinitionActionAddMessage,
 	ControlDefinitionActionRemoveMessage,
@@ -39,6 +50,7 @@ export function createControlDefaults(type: ControlType): IControlDefinition {
 			textColor: rgba(255, 255, 255, 255),
 			backgroundColor: rgba(0, 0, 0, 255),
 		},
+		overlayLayers: [],
 		renderHash: generateDocumentId(),
 		touchedAt: Date.now(),
 
@@ -99,6 +111,168 @@ export async function handleControlDefinitionRenderLayerUpdate(
 			$set: {
 				[`defaultLayer.${msg.key}`]: msg.value,
 				renderHash: generateDocumentId(),
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Not found');
+	}
+}
+
+export async function handleControlDefinitionRenderLayerAddExpression(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionRenderLayerAddExpressionMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{ _id: msg.controlId },
+		{
+			$push: {
+				overlayLayers: literal<IButtonControlOverlayExpressionLayer>({
+					id: generateDocumentId(),
+					name: 'New Expression Layer',
+					type: 'expression',
+					disabled: false,
+
+					style: {},
+					condition: [],
+				}),
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Not found');
+	}
+}
+
+export async function handleControlDefinitionRenderLayerAddFeedback(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionRenderLayerAddFeedbackMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+	// TODO - verify feedback is valid
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{ _id: msg.controlId },
+		{
+			$push: {
+				overlayLayers: literal<IButtonControlOverlayFeedbackLayer>({
+					id: generateDocumentId(),
+					name: 'New Feedback Layer', // TODO - use name of validated feedback
+					type: 'advanced',
+					disabled: false,
+
+					feedback: {
+						id: generateDocumentId(),
+						connectionId: msg.connectionId,
+						feedbackId: msg.feedbackId,
+
+						options: {}, // TODO - defaults?
+					},
+				}),
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Not found');
+	}
+}
+
+export async function handleControlDefinitionRenderLayerRemove(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionRenderLayerRemoveMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{ _id: msg.controlId },
+		{
+			$pull: {
+				overlayLayers: literal<Partial<IButtonControlOverlayFeedbackLayer>>({
+					id: msg.layerId,
+				}),
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Not found');
+	}
+}
+
+export async function handleControlDefinitionRenderLayerNameUpdate(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionRenderLayerNameUpdateMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{ _id: msg.controlId, 'overlayLayers.id': msg.layerId },
+		{
+			$set: {
+				'overlayLayers.$.name': msg.name,
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Not found');
+	}
+}
+
+export async function handleControlDefinitionRenderLayerEnabledUpdate(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionRenderLayerEnabledUpdateMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{ _id: msg.controlId, 'overlayLayers.id': msg.layerId },
+		{
+			$set: {
+				'overlayLayers.$.disabled': !msg.enabled,
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Not found');
+	}
+}
+
+export async function handleControlDefinitionRenderLayerFeedbackOptionUpdate(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionRenderLayerFeedbackOptionUpdateMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+
+	// TODO - validate option is a valid key
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{
+			_id: msg.controlId,
+			'overlayLayers.id': msg.layerId,
+			'overlayLayers.type': 'advanced',
+		},
+		{
+			$set: {
+				[`overlayLayers.$.feedback.options.${msg.option}`]: msg.value,
 			},
 		},
 	);

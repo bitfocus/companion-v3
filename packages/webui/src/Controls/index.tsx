@@ -2,9 +2,9 @@ import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } fr
 import { faCalculator } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import shortid from 'shortid';
-import { CompanionContext, MyErrorBoundary } from '../util';
+import { MyErrorBoundary } from '../util';
 import { EditControl } from './EditControl';
-import { useCallback, useContext, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { ControlsList } from './List';
 
@@ -14,6 +14,8 @@ export function ControlsPage() {
 	const [tabResetToken, setTabResetToken] = useState(shortid());
 	const [activeTab, setActiveTab] = useState('presets');
 	const [selectedControlId, setSelectedControlId] = useState<string | null>(null);
+
+	console.log(tabResetToken); // HACK
 
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {

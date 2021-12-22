@@ -9,14 +9,14 @@ import {
 	TextInputField,
 } from '../../Components';
 
-export interface ActionTableRowOptionProps {
-	actionId: string;
+export interface OptionEditorControlProps {
+	itemId: string;
 	option: SomeCompanionInputField;
 	value: InputValue | undefined;
 	setValue: (actionId: string, optionId: string, value: InputValue) => void;
 }
-export function ActionTableRowOption({ actionId, option, value, setValue }: ActionTableRowOptionProps) {
-	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue]);
+export function OptionEditorControl({ itemId, option, value, setValue }: OptionEditorControlProps) {
+	const setValueForOption = useCallback((val) => setValue(itemId, option.id, val), [itemId, option.id, setValue]);
 
 	if (!option) {
 		return <p>Unknown - TODO</p>;
@@ -27,11 +27,11 @@ export function ActionTableRowOption({ actionId, option, value, setValue }: Acti
 	let control: ReactElement | string = '';
 	switch (option.type) {
 		case 'textinput': {
-			control = <TextInputField value={value2} definition={option} setValue={setValue2} />;
+			control = <TextInputField value={value2} definition={option} setValue={setValueForOption} />;
 			break;
 		}
 		case 'dropdown': {
-			control = <DropdownInputField value={value2} definition={option} setValue={setValue2} />;
+			control = <DropdownInputField value={value2} definition={option} setValue={setValueForOption} />;
 			break;
 		}
 		// case 'multiselect': {
@@ -39,15 +39,15 @@ export function ActionTableRowOption({ actionId, option, value, setValue }: Acti
 		// 	break;
 		// }
 		case 'checkbox': {
-			control = <CheckboxInputField value={value2} definition={option} setValue={setValue2} />;
+			control = <CheckboxInputField value={value2} definition={option} setValue={setValueForOption} />;
 			break;
 		}
 		case 'colorpicker': {
-			control = <ColorInputField value={value2} definition={option} setValue={setValue2} />;
+			control = <ColorInputField value={value2} definition={option} setValue={setValueForOption} />;
 			break;
 		}
 		case 'number': {
-			control = <NumberInputField value={value2} definition={option} setValue={setValue2} />;
+			control = <NumberInputField value={value2} definition={option} setValue={setValueForOption} />;
 			break;
 		}
 		default:

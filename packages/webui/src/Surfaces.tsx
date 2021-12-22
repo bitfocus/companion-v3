@@ -13,7 +13,6 @@ import {
 	CButton,
 	CForm,
 	CFormGroup,
-	CInput,
 	CLabel,
 	CModal,
 	CModalBody,
@@ -21,10 +20,9 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react';
-import { CompanionContext, LoadingRetryOrError, socketEmit2 } from './util';
+import { CompanionContext, socketEmit2 } from './util';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCog, faPlus, faSync, faTrash } from '@fortawesome/free-solid-svg-icons';
-import shortid from 'shortid';
+import { faPlus, faSync, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useCollection } from './lib/subscription';
 import { CollectionId, ISurfaceDevice } from '@companion/core-shared/dist/collections';
 import { SocketCommand, SurfaceDeviceAttachMessage } from '@companion/core-shared/dist/api';

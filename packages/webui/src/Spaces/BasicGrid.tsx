@@ -34,6 +34,7 @@ export function SpaceBasicGrid({ spec, page, doSelectSlot }: SpaceBasicGridProps
 							const slotId = `${x}x${y}`;
 							return (
 								<SpaceGridBox
+									key={slotId}
 									slotId={slotId}
 									controlId={page.controls[slotId]}
 									onClick={doSelectSlot}

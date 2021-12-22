@@ -34,6 +34,8 @@ export interface IDeviceConnectionFeedback {
 	feedbackId: string;
 	connectionId: string;
 
+	type: 'advanced' | 'boolean';
+
 	name: string;
 	description?: string;
 	options: SomeCompanionInputField[]; // TODO - typed better?

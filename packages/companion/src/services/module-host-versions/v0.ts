@@ -202,6 +202,7 @@ async function handleSetFeedbackDefinitions(
 			feedbackId: feedback.id,
 
 			// TODO - more conversion
+			type: feedback.type,
 			name: feedback.name,
 			description: feedback.description,
 			options: feedback.options,

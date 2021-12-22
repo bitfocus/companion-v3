@@ -198,6 +198,27 @@ export function EditControl({ controlId }: EditControlProps) {
 		);
 	}, [context.socket, controlId]);
 
+	const simulatePressDown = useCallback(() => {
+		if (control?._id) {
+			socketEmit2(context.socket, SocketCommand.ControlSimulatePress, {
+				controlId: control._id,
+				pressed: true,
+			}).catch((e) => {
+				console.error(`Press failed: ${e}`);
+			});
+		}
+	}, [context.socket, control?._id]);
+	const simulatePressUp = useCallback(() => {
+		if (control?._id) {
+			socketEmit2(context.socket, SocketCommand.ControlSimulatePress, {
+				controlId: control._id,
+				pressed: false,
+			}).catch((e) => {
+				console.error(`Press failed: ${e}`);
+			});
+		}
+	}, [context.socket, control?._id]);
+
 	const dataReady = !loadFailed && !!control;
 
 	return (
@@ -209,7 +230,7 @@ export function EditControl({ controlId }: EditControlProps) {
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<div>
 						<CRow form>
-							<CCol className='fieldtype-textinput' sm={6}>
+							<CCol className='fieldtype-textinput' sm={10}>
 								<label>Control name</label>
 								<TextInputField
 									definition={{ default: '', tooltip: 'Control description' }}
@@ -217,6 +238,16 @@ export function EditControl({ controlId }: EditControlProps) {
 									setValid={undefined}
 									value={control.description}
 								/>
+							</CCol>
+							<CCol xs={2}>
+								<CButton
+									color='warning'
+									hidden={control.controlType !== ControlType.Button}
+									onMouseDown={simulatePressDown}
+									onMouseUp={simulatePressUp}
+								>
+									Test actions
+								</CButton>
 							</CCol>
 						</CRow>
 						{/* <ButtonEditPreview page={page} bank={bank} /> */}
@@ -247,46 +278,22 @@ export function EditControl({ controlId }: EditControlProps) {
 							Erase
 						</CButton>*/}
 						&nbsp;
-						<CButton
-							color='warning'
-							hidden={control.controlType !== ControlType.Button}
-							onMouseDown={() =>
-								socketEmit2(context.socket, SocketCommand.ControlSimulatePress, {
-									controlId: control._id,
-									pressed: true,
-								}).catch((e) => {
-									console.error(`Press failed: ${e}`);
-								})
-							}
-							onMouseUp={() =>
-								socketEmit2(context.socket, SocketCommand.ControlSimulatePress, {
-									controlId: control._id,
-									pressed: false,
-								}).catch((e) => {
-									console.error(`Press failed: ${e}`);
-								})
-							}
-						>
-							Test actions
-						</CButton>
 					</div>
 
-					<hr />
-
-					<ButtonStyleConfig controlId={controlId} layerId={'default'} layer={control.defaultLayer} />
+					<br />
 
 					{/* TODO - use CAccordion once newer CoreUI */}
-					<CTabs activeTab='actions'>
+					<CTabs activeTab='behaviour'>
 						<CNav variant='tabs'>
 							<CNavItem>
-								<CNavLink data-tab='actions'>Actions</CNavLink>
+								<CNavLink data-tab='behaviour'>Behaviour</CNavLink>
 							</CNavItem>
 							<CNavItem>
-								<CNavLink data-tab='feedback'>Feedback</CNavLink>
+								<CNavLink data-tab='style'>Style</CNavLink>
 							</CNavItem>
 						</CNav>
 						<CTabContent fade={false}>
-							<CTabPane data-tab='actions'>
+							<CTabPane data-tab='behaviour'>
 								<h4 className='mt-3'>Down actions</h4>
 								<ActionsPanel
 									controlId={controlId}
@@ -295,7 +302,15 @@ export function EditControl({ controlId }: EditControlProps) {
 									addPlaceholder='+ Add key down action'
 								/>
 							</CTabPane>
-							<CTabPane data-tab='feedback'>
+							<CTabPane data-tab='style'>
+								<ButtonStyleConfig
+									controlId={controlId}
+									layerId={'default'}
+									layer={control.defaultLayer}
+								/>
+
+								<hr />
+
 								<h4 className='mt-3'>Draw layers</h4>
 
 								<table className='table render-layer-table'>
@@ -322,13 +337,6 @@ export function EditControl({ controlId }: EditControlProps) {
 							</CTabPane>
 						</CTabContent>
 					</CTabs>
-
-					<hr />
-
-					<p>
-						<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{'page'}/{'bank'} to press this
-						button remotely. OSC port 12321!
-					</p>
 				</div>
 			) : (
 				''

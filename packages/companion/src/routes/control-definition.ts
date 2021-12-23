@@ -24,6 +24,7 @@ import {
 	IButtonControlOverlayExpressionLayer,
 	IButtonControlOverlayFeedbackLayer,
 	IControlDefinition,
+	IControlFeedback,
 } from '@companion/core-shared/dist/collections/index.js';
 import {
 	ControlDefinitionActionAddMessage,
@@ -142,6 +143,9 @@ export async function handleControlDefinitionRenderLayerAddExpression(
 					condition: [],
 				}),
 			},
+			$set: {
+				renderHash: generateDocumentId(),
+			},
 		},
 	);
 	if (res.modifiedCount === 0) {
@@ -153,11 +157,19 @@ export async function handleControlDefinitionRenderLayerAddFeedback(
 	_socket: SocketIO.Socket,
 	socketContext: SocketContext,
 	core: ICore,
-	_services: IServices,
+	services: IServices,
 	msg: ControlDefinitionRenderLayerAddFeedbackMessage,
 ): Promise<void> {
 	await verifyUserSession(core, socketContext.authSessionId);
 	// TODO - verify feedback is valid
+
+	const feedback: IControlFeedback = {
+		id: generateDocumentId(),
+		connectionId: msg.connectionId,
+		feedbackId: msg.feedbackId,
+
+		options: {}, // TODO - defaults?
+	};
 
 	const res = await core.models.controlDefinitions.updateOne(
 		{ _id: msg.controlId },
@@ -169,30 +181,39 @@ export async function handleControlDefinitionRenderLayerAddFeedback(
 					type: 'advanced',
 					disabled: false,
 
-					feedback: {
-						id: generateDocumentId(),
-						connectionId: msg.connectionId,
-						feedbackId: msg.feedbackId,
-
-						options: {}, // TODO - defaults?
-					},
+					feedback: feedback,
 				}),
+			},
+			$set: {
+				renderHash: generateDocumentId(),
 			},
 		},
 	);
 	if (res.modifiedCount === 0) {
 		throw new Error('Not found');
 	}
+
+	await services.controlRunner.updatedFeedback(msg.controlId, feedback);
 }
 
 export async function handleControlDefinitionRenderLayerRemove(
 	_socket: SocketIO.Socket,
 	socketContext: SocketContext,
 	core: ICore,
-	_services: IServices,
+	services: IServices,
 	msg: ControlDefinitionRenderLayerRemoveMessage,
 ): Promise<void> {
 	await verifyUserSession(core, socketContext.authSessionId);
+
+	const existing = await core.models.controlDefinitions.findOne({ _id: msg.controlId });
+	if (!existing) {
+		throw new Error('Not found');
+	}
+
+	const layerToRemove = existing.overlayLayers.find((l) => l.id === msg.layerId);
+	if (!layerToRemove) {
+		throw new Error('Not found');
+	}
 
 	const res = await core.models.controlDefinitions.updateOne(
 		{ _id: msg.controlId },
@@ -202,10 +223,17 @@ export async function handleControlDefinitionRenderLayerRemove(
 					id: msg.layerId,
 				}),
 			},
+			$set: {
+				renderHash: generateDocumentId(),
+			},
 		},
 	);
 	if (res.modifiedCount === 0) {
 		throw new Error('Not found');
+	}
+
+	if (layerToRemove.type === 'advanced') {
+		await services.controlRunner.removedFeedback(msg.controlId, layerToRemove.feedback);
 	}
 }
 
@@ -245,6 +273,7 @@ export async function handleControlDefinitionRenderLayerEnabledUpdate(
 		{
 			$set: {
 				'overlayLayers.$.disabled': !msg.enabled,
+				renderHash: generateDocumentId(),
 			},
 		},
 	);
@@ -257,7 +286,7 @@ export async function handleControlDefinitionRenderLayerFeedbackOptionUpdate(
 	_socket: SocketIO.Socket,
 	socketContext: SocketContext,
 	core: ICore,
-	_services: IServices,
+	services: IServices,
 	msg: ControlDefinitionRenderLayerFeedbackOptionUpdateMessage,
 ): Promise<void> {
 	await verifyUserSession(core, socketContext.authSessionId);
@@ -273,11 +302,26 @@ export async function handleControlDefinitionRenderLayerFeedbackOptionUpdate(
 		{
 			$set: {
 				[`overlayLayers.$.feedback.options.${msg.option}`]: msg.value,
+				renderHash: generateDocumentId(),
 			},
 		},
 	);
 	if (res.modifiedCount === 0) {
 		throw new Error('Not found');
+	}
+
+	const doc = await core.models.controlDefinitions.findOne({ _id: msg.controlId });
+	if (!doc) {
+		throw new Error('Not found');
+	}
+
+	const updatedLayer = doc.overlayLayers.find((l) => l.id === msg.layerId);
+	if (!updatedLayer) {
+		throw new Error('Not found');
+	}
+
+	if (updatedLayer.type === 'advanced') {
+		await services.controlRunner.updatedFeedback(msg.controlId, updatedLayer.feedback);
 	}
 }
 

@@ -1,6 +1,6 @@
 import { createChildLogger } from '../logger.js';
 import { generateDocumentId, ICore } from '../core.js';
-import { ControlType, IControlAction } from '@companion/core-shared/dist/collections/index.js';
+import { ControlType, IControlAction, IControlFeedback } from '@companion/core-shared/dist/collections/index.js';
 import * as Mongo from 'mongodb';
 import { literal } from '@companion/module-framework';
 import { IDeviceConnectionWorkTask } from '../internal/connection-work.js';
@@ -71,8 +71,37 @@ export class ControlRunner {
 					}),
 				),
 			);
-			//
 		}
+	}
+
+	public async updatedFeedback(controlId: string, feedback: IControlFeedback): Promise<void> {
+		await this.core.models.deviceConnectionWorkTasks.insertOne(
+			literal<IDeviceConnectionWorkTask>({
+				_id: generateDocumentId(),
+				connectionId: feedback.connectionId,
+				task: {
+					type: 'feedback:update',
+					controlId: controlId,
+					feedback: feedback,
+				},
+				queuedTime: Date.now(),
+			}),
+		);
+	}
+
+	public async removedFeedback(controlId: string, feedback: IControlFeedback): Promise<void> {
+		await this.core.models.deviceConnectionWorkTasks.insertOne(
+			literal<IDeviceConnectionWorkTask>({
+				_id: generateDocumentId(),
+				connectionId: feedback.connectionId,
+				task: {
+					type: 'feedback:remove',
+					controlId: controlId,
+					feedbackId: feedback.id,
+				},
+				queuedTime: Date.now(),
+			}),
+		);
 	}
 }
 

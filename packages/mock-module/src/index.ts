@@ -19,6 +19,10 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 
 		this.updateStatus(InstanceStatus.OK, 'something something');
 
+		setInterval(() => {
+			this.checkFeedbacks();
+		}, 1000);
+
 		this.setActionDefinitions({
 			fake: {
 				name: 'Fake action',
@@ -35,7 +39,7 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 				options: [],
 				type: 'boolean',
 				defaultStyle: {},
-				callback: () => false,
+				callback: () => Math.random() > 0.4,
 			},
 			advanced: {
 				name: 'Fake advanced feedback',
@@ -49,8 +53,8 @@ export default class MockModule extends InstanceBaseV0<MockConfig> {
 					},
 				],
 				type: 'advanced',
-				callback: (fb) => {
-					if (fb.options.test) {
+				callback: (_fb) => {
+					if (Math.random() > 0.4) {
 						return { text: 'haha!' };
 					} else {
 						return {};

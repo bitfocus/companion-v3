@@ -4,6 +4,7 @@ import { splitColors } from '@companion/core-shared/dist/color.js';
 import PQueue from 'p-queue';
 import sharp from 'sharp';
 import { ICore, watchCollection } from '../core.js';
+import { assertNever } from '@companion/module-framework';
 
 const logger = createChildLogger('services/renderer');
 
@@ -23,16 +24,16 @@ class ControlRenderer {
 		watchCollection(this.core.models.controlDefinitions, undefined, {
 			onInsert: (doc) => {
 				const docId = (doc.documentKey as any)._id;
-				if (docId) this.queue.add(() => this.renderControl(docId));
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
 			},
 			onReplace: (doc) => {
 				const docId = (doc.documentKey as any)._id;
-				if (docId) this.queue.add(() => this.renderControl(docId));
+				if (docId) this.queue.add(() => this.renderControl(docId, false));
 			},
 			onUpdate: (doc) => {
 				if (doc.updateDescription && 'renderHash' in doc.updateDescription.updatedFields) {
 					const docId = (doc.documentKey as any)._id;
-					if (docId) this.queue.add(() => this.renderControl(docId));
+					if (docId) this.queue.add(() => this.renderControl(docId, false));
 				}
 			},
 			onDelete: (doc) => {
@@ -42,26 +43,44 @@ class ControlRenderer {
 		watchCollection(this.core.models.controlStatus, undefined, {
 			onInsert: (doc) => {
 				const docId = (doc.documentKey as any)._id;
-				if (docId) this.queue.add(() => this.renderControl(docId));
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
 			},
 			onReplace: (doc) => {
 				const docId = (doc.documentKey as any)._id;
-				if (docId) this.queue.add(() => this.renderControl(docId));
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
 			},
 			onUpdate: (doc) => {
 				const docId = (doc.documentKey as any)._id;
-				if (docId) this.queue.add(() => this.renderControl(docId));
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
 			},
 			onDelete: (doc) => {
 				const docId = (doc.documentKey as any)._id;
-				if (docId) this.queue.add(() => this.renderControl(docId));
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
+			},
+		});
+		watchCollection(this.core.models.controlFeedbackValues, undefined, {
+			onInsert: (doc) => {
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
+			},
+			onReplace: (doc) => {
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
+			},
+			onUpdate: (doc) => {
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
+			},
+			onDelete: (doc) => {
+				const docId = (doc.documentKey as any)._id;
+				if (docId) this.queue.add(() => this.renderControl(docId, true));
 			},
 		});
 
 		// Queue everything for validation
 		this.core.models.controlDefinitions.find().forEach((doc) => {
 			const docId = doc._id;
-			this.queue.add(() => this.renderControl(docId));
+			this.queue.add(() => this.renderControl(docId, false));
 		});
 	}
 
@@ -71,37 +90,63 @@ class ControlRenderer {
 			.catch((e) => logger.error(`ControlRender "${controlId}" cleanup failed: ${e}`));
 	}
 
-	private async renderControl(controlId: string): Promise<void> {
-		const [control, render, status] = await Promise.all([
+	private async renderControl(controlId: string, force: boolean): Promise<void> {
+		const [control, render, status, feedbackValues0] = await Promise.all([
 			this.core.models.controlDefinitions.findOne({ _id: controlId }),
 			this.core.models.controlRenders.findOne({ _id: controlId }),
 			this.core.models.controlStatus.findOne({ _id: controlId }),
+			this.core.models.controlFeedbackValues.findOne({ _id: controlId }),
 		]);
 		if (!control) {
 			logger.debug(`Skipping render of ${JSON.stringify(controlId)}, as it no longer exists`);
 			return;
 		}
 
-		if (render && render.renderHash === control.renderHash) {
-			// TODO - consider variables
+		const feedbackValues = new Map(feedbackValues0 ? Object.entries(feedbackValues0.values) : []);
+
+		if (!force && render && render.renderHash === control.renderHash) {
+			// TODO - consider variables/status
 			logger.debug(`Existing render of ${controlId} is still valid`);
 			// return;
+		}
+
+		let controlStyle = { ...control.defaultLayer };
+		for (const layer of control.overlayLayers || []) {
+			if (!layer.disabled) {
+				switch (layer.type) {
+					case 'advanced':
+						// combine the styles
+						const value = feedbackValues.get(layer.feedback.id);
+						if (value && typeof value === 'object') {
+							controlStyle = {
+								...controlStyle,
+								...value,
+							};
+						}
+						break;
+					case 'expression':
+						// TODO
+						break;
+					default:
+						assertNever(layer);
+				}
+			}
 		}
 
 		logger.debug(`Starting render of ${controlId}`);
 		const start = Date.now();
 
-		const rawBg = splitColors(control.defaultLayer.backgroundColor, true);
+		const rawBg = splitColors(controlStyle.backgroundColor, true);
 
 		const imageDimension = 72; // TODO dynamic
 		const imageLayers: Array<sharp.OverlayOptions> = [];
-		if (control.defaultLayer.text) {
-			let fontsize = control.defaultLayer.textSize;
+		if (controlStyle.text) {
+			let fontsize = controlStyle.textSize;
 			if (typeof fontsize === 'string') fontsize = 16;
 
 			let x: number;
 			let align: string;
-			switch (control.defaultLayer.textAlignment[0]) {
+			switch (controlStyle.textAlignment[0]) {
 				case 'l':
 					x = 0;
 					align = 'start';
@@ -117,7 +162,7 @@ class ControlRenderer {
 			}
 			let y: number;
 			// TODO - refine
-			switch (control.defaultLayer.textAlignment[1]) {
+			switch (controlStyle.textAlignment[1]) {
 				case 't':
 					y = fontsize;
 					break;
@@ -140,7 +185,7 @@ class ControlRenderer {
                             y="${y}"
                             fill="#fff"
                             text-anchor="${align}" 
-                            >${control.defaultLayer.text}</text>
+                            >${controlStyle.text}</text>
                     </svg>`,
 				),
 				top: imageDimension - 20,

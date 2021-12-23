@@ -77,3 +77,16 @@ export interface IControlFeedback {
 
 	options: { [key: string]: InputValue | undefined };
 }
+
+/** Get all the feedbacks in use on this control */
+export function getAllControlDefinitionFeedbacks(control: IControlDefinition): IControlFeedback[] {
+	const feedbacks: IControlFeedback[] = [];
+
+	for (const layer of control.overlayLayers) {
+		if (layer.type === 'advanced') {
+			feedbacks.push(layer.feedback);
+		}
+	}
+
+	return feedbacks;
+}

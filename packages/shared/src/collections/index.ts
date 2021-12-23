@@ -16,6 +16,7 @@ export enum CollectionId {
 	ControlDefinitions = 'controlDefinitions',
 	ControlRenders = 'controlRenders',
 	ControlStatus = 'controlStatus',
+	ControlFeedbackValues = 'controlFeedbackValues',
 	SurfaceDevices = 'surfaceDevices',
 	SurfaceSpaces = 'surfaceSpaces',
 }

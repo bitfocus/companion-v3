@@ -1,3 +1,4 @@
+import { IControlFeedback } from '@companion/core-shared/dist/collections';
 import { InputValue } from '@companion/module-framework';
 
 export interface IDeviceConnectionWorkTask {
@@ -5,7 +6,10 @@ export interface IDeviceConnectionWorkTask {
 
 	connectionId: string;
 
-	task: IDeviceConnectionWorkTaskActionExecute | IDeviceConnectionWorkTaskActionExecute2;
+	task:
+		| IDeviceConnectionWorkTaskActionExecute
+		| IDeviceConnectionWorkTaskFeedbackUpdate
+		| IDeviceConnectionWorkTaskFeedbackRemove;
 
 	queuedTime: number;
 }
@@ -16,8 +20,14 @@ export interface IDeviceConnectionWorkTaskActionExecute {
 	options: { [key: string]: InputValue | undefined };
 }
 
-export interface IDeviceConnectionWorkTaskActionExecute2 {
-	type: 'action2';
-	actionId: string;
-	options: { [key: string]: InputValue };
+export interface IDeviceConnectionWorkTaskFeedbackUpdate {
+	type: 'feedback:update';
+	controlId: string;
+	feedback: IControlFeedback;
+}
+
+export interface IDeviceConnectionWorkTaskFeedbackRemove {
+	type: 'feedback:remove';
+	controlId: string;
+	feedbackId: string;
 }

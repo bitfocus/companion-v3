@@ -1,5 +1,4 @@
 import {
-	CompanionActions,
 	CompanionFeedbackButtonStyleResult,
 	InputValue,
 	InstanceStatus,
@@ -13,14 +12,17 @@ export interface ModuleToHostEventsV0 {
 	setActionDefinitions: (msg: SetActionDefinitionsMessage) => void;
 	setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void;
 	setPropertyDefinitions: (msg: SetPropertyDefinitionsMessage) => void;
+	updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void;
 }
 
 export interface HostToModuleEventsV0 {
 	init: (config: unknown) => void;
 	destroy: (msg: Record<string, never>) => void;
 	updateConfig: (config: unknown) => void;
+	updateFeedbacks: (msg: UpdateFeedbackInstancesMessage) => void;
 	executeAction: (msg: ExecuteActionMessage) => void;
 }
+
 
 export interface LogMessageMessage {
 	level: LogLevel;
@@ -70,4 +72,23 @@ export interface ExecuteActionMessage {
 	options: { [key: string]: InputValue | undefined };
 
 	// TODO more over time
+}
+
+export interface UpdateFeedbackValuesMessage {
+	values: Array<{
+		id: string;
+		controlId: string;
+		value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined;
+	}>;
+}
+
+export interface FeedbackInstance {
+	id: string;
+	controlId: string;
+	feedbackId: string; // aka 'type'
+	options: { [key: string]: InputValue | undefined };
+}
+
+export interface UpdateFeedbackInstancesMessage {
+	feedbacks: { [feedbackId: string]: FeedbackInstance | null | undefined };
 }

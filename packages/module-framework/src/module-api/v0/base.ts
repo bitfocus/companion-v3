@@ -1,11 +1,12 @@
 import * as SocketIOClient from 'socket.io-client';
 import { CompanionInputField } from './input.js';
 import { CompanionAction, CompanionActions } from './action.js';
-import { CompanionFeedbacks, CompanionFeedback } from './feedback.js';
+import { CompanionFeedbacks, CompanionFeedback, CompanionFeedbackButtonStyleResult } from './feedback.js';
 import { CompanionPreset } from './preset.js';
 import { InstanceStatus, LogLevel } from './enums.js';
 import {
 	ExecuteActionMessage,
+	FeedbackInstance,
 	HostToModuleEventsV0,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
@@ -13,6 +14,8 @@ import {
 	SetFeedbackDefinitionsMessage,
 	SetPropertyDefinitionsMessage,
 	SetStatusMessage,
+	UpdateFeedbackInstancesMessage,
+	UpdateFeedbackValuesMessage,
 } from '../../host-api/v0.js';
 import { literal } from '../../util.js';
 import { InstanceBaseShared } from '../../instance-base.js';
@@ -81,12 +84,14 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	readonly #socket: SocketIOClient.Socket;
 	public readonly id: string;
 
-	readonly #lifecycleQueue: PQueue;
-	#initialized: boolean;
+	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 });
+	#initialized: boolean = false;
 
-	readonly #actionDefinitions: Map<string, CompanionAction>;
-	readonly #feedbackDefinitions: Map<string, CompanionFeedback>;
-	readonly #propertyDefinitions: Map<string, CompanionProperty | CompanionReadOnlyProperty>;
+	readonly #actionDefinitions = new Map<string, CompanionAction>();
+	readonly #feedbackDefinitions = new Map<string, CompanionFeedback>();
+	readonly #propertyDefinitions = new Map<string, CompanionProperty | CompanionReadOnlyProperty>();
+
+	readonly #feedbackInstances = new Map<string, FeedbackInstance>();
 
 	/**
 	 * Create an instance of the module.
@@ -101,19 +106,13 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		this.#socket = socket;
 		this.id = id;
 
-		this.#lifecycleQueue = new PQueue({ concurrency: 1 });
-		this.#initialized = false;
-
-		this.#actionDefinitions = new Map();
-		this.#feedbackDefinitions = new Map();
-		this.#propertyDefinitions = new Map();
-
 		// subscribe to socket events from host
 		listenToEvents<HostToModuleEventsV0>(socket, {
 			init: this._handleInit.bind(this),
 			destroy: this._handleDestroy.bind(this),
 			updateConfig: this._handleConfigUpdate.bind(this),
 			executeAction: this._handleExecuteAction.bind(this),
+			updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 		});
 
 		this.updateStatus(null, 'Initializing');
@@ -169,6 +168,63 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			actionId: msg.actionId,
 			options: msg.options,
 		});
+	}
+	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage): Promise<void> {
+		const newValues: UpdateFeedbackValuesMessage['values'] = [];
+
+		for (const [id, feedback] of Object.entries(msg.feedbacks)) {
+			const existing = this.#feedbackInstances.get(id);
+			const definition = existing && this.#feedbackDefinitions.get(existing.feedbackId);
+			if (existing) {
+				// Call unsubscribe
+				if (definition?.unsubscribe) {
+					try {
+						definition.unsubscribe(existing);
+					} catch (e) {
+						// TODO
+					}
+				}
+			}
+
+			if (!feedback) {
+				// Deleted
+				this.#feedbackInstances.delete(id);
+			} else {
+				// TODO - deep freeze the feedback to avoid mutation
+				this.#feedbackInstances.set(id, feedback);
+
+				// Inserted or updated
+				if (definition?.subscribe) {
+					try {
+						definition.subscribe(feedback);
+					} catch (e) {
+						// TODO
+					}
+				}
+
+				// Calculate the new value for the feedback
+				if (definition) {
+					let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined;
+					try {
+						value = definition.callback(feedback);
+					} catch (e) {
+						// TODO
+					}
+					newValues.push({
+						id: id,
+						controlId: feedback.controlId,
+						value: value,
+					});
+				}
+			}
+		}
+
+		// Send the new values back
+		if (Object.keys(newValues).length > 0) {
+			await this._socketEmit('updateFeedbackValues', {
+				values: newValues,
+			});
+		}
 	}
 
 	/**
@@ -282,8 +338,68 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		return Promise.resolve();
 	}
 
-	checkFeedbacks(_feedbackId?: string): void {
-		// return this.system.checkFeedbacks(feedbackId);
+	async checkFeedbacks(...feedbackTypes: string[]): Promise<void> {
+		const newValues: UpdateFeedbackValuesMessage['values'] = [];
+
+		const types = new Set(feedbackTypes);
+		for (const [id, feedback] of this.#feedbackInstances.entries()) {
+			const definition = this.#feedbackDefinitions.get(feedback.feedbackId);
+			if (definition) {
+				if (types.size > 0 && !types.has(feedback.feedbackId)) {
+					// Not to be considered
+					continue;
+				}
+
+				// Calculate the new value for the feedback
+				let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined;
+				try {
+					value = definition.callback(feedback);
+				} catch (e) {
+					// TODO
+				}
+				newValues.push({
+					id: id,
+					controlId: feedback.controlId,
+					value: value,
+				});
+			}
+		}
+
+		// Send the new values back
+		if (Object.keys(newValues).length > 0) {
+			await this._socketEmit('updateFeedbackValues', {
+				values: newValues,
+			});
+		}
+	}
+	async checkFeedbacksById(...feedbackIds: string[]): Promise<void> {
+		const newValues: UpdateFeedbackValuesMessage['values'] = [];
+
+		for (const id of feedbackIds) {
+			const feedback = this.#feedbackInstances.get(id);
+			const definition = feedback && this.#feedbackDefinitions.get(feedback.feedbackId);
+			if (feedback && definition) {
+				// Calculate the new value for the feedback
+				let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined;
+				try {
+					value = definition.callback(feedback);
+				} catch (e) {
+					// TODO
+				}
+				newValues.push({
+					id: id,
+					controlId: feedback.controlId,
+					value: value,
+				});
+			}
+		}
+
+		// Send the new values back
+		if (Object.keys(newValues).length > 0) {
+			await this._socketEmit('updateFeedbackValues', {
+				values: newValues,
+			});
+		}
 	}
 
 	updateStatus(status: InstanceStatus | null, message?: string | null): void {

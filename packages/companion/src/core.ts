@@ -16,6 +16,7 @@ import { IDeviceConnectionWorkTask } from './internal/connection-work.js';
 import { assertNever } from '@companion/module-framework';
 import Bson from 'bson';
 import { IControlStatus } from './internal/control-status.js';
+import { IControlFeedbackValue } from './internal/control-feedback-value.js';
 
 export interface ICore {
 	client: Mongo.MongoClient;
@@ -29,6 +30,7 @@ export interface ICore {
 
 		controlRenders: Mongo.Collection<IControlRender>;
 		controlStatus: Mongo.Collection<IControlStatus>;
+		controlFeedbackValues: Mongo.Collection<IControlFeedbackValue>;
 		deviceConnectionStatuses: Mongo.Collection<IDeviceConnectionStatus>;
 		deviceConnectionActions: Mongo.Collection<IDeviceConnectionAction>;
 		deviceConnectionFeedbacks: Mongo.Collection<IDeviceConnectionFeedback>;

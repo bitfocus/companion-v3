@@ -61,6 +61,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 			controlDefinitions: database.collection(CollectionId.ControlDefinitions),
 			controlRenders: database.collection(CollectionId.ControlRenders),
 			controlStatus: database.collection(CollectionId.ControlStatus),
+			controlFeedbackValues: database.collection(CollectionId.ControlFeedbackValues),
 			deviceConnections: database.collection(CollectionId.Connections),
 			deviceConnectionActions: database.collection(CollectionId.ConnectionActions),
 			deviceConnectionFeedbacks: database.collection(CollectionId.ConnectionFeedbacks),

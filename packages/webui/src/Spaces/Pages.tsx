@@ -7,6 +7,7 @@ import {
 import { ISurfaceSpace, ISurfaceSpacePage } from '@companion/core-shared/dist/collections';
 import { literal } from '@companion/core-shared/dist/util';
 import { CButton } from '@coreui/react';
+import classNames from 'classnames';
 import { useCallback, useContext, useRef } from 'react';
 import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { CompanionContext, socketEmit2 } from '../util';
@@ -15,10 +16,12 @@ export function SpacePages({
 	space,
 	pages,
 	selectPage,
+	currentPageId,
 }: {
 	space: ISurfaceSpace;
 	pages: Record<string, ISurfaceSpacePage>;
 	selectPage: (id: string) => void;
+	currentPageId: string | null;
 }) {
 	const context = useContext(CompanionContext);
 
@@ -71,6 +74,7 @@ export function SpacePages({
 								allowDelete={pagesList.length > 1}
 								confirmModalRef={confirmModalRef}
 								selectPage={selectPage}
+								isCurrent={currentPageId === page._id}
 							/>
 						);
 					})}
@@ -86,8 +90,9 @@ interface PagesTableRowProps {
 	allowDelete: boolean;
 	confirmModalRef: any;
 	selectPage: (id: string) => void;
+	isCurrent: boolean;
 }
-function PagesTableRow({ spaceId, page, confirmModalRef, selectPage }: PagesTableRowProps) {
+function PagesTableRow({ spaceId, page, confirmModalRef, selectPage, isCurrent }: PagesTableRowProps) {
 	const context = useContext(CompanionContext);
 
 	const doSelect = useCallback(() => selectPage(page._id), [selectPage, page._id]);
@@ -111,7 +116,7 @@ function PagesTableRow({ spaceId, page, confirmModalRef, selectPage }: PagesTabl
 	}, [confirmModalRef, context.socket, spaceId, page._id]);
 
 	return (
-		<tr>
+		<tr className={classNames({ 'is-current': isCurrent })}>
 			<td>{page.name || 'Unnamed page'}</td>
 			<td className='action-buttons'>
 				<CButton onClick={doSelect} color='primary' size='sm'>

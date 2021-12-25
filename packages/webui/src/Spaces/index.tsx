@@ -3,7 +3,7 @@ import { faCalendar, faGamepad, faList } from '@fortawesome/free-solid-svg-icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import shortid from 'shortid';
 import { CompanionContext, MyErrorBoundary } from '../util';
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { SpacesList } from './List';
 import { ISurfaceSpace, ISurfaceSpacePage, SurfaceType } from '@companion/core-shared/dist/collections';
@@ -37,8 +37,19 @@ export function SpacesPage() {
 	for (const page of currentSpace?.pages || []) {
 		spacePages[page._id] = page;
 	}
+	const validPageIds = useMemo(() => (currentSpace?.pages || []).map((p) => p._id), [currentSpace?.pages]);
 
-	const currentPage = Object.values(spacePages)[0];
+	const [currentPageId, setCurrentPageId] = useState<string | null>(null);
+	useEffect(() => {
+		// Ensure the current page is a valid id
+		setCurrentPageId((oldPage) => {
+			if (oldPage && validPageIds.includes(oldPage)) {
+				return oldPage;
+			} else {
+				return validPageIds[0] ?? null;
+			}
+		});
+	}, [validPageIds]);
 
 	const [currentSlot, setCurrentSlot] = useState<string | null>(null);
 
@@ -83,13 +94,14 @@ export function SpacesPage() {
 				}
 			});
 
-			// const knownSpaces = Object.keys(allSpaces);
-			// if (id === null || knownSpaces.includes(id)) {
-			// 	setCurrentSpaceId(id);
-			// }
+			if (id === null || validPageIds.includes(id)) {
+				setCurrentPageId(id);
+			}
 		},
-		[doSelectSlot],
+		[doSelectSlot, validPageIds],
 	);
+
+	const currentPage = currentPageId ? spacePages[currentPageId] : undefined;
 
 	return (
 		<CRow className='controls-page split-panels'>
@@ -99,7 +111,9 @@ export function SpacesPage() {
 				<MyErrorBoundary>
 					{currentSpace && currentPage ? (
 						<>
-							<h3>Space - {currentSpace.name}</h3>
+							<h3>
+								Space - {currentSpace.name} - {currentPage.name}
+							</h3>
 							<SpacePageRender space={currentSpace} page={currentPage} doSelectSlot={doSelectSlot} />
 						</>
 					) : (
@@ -136,13 +150,18 @@ export function SpacesPage() {
 						<CTabContent fade={false}>
 							<CTabPane data-tab='list'>
 								<MyErrorBoundary>
-									<SpacesList selectSpace={selectSpace} />
+									<SpacesList selectSpace={selectSpace} currentSpaceId={currentSpaceId} />
 								</MyErrorBoundary>
 							</CTabPane>
 							<CTabPane data-tab='pages'>
 								<MyErrorBoundary>
 									{currentSpace ? (
-										<SpacePages space={currentSpace} pages={spacePages} selectPage={selectPage} />
+										<SpacePages
+											space={currentSpace}
+											pages={spacePages}
+											selectPage={selectPage}
+											currentPageId={currentPageId}
+										/>
 									) : (
 										<p>No space selected</p>
 									)}

@@ -7,11 +7,18 @@ import {
 import { ISurfaceSpace, SurfaceType } from '@companion/core-shared/dist/collections';
 import { literal } from '@companion/core-shared/dist/util';
 import { CButton } from '@coreui/react';
+import classNames from 'classnames';
 import { useCallback, useContext, useRef } from 'react';
 import { GenericConfirmModal, IGenericConfirmModalHandle } from '../Components/GenericConfirmModal';
 import { CompanionContext, socketEmit2 } from '../util';
 
-export function SpacesList({ selectSpace }: { selectSpace: (id: string) => void }) {
+export function SpacesList({
+	selectSpace,
+	currentSpaceId,
+}: {
+	selectSpace: (id: string) => void;
+	currentSpaceId: string | null;
+}) {
 	const context = useContext(CompanionContext);
 
 	const confirmModalRef = useRef<IGenericConfirmModalHandle>(null);
@@ -60,6 +67,7 @@ export function SpacesList({ selectSpace }: { selectSpace: (id: string) => void 
 								space={space}
 								confirmModalRef={confirmModalRef}
 								selectSpace={selectSpace}
+								isCurrent={currentSpaceId === space._id}
 							/>
 						);
 					})}
@@ -73,8 +81,9 @@ interface SpacesTableRowProps {
 	space: ISurfaceSpace;
 	confirmModalRef: any;
 	selectSpace: (id: string) => void;
+	isCurrent: boolean;
 }
-function SpacesTableRow({ space, confirmModalRef, selectSpace }: SpacesTableRowProps) {
+function SpacesTableRow({ space, confirmModalRef, selectSpace, isCurrent }: SpacesTableRowProps) {
 	const context = useContext(CompanionContext);
 
 	const doSelect = useCallback(() => selectSpace(space._id), [selectSpace, space._id]);
@@ -97,7 +106,7 @@ function SpacesTableRow({ space, confirmModalRef, selectSpace }: SpacesTableRowP
 	}, [confirmModalRef, context.socket, space._id]);
 
 	return (
-		<tr>
+		<tr className={classNames({ 'is-current': isCurrent })}>
 			<td>{space.name || 'Unnamed space'}</td>
 			<td>{space.cachedSpec.deviceName}</td>
 			<td className='action-buttons'>

@@ -21,6 +21,10 @@ export function getQueryForControlDefinitionUsingFeedbacksWithConnectionId(
 				'overlayLayers.type': 'advanced',
 				'overlayLayers.feedback.connectionId': connectionId,
 			},
+			{
+				'overlayLayers.type': 'expression',
+				'overlayLayers.feedbacks.connectionId': connectionId,
+			},
 		],
 	};
 }

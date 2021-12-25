@@ -24,6 +24,8 @@ export enum SocketCommand {
 	ControlDefinitionRenderLayerNameUpdate = 'CONTROLDEFINITION.RENDERLAYER.NAME.UPDATE',
 	ControlDefinitionRenderLayerEnabledUpdate = 'CONTROLDEFINITION.RENDERLAYER.ENABLED.UPDATE',
 	ControlDefinitionRenderLayerFeedbackOptionUpdate = 'CONTROLDEFINITION.RENDERLAYER.FEEDBACK.OPTION.UPDATE',
+	ControlDefinitionRenderLayerExpressionSelectedStyleUpdate = 'CONTROLDEFINITION.RENDERLAYER.EXPRESSION.SELECTED_STYLE.UPDATE',
+	ControlDefinitionRenderLayerExpressionStylePropertyUpdate = 'CONTROLDEFINITION.RENDERLAYER.EXPRESSION.STYLE_PROPERTY.UPDATE',
 	ControlDefinitionNameUpdate = 'CONTROLDEFINITION.NAME.UPDATE',
 	ControlDefinitionActionAdd = 'CONTROLDEFINITION.ACTION.ADD',
 	ControlDefinitionPropertyActionAdd = 'CONTROLDEFINITION.ACTION.ADD_PROPERTY',
@@ -145,7 +147,6 @@ export interface ControlDefinitionActionReorderMessage {
 
 export interface ControlDefinitionRenderLayerUpdateMessage<T extends keyof IButtonControlRenderLayer> {
 	controlId: string;
-	layerId: 'default' | number;
 	key: T;
 	value: IButtonControlRenderLayer[T];
 }
@@ -178,6 +179,19 @@ export interface ControlDefinitionRenderLayerFeedbackOptionUpdateMessage {
 	layerId: string;
 
 	option: string;
+	value: InputValue;
+}
+export interface ControlDefinitionRenderLayerExpressionSelectedStyleUpdateMessage {
+	controlId: string;
+	layerId: string;
+
+	selected: Array<keyof IButtonControlRenderLayer>;
+}
+export interface ControlDefinitionRenderLayerExpressionStylePropertyUpdateMessage {
+	controlId: string;
+	layerId: string;
+
+	option: keyof IButtonControlRenderLayer;
 	value: InputValue;
 }
 
@@ -283,6 +297,12 @@ export type SocketCommandFunc = {
 	) => void;
 	[SocketCommand.ControlDefinitionRenderLayerFeedbackOptionUpdate]: (
 		data: ControlDefinitionRenderLayerFeedbackOptionUpdateMessage,
+	) => void;
+	[SocketCommand.ControlDefinitionRenderLayerExpressionSelectedStyleUpdate]: (
+		data: ControlDefinitionRenderLayerExpressionSelectedStyleUpdateMessage,
+	) => void;
+	[SocketCommand.ControlDefinitionRenderLayerExpressionStylePropertyUpdate]: (
+		data: ControlDefinitionRenderLayerExpressionStylePropertyUpdateMessage,
 	) => void;
 	[SocketCommand.ControlDefinitionNameUpdate]: (data: ControlDefinitionNameUpdateMessage) => void;
 	[SocketCommand.ControlDefinitionActionAdd]: (data: ControlDefinitionActionAddMessage) => void;

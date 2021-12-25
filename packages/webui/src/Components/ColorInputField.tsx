@@ -26,7 +26,6 @@ export function ColorInputField({ definition, value, setValue, setValid, alpha }
 
 	const onChange = useCallback(
 		(c: ColorResult) => {
-			console.log(c);
 			const newValue = rgba(c.rgb.r, c.rgb.g, c.rgb.b, c.rgb.a !== undefined ? c.rgb.a * 255 : 0xff);
 			console.log('change', newValue);
 			setValue(newValue);

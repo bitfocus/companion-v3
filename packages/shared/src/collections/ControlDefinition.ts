@@ -1,4 +1,4 @@
-import { InputValue } from '@companion/module-framework';
+import { assertNever, InputValue } from '@companion/module-framework';
 
 export enum ControlType {
 	Button = 'button',
@@ -46,7 +46,7 @@ export interface IButtonControlOverlayExpressionLayer extends IButtonControlOver
 	style: Partial<IButtonControlRenderLayer>;
 
 	// TODO - AND/OR expressions
-	condition: IControlFeedback[];
+	feedbacks: IControlFeedback[];
 }
 export interface IButtonControlRenderLayer {
 	text: string;
@@ -83,8 +83,16 @@ export function getAllControlDefinitionFeedbacks(control: IControlDefinition): I
 	const feedbacks: IControlFeedback[] = [];
 
 	for (const layer of control.overlayLayers) {
-		if (layer.type === 'advanced') {
-			feedbacks.push(layer.feedback);
+		switch (layer.type) {
+			case 'advanced':
+				feedbacks.push(layer.feedback);
+				break;
+			case 'expression':
+				feedbacks.push(...layer.feedbacks);
+				break;
+			default:
+				assertNever(layer);
+				break;
 		}
 	}
 

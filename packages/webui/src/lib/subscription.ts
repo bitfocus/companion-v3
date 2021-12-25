@@ -127,7 +127,6 @@ export function useCollectionOne<T extends { _id: string }>(
 			// TODO - limit to one?
 			const unsub = subscribeToCollection<T>(socket, collection, docId, undefined, (docs) => {
 				const newDoc = docs.find((d) => d._id === docId) ?? null;
-				console.log(newDoc, docs.length);
 				setDoc(newDoc);
 				clearTimeoutHandle();
 				setFailed(!newDoc);

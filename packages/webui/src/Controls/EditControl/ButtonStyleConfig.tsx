@@ -6,14 +6,18 @@ import { IButtonControlRenderLayer } from '@companion/core-shared/dist/collectio
 import { ControlDefinitionRenderLayerUpdateMessage, SocketCommand } from '@companion/core-shared/dist/api';
 import { literal } from '@companion/core-shared/dist/util';
 import { rgba } from '@companion/core-shared/dist/color';
+import { ConfigValue } from '@companion/module-framework';
 
 export interface ButtonStyleConfigProps {
 	controlId: string;
-	layerId: 'default';
 	layer: IButtonControlRenderLayer;
 }
 
-export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConfigProps) {
+function ControlWrapper(colProps: CCol, contents: React.ReactElement) {
+	return <CCol {...colProps}>{contents}</CCol>;
+}
+
+export function ButtonStyleConfig({ controlId, layer }: ButtonStyleConfigProps) {
 	const context = useContext(CompanionContext);
 
 	// const [pngError, setPngError] = useState<string | null>(null);
@@ -40,14 +44,13 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 
 	const setValueInner = useCallback(
 		<T extends keyof IButtonControlRenderLayer>(key: T, value: IButtonControlRenderLayer[T]) => {
-			console.log('set', controlId, layerId, key, value);
+			console.log('set', controlId, key, value);
 			if (!layer || value !== layer[key]) {
 				socketEmit2(
 					context.socket,
 					SocketCommand.ControlDefinitionRenderLayerUpdate,
 					literal<ControlDefinitionRenderLayerUpdateMessage<T>>({
 						controlId,
-						layerId,
 						key,
 						value,
 					}),
@@ -55,17 +58,8 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 				// valueChanged();
 			}
 		},
-		[context.socket, layer, controlId, layerId],
+		[context.socket, layer, controlId],
 	);
-
-	const setTextValue = useCallback((val) => setValueInner('text', val), [setValueInner]);
-	// const setSizeValue = useCallback((val) => setValueInner('size', val), [setValueInner]);
-	const setTextAlignmentValue = useCallback((val) => setValueInner('textAlignment', val), [setValueInner]);
-	// const setPngAlignmentValue = useCallback((val) => setValueInner('pngalignment', val), [setValueInner]);
-	const setTextColorValue = useCallback((val) => setValueInner('textColor', val), [setValueInner]);
-	const setBackgroundColorValue = useCallback((val) => setValueInner('backgroundColor', val), [setValueInner]);
-	// const setLatchValue = useCallback((val) => setValueInner('latch', val), [setValueInner]);
-	// const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner]);
 
 	return (
 		<CCol sm={12} className='p-0 mt-5'>
@@ -81,16 +75,53 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 
 			<CForm inline>
 				<CRow form className='button-style-form'>
-					<CCol className='fieldtype-textinput' sm={6}>
-						<label>Button text</label>
-						<TextWithVariablesInputField
-							definition={{ default: '', tooltip: 'Button text' }}
-							setValue={setTextValue}
-							value={layer.text}
-						/>
-					</CCol>
+					<ButtonStyleConfigFields
+						values={layer}
+						setValueInner={setValueInner}
+						controlTemplate={ControlWrapper}
+					/>
+				</CRow>
+			</CForm>
+		</CCol>
+	);
+}
 
-					{/* <CCol className='fieldtype-dropdown' sm={3} xs={6}>
+export interface ButtonStyleConfigFieldsProps {
+	values: Partial<IButtonControlRenderLayer>;
+	setValueInner: (key: keyof IButtonControlRenderLayer, val: ConfigValue) => void;
+	controlTemplate: (colProps: CCol, children: React.ReactElement) => React.ReactElement;
+}
+
+export function ButtonStyleConfigFields({
+	values,
+	setValueInner,
+	// setPng,
+	// setPngError,
+	// clearPng,
+	controlTemplate,
+}: ButtonStyleConfigFieldsProps) {
+	const setTextValue = useCallback((val) => setValueInner('text', val), [setValueInner]);
+	const setTextAlignmentValue = useCallback((val) => setValueInner('textAlignment', val), [setValueInner]);
+	const setTextColorValue = useCallback((val) => setValueInner('textColor', val), [setValueInner]);
+	const setBackgroundColorValue = useCallback((val) => setValueInner('backgroundColor', val), [setValueInner]);
+
+	return (
+		<>
+			{values.text !== undefined
+				? controlTemplate(
+						{ sm: 6 },
+						<>
+							<label>Button text</label>
+							<TextWithVariablesInputField
+								definition={{ default: '', tooltip: 'Button text' }}
+								setValue={setTextValue}
+								value={values.text}
+							/>
+						</>,
+				  )
+				: ''}
+
+			{/* <CCol className='fieldtype-dropdown' sm={3} xs={6}>
 						<label>Font size</label>
 						<DropdownInputField
 							definition={{ default: 'auto', choices: FONT_SIZES }}
@@ -114,15 +145,21 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 						</CButtonGroup>
 					</CCol>*/}
 
-					<CCol className='fieldtype-alignment' sm={2} xs={3}>
-						<label>Text Alignment</label>
-						<AlignmentInputField
-							definition={{ default: 'center:center' }}
-							setValue={setTextAlignmentValue}
-							value={layer.textAlignment}
-						/>
-					</CCol>
-					{/* 
+			{values.textAlignment !== undefined
+				? controlTemplate(
+						{ sm: 2, xs: 3 },
+						<>
+							<label>Text Alignment</label>
+							<AlignmentInputField
+								definition={{ default: 'center:center' }}
+								setValue={setTextAlignmentValue}
+								value={values.textAlignment}
+							/>
+						</>,
+				  )
+				: ''}
+
+			{/* 
 					<CCol className='fieldtype-alignment' sm={2} xs={3}>
 						<label>PNG Alignment</label>
 						<AlignmentInputField
@@ -132,25 +169,36 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 						/>
 					</CCol>*/}
 
-					<CCol className='fieldtype-colorpicker' sm={2} xs={3}>
-						<label>Text Color</label>
-						<ColorInputField
-							definition={{ default: rgba(255, 255, 255, 255) }}
-							alpha={true}
-							setValue={setTextColorValue}
-							value={layer.textColor}
-						/>
-					</CCol>
-					<CCol className='fieldtype-colorpicker' sm={2} xs={3}>
-						<label>Background Color</label>
-						<ColorInputField
-							definition={{ default: rgba(0, 0, 0, 255) }}
-							alpha={true}
-							setValue={setBackgroundColorValue}
-							value={layer.backgroundColor}
-						/>
-					</CCol>
-					{/* 
+			{values.textColor !== undefined
+				? controlTemplate(
+						{ sm: 2, xs: 3 },
+						<>
+							<label>Text Color</label>
+							<ColorInputField
+								definition={{ default: rgba(255, 255, 255, 255) }}
+								alpha={true}
+								setValue={setTextColorValue}
+								value={values.textColor}
+							/>
+						</>,
+				  )
+				: ''}
+			{values.backgroundColor !== undefined
+				? controlTemplate(
+						{ sm: 2, xs: 3 },
+						<>
+							<label>Background Color</label>
+							<ColorInputField
+								definition={{ default: rgba(0, 0, 0, 255) }}
+								alpha={true}
+								setValue={setBackgroundColorValue}
+								value={values.backgroundColor}
+							/>
+						</>,
+				  )
+				: ''}
+
+			{/* 
 
 					<CCol className='fieldtype-checkbox' sm={2} xs={3}>
 						<label>Latch/Toggle</label>
@@ -172,8 +220,6 @@ export function ButtonStyleConfig({ controlId, layerId, layer }: ButtonStyleConf
 							/>
 						</p>
 					</CCol> */}
-				</CRow>
-			</CForm>
-		</CCol>
+		</>
 	);
 }

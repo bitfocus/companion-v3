@@ -211,6 +211,8 @@ export class ModuleHost {
 			registerResult.doInit().catch((e) => {
 				// TODO - log error?
 
+				console.log('Init error', e);
+
 				// Force restart the connetion, as it failed to initialise and will be broken
 				this.queueRestartConnection(connectionId);
 			});

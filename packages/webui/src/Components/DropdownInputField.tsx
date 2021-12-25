@@ -8,7 +8,7 @@ interface DropdownOption {
 }
 
 export interface DropdownInputFieldProps {
-	definition: CompanionInputFieldDropdown;
+	definition: Omit<CompanionInputFieldDropdown, 'type' | 'id' | 'label'>;
 	value: ConfigValue | ConfigValue[];
 	setValue: (value: ConfigValue | ConfigValue[]) => void;
 	setValid?: (valid: boolean) => void;

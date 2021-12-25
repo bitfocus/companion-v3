@@ -305,7 +305,6 @@ export function EditControl({ controlId }: EditControlProps) {
 							<CTabPane data-tab='style'>
 								<ButtonStyleConfig
 									controlId={controlId}
-									layerId={'default'}
 									layer={control.defaultLayer}
 								/>
 

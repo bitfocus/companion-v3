@@ -125,7 +125,22 @@ class ControlRenderer {
 						}
 						break;
 					case 'expression':
-						// TODO
+						let combinedValue = false;
+						for (const feedback of layer.feedbacks || []) {
+							const value = feedbackValues.get(feedback.id);
+							if (value) {
+								// For now treat as an OR operation
+								combinedValue = true;
+								break;
+							}
+						}
+
+						if (combinedValue) {
+							controlStyle = {
+								...controlStyle,
+								...layer.style,
+							};
+						}
 						break;
 					default:
 						assertNever(layer);

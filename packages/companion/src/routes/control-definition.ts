@@ -10,6 +10,8 @@ import {
 	ControlDefinitionRenderLayerAddExpressionMessage,
 	ControlDefinitionRenderLayerAddFeedbackMessage,
 	ControlDefinitionRenderLayerEnabledUpdateMessage,
+	ControlDefinitionRenderLayerExpressionSelectedStyleUpdateMessage,
+	ControlDefinitionRenderLayerExpressionStylePropertyUpdateMessage,
 	ControlDefinitionRenderLayerFeedbackOptionUpdateMessage,
 	ControlDefinitionRenderLayerNameUpdateMessage,
 	ControlDefinitionRenderLayerRemoveMessage,
@@ -23,6 +25,7 @@ import {
 	ControlType,
 	IButtonControlOverlayExpressionLayer,
 	IButtonControlOverlayFeedbackLayer,
+	IButtonControlRenderLayer,
 	IControlDefinition,
 	IControlFeedback,
 } from '@companion/core-shared/dist/collections/index.js';
@@ -36,6 +39,15 @@ import {
 	InternalSetPropertyActionOptions,
 } from '@companion/core-shared/dist/internal/actions.js';
 import { literal } from '@companion/module-framework';
+import { pick } from '@companion/core-shared/dist/util.js';
+
+const DEFAULT_STYLE: IButtonControlRenderLayer = {
+	text: '',
+	textSize: 'auto',
+	textAlignment: ['c', 'c'],
+	textColor: rgba(255, 255, 255, 255),
+	backgroundColor: rgba(0, 0, 0, 255),
+};
 
 export function createControlDefaults(type: ControlType): IControlDefinition {
 	// TODO - validate type
@@ -44,13 +56,7 @@ export function createControlDefaults(type: ControlType): IControlDefinition {
 		_id: generateDocumentId(),
 		description: 'New control',
 		controlType: type,
-		defaultLayer: {
-			text: '',
-			textSize: 'auto',
-			textAlignment: ['c', 'c'],
-			textColor: rgba(255, 255, 255, 255),
-			backgroundColor: rgba(0, 0, 0, 255),
-		},
+		defaultLayer: DEFAULT_STYLE,
 		overlayLayers: [],
 		renderHash: generateDocumentId(),
 		touchedAt: Date.now(),
@@ -140,7 +146,7 @@ export async function handleControlDefinitionRenderLayerAddExpression(
 					disabled: false,
 
 					style: {},
-					condition: [],
+					feedbacks: [],
 				}),
 			},
 			$set: {
@@ -322,6 +328,95 @@ export async function handleControlDefinitionRenderLayerFeedbackOptionUpdate(
 
 	if (updatedLayer.type === 'advanced') {
 		await services.controlRunner.updatedFeedback(msg.controlId, updatedLayer.feedback);
+	}
+}
+
+export async function handleControlDefinitionRenderLayerExpressionSelectedStyleUpdate(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionRenderLayerExpressionSelectedStyleUpdateMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+
+	const doc = await core.models.controlDefinitions.findOne({
+		_id: msg.controlId,
+	});
+	if (!doc) {
+		throw new Error('Not found');
+	}
+
+	// Find the layer we are updating
+	const layer = doc.overlayLayers.find((l) => l.id === msg.layerId);
+	if (!layer) {
+		throw new Error('Not found');
+	}
+	if (layer.type !== 'expression') {
+		throw new Error('Not an expression');
+	}
+
+	// Build the new style in memory. A little risk of a race condition
+	const allowedKeys = new Set(Object.keys(DEFAULT_STYLE));
+	const validKeys = msg.selected.filter((k) => allowedKeys.has(k));
+	const newStyle: Partial<IButtonControlRenderLayer> = {
+		// Use defaults as a fallback (should never get here)
+		...pick(DEFAULT_STYLE, true, ...validKeys),
+		// Take buton style as a basis
+		...pick(doc.defaultLayer, false, ...validKeys),
+		// Use existing values where already set
+		...pick(layer.style, false, ...validKeys),
+	};
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{
+			_id: msg.controlId,
+			'overlayLayers.id': msg.layerId,
+			'overlayLayers.type': 'expression',
+		},
+		{
+			$set: {
+				[`overlayLayers.$.style`]: newStyle,
+				renderHash: generateDocumentId(),
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Not found');
+	}
+}
+
+export async function handleControlDefinitionRenderLayerExpressionStylePropertyUpdate(
+	_socket: SocketIO.Socket,
+	socketContext: SocketContext,
+	core: ICore,
+	_services: IServices,
+	msg: ControlDefinitionRenderLayerExpressionStylePropertyUpdateMessage,
+): Promise<void> {
+	await verifyUserSession(core, socketContext.authSessionId);
+
+	// TODO - verify type of value
+
+	if (!Object.keys(DEFAULT_STYLE).includes(msg.option)) {
+		throw new Error('Invalid property');
+	}
+
+	const res = await core.models.controlDefinitions.updateOne(
+		{
+			_id: msg.controlId,
+			'overlayLayers.id': msg.layerId,
+			'overlayLayers.type': 'expression',
+			[`overlayLayers.style.${msg.option}`]: { $exists: true },
+		},
+		{
+			$set: {
+				[`overlayLayers.$.style.${msg.option}`]: msg.value,
+				renderHash: generateDocumentId(),
+			},
+		},
+	);
+	if (res.modifiedCount === 0) {
+		throw new Error('Not found');
 	}
 }
 

@@ -14,11 +14,12 @@
  * disclosing the source code of your own applications.
  *
  */
-const debug = require('debug')('lib/satellite_server');
 import net from 'net';
-import { ICore } from '../core';
-import { SatelliteDevice } from './satellite-device';
-import { SurfaceHost } from './surface-host';
+import { createChildLogger } from '../logger.js';
+import { SatelliteDevice } from './satellite-device.js';
+import { SurfaceHost } from './surface-host.js';
+
+const logger = createChildLogger('service/satellite-server');
 
 /** TODO - these need removing */
 const MAX_BUTTONS = 32;
@@ -29,7 +30,7 @@ const MAX_BUTTONS_PER_ROW = 8;
  * 1.0.0 - Initial release
  * 1.1.0 - Add KEY-STATE TYPE property
  */
-const API_VERSION = '1.0.0';
+const API_VERSION = '2.0.0';
 
 function isFalsey(val: any) {
 	return (typeof val === 'string' && val.toLowerCase() == 'false') || val == '0';
@@ -89,19 +90,19 @@ class SatelliteServer {
 			this.initSocket(socket);
 		});
 		this.server.on('error', function (e) {
-			debug('listen-socket error: ', e);
+			logger.debug('listen-socket error: ', e);
 		});
 
 		try {
 			this.server.listen(16622);
 		} catch (e) {
-			debug('ERROR opening port 16622 for companion satellite devices');
+			logger.debug('ERROR opening port 16622 for companion satellite devices');
 		}
 	}
 
 	initSocket(socket: net.Socket) {
 		const socketName = socket.remoteAddress + ':' + socket.remotePort;
-		debug(`new connection from ${socketName}`);
+		logger.debug(`new connection from ${socketName}`);
 
 		let receivebuffer = '';
 		socket.on('data', (data) => {
@@ -119,7 +120,7 @@ class SatelliteServer {
 		});
 
 		socket.on('error', (e) => {
-			debug('socket error:', e);
+			logger.debug('socket error:', e);
 		});
 
 		socket.on('close', () => {
@@ -139,7 +140,7 @@ class SatelliteServer {
 
 	handleCommand(socket: net.Socket, socketName: string, line: string) {
 		if (!line.trim().toUpperCase().startsWith('PING')) {
-			debug(`received "${line}" from ${socketName}`);
+			logger.debug(`received "${line}" from ${socketName}`);
 		}
 
 		const i = line.indexOf(' ');
@@ -182,7 +183,7 @@ class SatelliteServer {
 		}
 
 		const id = `satellite-${params.DEVICEID}`;
-		debug(`add device "${id}" for ${socket.remoteAddress}`);
+		logger.debug(`add device "${id}" for ${socket.remoteAddress}`);
 
 		const existing = Object.entries(this.devices).find(([internalId, dev]) => dev && dev.id === id);
 		if (existing) {
@@ -233,7 +234,7 @@ class SatelliteServer {
 		);
 
 		this.surfaceHost.surfaceConnected(id, dev).catch((e) => {
-			console.error(`Connect failed: ${e}`);
+			logger.error(`Connect failed: ${e}`);
 		});
 
 		socket.write(`ADD-DEVICE OK DEVICEID=${params.DEVICEID}\n`);

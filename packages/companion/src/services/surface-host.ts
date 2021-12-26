@@ -8,6 +8,7 @@ import {
 import { createChildLogger } from '../logger.js';
 import PQueue from 'p-queue';
 import { DEFAULT_STYLE } from '../routes/control-definition.js';
+import { ControlRunner } from './control-runner.js';
 
 const logger = createChildLogger('services/surfaces');
 
@@ -40,6 +41,7 @@ interface WrappedSurface {
 	surfaceSpaceId: string | null;
 	surfacePageId: string | null;
 	currentControlIds: Record<string, SlotIdsWrapped | undefined>; // ControlId, SlotId
+	slotToControlIds: Record<string, string | undefined>;
 }
 
 /**
@@ -49,10 +51,12 @@ interface WrappedSurface {
 export class SurfaceHost {
 	private readonly surfaceHostId = generateDocumentId();
 	private readonly core: ICore;
+	private readonly controlRunner: ControlRunner;
 	private readonly surfaces = new Map<string, WrappedSurface>();
 
-	constructor(core: ICore) {
+	constructor(core: ICore, controlRunner: ControlRunner) {
 		this.core = core;
+		this.controlRunner = controlRunner;
 	}
 
 	async start(): Promise<void> {
@@ -127,6 +131,7 @@ export class SurfaceHost {
 				surfaceSpaceId: null,
 				surfacePageId: null,
 				currentControlIds: {},
+				slotToControlIds: {},
 			};
 
 			// When the queue runs idle, try to do some cleanup to avoid a forever growing this.surfaces
@@ -214,6 +219,7 @@ export class SurfaceHost {
 		device.surfaceSpaceId = surfaceSpaceId;
 		device.surfacePageId = null;
 		device.currentControlIds = {};
+		device.slotToControlIds = {};
 
 		// Clear in preparation for the change
 		device.surface.clearSurface(
@@ -227,6 +233,7 @@ export class SurfaceHost {
 				device.surfaceSpaceId = null;
 				device.surfacePageId = null;
 				device.currentControlIds = {};
+				device.slotToControlIds = {};
 
 				device.surface.clearSurface(IConnectedSurfaceState.Unassigned);
 
@@ -249,6 +256,7 @@ export class SurfaceHost {
 				// Start on the first page
 				device.surfacePageId = page?._id ?? null;
 				device.currentControlIds = {};
+				device.slotToControlIds = {};
 
 				if (page) {
 					// Update the list of controls for the page
@@ -261,6 +269,8 @@ export class SurfaceHost {
 
 						wrappedSlotIds.slotIds.push(slotId);
 					}
+
+					device.slotToControlIds = page.controls;
 
 					// Perform the 'initial' renders
 					const controlIds = Object.keys(device.currentControlIds);
@@ -338,12 +348,18 @@ export class SurfaceHost {
 
 	/** Surface 'control' value changed. ie pressed, or fader moved */
 	async surfaceControlInput(deviceId: string, slotId: string, pressed: boolean): Promise<void> {
-		//
+		const surface = this.surfaces.get(deviceId);
+		if (surface) {
+			const controlId = surface.slotToControlIds[slotId];
+			if (controlId) {
+				await this.controlRunner.pressControl(controlId, pressed);
+			}
+		}
 	}
 }
 
-export async function startSurfaceHost(core: ICore): Promise<SurfaceHost> {
-	const host = new SurfaceHost(core);
+export async function startSurfaceHost(core: ICore, controlRunner: ControlRunner): Promise<SurfaceHost> {
+	const host = new SurfaceHost(core, controlRunner);
 	await host.start();
 	return host;
 }

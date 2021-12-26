@@ -102,7 +102,7 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	const surfaceManager = await startSurfaceManager(core);
 	await startModuleHost(core);
 
-	const surfaceHost = await startSurfaceHost(core);
+	const surfaceHost = await startSurfaceHost(core, controlRunner);
 	await startSatelliteServer(surfaceHost);
 
 	// app.use(apiRouter(core));

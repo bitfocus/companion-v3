@@ -14,12 +14,12 @@
  * disclosing the source code of your own applications.
  *
  */
-// const { EventEmitter } = require('events');
-// const util = require('util');
-const debug = require('debug')('lib/satellite_device');
 import { IButtonControlRenderLayer } from '@companion/core-shared/dist/collections';
 import net from 'net';
+import { createChildLogger } from '../logger.js';
 import { IConnectedSurface } from './surface-host.js';
+
+const logger = createChildLogger('services/satellite-device');
 
 export interface SatelliteOptions {
 	streamBitmaps: boolean;
@@ -40,11 +40,11 @@ export class SatelliteDevice implements IConnectedSurface {
 	}
 
 	setBrightness(percent: number): void {
-		debug('brightness: ' + percent);
+		logger.debug('brightness: ' + percent);
 		this.socket.write(`SURFACE-BRIGHTNESS DEVICEID=${this.deviceId} VALUE=${percent}\n`);
 	}
 	clearSurface(): void {
-		debug('elgato.prototype.clearDeck()');
+		logger.debug('elgato.prototype.clearDeck()');
 		this.socket.write(`SURFACE-CLEAR DEVICEID=${this.deviceId}\n`);
 	}
 	drawControl(slotId: string, style: IButtonControlRenderLayer, pngStr: string | null): void {

@@ -18,6 +18,8 @@ import { startControlRenderer } from './services/renderer.js';
 import { startSurfaceManager } from './services/surfaces.js';
 import { startModuleHost } from './services/module-host.js';
 import { startControlRunner } from './services/control-runner.js';
+import { startSurfaceHost } from './services/surface-host.js';
+import { startSatelliteServer } from './services/satellite-server.js';
 
 logger.info(`*******************************************`);
 logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -99,6 +101,9 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	await startControlRenderer(core);
 	const surfaceManager = await startSurfaceManager(core);
 	await startModuleHost(core);
+
+	const surfaceHost = await startSurfaceHost(core);
+	await startSatelliteServer(surfaceHost);
 
 	// app.use(apiRouter(core));
 	socketHandler(core, surfaceManager, controlRunner);

@@ -17,7 +17,7 @@ export interface SurfaceSpecAdvanced {
 
 /**
  * A basic grid surface. Any surfaces which conform to this will allow for sharing the grid between surfaces.
- * ControlId is dynamically generated as `${x}x${y}`
+ * SlotId is dynamically generated as `${x}x${y}`
  */
 export interface SurfaceSpecBasic {
 	type: SurfaceType.ButtonGrid;

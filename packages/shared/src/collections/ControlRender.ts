@@ -1,3 +1,5 @@
+import { IButtonControlRenderLayer } from './ControlDefinition';
+
 export interface IControlRender {
 	// Id is the same as IControlDefinition._id
 	_id: string;
@@ -5,6 +7,7 @@ export interface IControlRender {
 	renderHash: string;
 
 	pngStr: string;
+	cachedStyle: IButtonControlRenderLayer;
 }
 
 export function pngBufferToString(buffer: Buffer): string {

@@ -1,7 +1,7 @@
 import { generateDocumentId, ICore } from '../core.js';
 import { ModuleThread, spawn, Thread, Worker } from 'threads';
 import { SurfaceWorker } from '../workers/surface.js';
-import { SurfaceDeviceStatus } from '@companion/core-shared/dist/collections/index.js';
+import { IButtonControlRenderLayer, SurfaceDeviceStatus } from '@companion/core-shared/dist/collections/index.js';
 import { createChildLogger } from '../logger.js';
 
 const logger = createChildLogger('services/surfaces');
@@ -76,6 +76,7 @@ export class SurfaceManager {
 								_id: newId,
 								name: surface.deviceName,
 								status: SurfaceDeviceStatus.DETECTED,
+								surfaceHostId: '',
 								adopted: false,
 
 								module: moduleName,
@@ -215,7 +216,9 @@ export class SurfaceManager {
 			// 		status: SurfaceDeviceStatus.READY,
 			// 	},
 			// );
-		} finally {
+		} catch (e) {
+			logger.error(`Failed to open device: ${e}`);
+
 			if (worker) {
 				try {
 					await Thread.terminate(worker);
@@ -232,7 +235,7 @@ export class SurfaceManager {
 					status: SurfaceDeviceStatus.ERROR,
 				},
 			);
-
+		} finally {
 			// ensure we unmark the opening when complete/failed
 			this.devicesInProgress.delete(deviceId);
 		}

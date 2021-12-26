@@ -278,6 +278,7 @@ class ControlRenderer {
 					_id: controlId,
 					renderHash: control.renderHash,
 					pngStr: pngStr,
+					cachedStyle: controlStyle,
 				},
 				{
 					upsert: true,

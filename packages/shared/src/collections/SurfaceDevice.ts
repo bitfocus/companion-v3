@@ -11,6 +11,8 @@ export interface ISurfaceDevice {
 
 	/** Current status of the device */
 	status: SurfaceDeviceStatus;
+	/** The SurfaceHost the device is currently attached to */
+	surfaceHostId: string | null;
 
 	/** The module which interfaces with the hardware */
 	module: string;

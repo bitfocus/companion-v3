@@ -41,13 +41,13 @@ import {
 import { literal } from '@companion/module-framework';
 import { pick } from '@companion/core-shared/dist/util.js';
 
-const DEFAULT_STYLE: IButtonControlRenderLayer = {
+export const DEFAULT_STYLE: IButtonControlRenderLayer = Object.freeze({
 	text: '',
 	textSize: 'auto',
 	textAlignment: ['c', 'c'],
 	textColor: rgba(255, 255, 255, 255),
 	backgroundColor: rgba(0, 0, 0, 255),
-};
+});
 
 export function createControlDefaults(type: ControlType): IControlDefinition {
 	// TODO - validate type

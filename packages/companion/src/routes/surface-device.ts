@@ -8,19 +8,20 @@ export async function handleSurfaceDeviceScan(
 	_socket: SocketIO.Socket,
 	socketContext: SocketContext,
 	core: ICore,
-	services: IServices,
+	_services: IServices,
 	_msg: null,
 ): Promise<void> {
 	await verifyUserSession(core, socketContext.authSessionId);
 
-	await services.surfaceManager.scan();
+	// TODO
+	// await services.surfaceManager.scan();
 }
 
 export async function handleSurfaceDeviceAttach(
 	_socket: SocketIO.Socket,
 	socketContext: SocketContext,
 	core: ICore,
-	services: IServices,
+	_services: IServices,
 	msg: SurfaceDeviceAttachMessage,
 ): Promise<void> {
 	await verifyUserSession(core, socketContext.authSessionId);
@@ -37,7 +38,7 @@ export async function handleSurfaceDeviceAttach(
 		},
 		{
 			$set: {
-				// adopted: true,
+				adopted: true,
 				surfaceSpaceId: space._id,
 			},
 		},
@@ -47,14 +48,15 @@ export async function handleSurfaceDeviceAttach(
 		throw new Error(`Failed to attach device "${msg.deviceId}" to space "${space._id}"`);
 	}
 
-	await services.surfaceManager.open(msg.deviceId);
+	// TODO
+	// await services.surfaceManager.open(msg.deviceId);
 }
 
 export async function handleSurfaceDeviceDetach(
 	_socket: SocketIO.Socket,
 	socketContext: SocketContext,
 	core: ICore,
-	services: IServices,
+	_services: IServices,
 	msg: SurfaceDeviceDetachMessage,
 ): Promise<void> {
 	await verifyUserSession(core, socketContext.authSessionId);
@@ -75,5 +77,6 @@ export async function handleSurfaceDeviceDetach(
 		throw new Error(`Failed to detach device "${msg.deviceId}" from space "${msg.spaceId}"`);
 	}
 
-	await services.surfaceManager.close(msg.deviceId);
+	// TODO
+	// await services.surfaceManager.close(msg.deviceId);
 }

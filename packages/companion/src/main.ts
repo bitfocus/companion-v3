@@ -15,7 +15,6 @@ import { CollectionId } from '@companion/core-shared/dist/collections/index.js';
 import getPort from 'get-port';
 import { startMongo } from './mongo.js';
 import { startControlRenderer } from './services/renderer.js';
-import { startSurfaceManager } from './services/surfaces.js';
 import { startModuleHost } from './services/module-host.js';
 import { startControlRunner } from './services/control-runner.js';
 import { startSurfaceHost } from './services/surface-host.js';
@@ -99,14 +98,14 @@ export async function startup(configPath: string, appPath: string): Promise<void
 	// start the various services
 	const controlRunner = await startControlRunner(core);
 	await startControlRenderer(core);
-	const surfaceManager = await startSurfaceManager(core);
-	await startModuleHost(core);
 
 	const surfaceHost = await startSurfaceHost(core, controlRunner);
 	await startSatelliteServer(surfaceHost);
 
+	await startModuleHost(core);
+
 	// app.use(apiRouter(core));
-	socketHandler(core, surfaceManager, controlRunner);
+	socketHandler(core, surfaceHost, controlRunner);
 
 	// serve status ui assets
 	app.use(await staticsRouter());

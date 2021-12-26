@@ -34,17 +34,17 @@ import {
 	handleControlDefinitionRenderLayerRemove,
 	handleControlDefinitionRenderLayerUpdate,
 } from './control-definition.js';
-import { SurfaceManager } from '../services/surfaces.js';
 import { handleModuleFetchHelp } from './module.js';
 import { ControlRunner } from '../services/control-runner.js';
 import { handleControlSimulatePress } from './control-runner.js';
+import { SurfaceHost } from '../services/surface-host.js';
 
 export interface SocketContext {
 	authSessionId: string | null;
 }
 
 export interface IServices {
-	surfaceManager: SurfaceManager;
+	surfaceHost: SurfaceHost;
 	controlRunner: ControlRunner;
 }
 

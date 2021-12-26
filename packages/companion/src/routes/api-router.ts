@@ -4,10 +4,10 @@ import { literal } from '@companion/core-shared/dist/util.js';
 import { unsubscribeAllForSocket } from '../subscriptions.js';
 import { getUserInfo } from '../auth.js';
 import * as SocketIO from 'socket.io';
-import { SurfaceManager } from '../services/surfaces.js';
 import { IServices, SocketContext, SocketHandlers } from './handlers.js';
 import { createChildLogger } from '../logger.js';
 import { ControlRunner } from '../services/control-runner.js';
+import { SurfaceHost } from '../services/surface-host.js';
 
 const logger = createChildLogger('routes/api-router');
 
@@ -33,9 +33,9 @@ const logger = createChildLogger('routes/api-router');
 // 	return router;
 // }
 
-export function socketHandler(core: ICore, surfaceManager: SurfaceManager, controlRunner: ControlRunner): void {
+export function socketHandler(core: ICore, surfaceHost: SurfaceHost, controlRunner: ControlRunner): void {
 	const services: IServices = {
-		surfaceManager,
+		surfaceHost,
 		controlRunner,
 	};
 

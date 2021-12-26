@@ -51,8 +51,6 @@
 	"dependencies": {
 		"@companion/core-shared": "*",
 		"@companion/module-framework": "*",
-		"@elgato-stream-deck/node": "^5.1.1",
-		"@julusian/jpeg-turbo": "^1.1.1",
 		"axios": "^0.21.1",
 		"body-parser": "^1.19.0",
 		"concurrently": "^6.4.0",

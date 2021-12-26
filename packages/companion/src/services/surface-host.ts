@@ -36,7 +36,7 @@ interface SlotIdsWrapped {
 }
 
 interface WrappedSurface {
-	queue: PQueue;
+	readonly queue: PQueue;
 	surface: IConnectedSurface | null;
 	surfaceSpaceId: string | null;
 	surfacePageId: string | null;
@@ -60,12 +60,21 @@ export class SurfaceHost {
 	}
 
 	async start(): Promise<void> {
-		// watchCollection(this.core.models.surfaceDevices, undefined, {
-		// 	onInsert: null, // Must have come from this class instance
-		// 	onReplace: (doc) => this.recheckSurface(doc._id),
-		// 	onUpdate: (doc) => this.recheckSurface(doc._id),
-		// 	onDelete: (doc) => this.recheckSurface(doc._id),
-		// });
+		watchCollection(this.core.models.surfaceDevices, undefined, {
+			onInsert: null,
+			onReplace: null,
+			onUpdate: (doc) => {
+				if (
+					doc.documentKey &&
+					doc.updateDescription &&
+					'surfaceSpaceId' in doc.updateDescription.updatedFields
+				) {
+					// If surfaceSpaceId changed, re-setup
+					this.setupSurfaceForSpace(doc.documentKey);
+				}
+			},
+			onDelete: null,
+		});
 		watchCollection(this.core.models.controlRenders, undefined, {
 			onInsert: (doc) => {
 				if (doc.documentKey) {
@@ -194,14 +203,24 @@ export class SurfaceHost {
 		});
 	}
 
-	private setupSurfaceForSpace(deviceId: string, surfaceSpaceId: string | null): void {
-		this.getWrappedSurface(deviceId)
-			.queue.add(async () => {
-				this.setupSurfaceForSpaceInner(deviceId, surfaceSpaceId);
-			})
-			.catch((e) => {
-				console.error(`Failed to setup surface for space: ${e}`);
-			});
+	private setupSurfaceForSpace(deviceId: string): void {
+		const surface = this.surfaces.get(deviceId);
+		if (surface) {
+			surface.queue
+				.add(async () => {
+					const device = await this.core.models.surfaceDevices.findOne({
+						// Find the device if it is for this host
+						_id: deviceId,
+						surfaceHostId: this.surfaceHostId,
+					});
+					if (device) {
+						this.setupSurfaceForSpaceInner(deviceId, device.surfaceSpaceId ?? null);
+					}
+				})
+				.catch((e) => {
+					console.error(`Failed to setup surface for space: ${e}`);
+				});
+		}
 	}
 
 	private async setupSurfaceForSpaceInner(deviceId: string, surfaceSpaceId: string | null): Promise<void> {

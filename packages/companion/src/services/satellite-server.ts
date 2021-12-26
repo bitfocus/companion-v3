@@ -14,6 +14,7 @@
  * disclosing the source code of your own applications.
  *
  */
+import { SomeSurfaceSpec, SurfaceType } from '@companion/core-shared/dist/collections/index.js';
 import net from 'net';
 import { createChildLogger } from '../logger.js';
 import { SatelliteDevice } from './satellite-device.js';
@@ -21,14 +22,11 @@ import { SurfaceHost } from './surface-host.js';
 
 const logger = createChildLogger('service/satellite-server');
 
-/** TODO - these need removing */
-const MAX_BUTTONS = 32;
-const MAX_BUTTONS_PER_ROW = 8;
-
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatability
  * 1.0.0 - Initial release
  * 1.1.0 - Add KEY-STATE TYPE property
+ * 2.0.0 - Rewrite for companion3-prototype
  */
 const API_VERSION = '2.0.0';
 
@@ -126,7 +124,10 @@ class SatelliteServer {
 		socket.on('close', () => {
 			for (const [key, device] of Object.entries(this.devices)) {
 				if (device?.socket === socket) {
-					this.surfaceHost.surfaceDisonnected(device.id);
+					logger.info(`Closing "${key}" from connection close`);
+					this.surfaceHost.surfaceDisonnected(device.id).catch((e) => {
+						logger.error(`Surface connect failed: ${e}`);
+					});
 					delete this.devices[key];
 				}
 			}
@@ -206,15 +207,27 @@ class SatelliteServer {
 			socket: socket,
 		};
 
-		const keysTotal = params.KEYS_TOTAL ? parseInt(params.KEYS_TOTAL + '') : MAX_BUTTONS;
-		if (isNaN(keysTotal) || keysTotal > MAX_BUTTONS || keysTotal <= 0) {
-			socket.write(`ADD-DEVICE ERROR MESSAGE="Invalid KEYS_TOTAL"\n`);
-			return;
-		}
+		let spec: SomeSurfaceSpec | undefined;
+		if (params.TYPE === 'GRID') {
+			const width = parseInt(params.GRID_WIDTH + '', 10);
+			if (isNaN(width) || width <= 0) {
+				socket.write(`ADD-DEVICE ERROR MESSAGE="Invalid GRID_WIDTH"\n`);
+				return;
+			}
+			const height = parseInt(params.GRID_HEIGHT + '', 10);
+			if (isNaN(height) || height <= 0) {
+				socket.write(`ADD-DEVICE ERROR MESSAGE="Invalid GRID_HEIGHT"\n`);
+				return;
+			}
 
-		const keysPerRow = params.KEYS_PER_ROW ? parseInt(params.KEYS_PER_ROW + '') : MAX_BUTTONS_PER_ROW;
-		if (isNaN(keysPerRow) || keysPerRow > MAX_BUTTONS || keysPerRow <= 0) {
-			socket.write(`ADD-DEVICE ERROR MESSAGE="Invalid KEYS_PER_ROW"\n`);
+			spec = {
+				type: SurfaceType.ButtonGrid,
+				deviceName: params.PRODUCT_NAME,
+				width,
+				height,
+			};
+		} else {
+			socket.write(`ADD-DEVICE ERROR MESSAGE="Unsupported TYPE"\n`);
 			return;
 		}
 
@@ -230,7 +243,7 @@ class SatelliteServer {
 				streamColors,
 				streamText,
 			},
-			params.PRODUCT_NAME,
+			spec,
 		);
 
 		this.surfaceHost.surfaceConnected(id, dev).catch((e) => {
@@ -249,7 +262,9 @@ class SatelliteServer {
 		const id = `satellite-${params.DEVICEID}`;
 		const device = this.devices[id];
 		if (device && device.socket === socket) {
-			this.surfaceHost.surfaceDisonnected(device.id);
+			this.surfaceHost.surfaceDisonnected(device.id).catch((e) => {
+				logger.error(`Surface connect failed: ${e}`);
+			});
 			delete this.devices[id];
 			socket.write(`REMOVE-DEVICE OK DEVICEID=${params.DEVICEID}\n`);
 		} else {
@@ -271,19 +286,12 @@ class SatelliteServer {
 			return;
 		}
 
-		const key = parseInt(params.KEY + '');
-		if (isNaN(key) || key > MAX_BUTTONS || key < 0) {
-			socket.write(`KEY-PRESS ERROR MESSAGE="Invalid KEY"\n`);
-			return;
-		}
-
 		const pressed = !isFalsey(params.PRESSED);
 
 		const id = `satellite-${params.DEVICEID}`;
 		const device = this.devices[id];
 		if (device && device.socket === socket) {
-			this.surfaceHost.surfaceControlInput(params.DEVICEID, params.SLOT, pressed);
-			// this.system.emit(id + '_button', key, pressed);
+			this.surfaceHost.surfaceControlInput(id, params.SLOT, pressed);
 			socket.write(`KEY-PRESS OK\n`);
 		} else {
 			socket.write(`KEY-PRESS ERROR MESSAGE="Device not found"\n`);

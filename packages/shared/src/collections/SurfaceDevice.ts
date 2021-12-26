@@ -1,3 +1,5 @@
+import { SomeSurfaceSpec } from './SurfaceSpace';
+
 export enum SurfaceDeviceStatus {
 	OFFLINE = 'offline',
 	DETECTED = 'detected',
@@ -14,8 +16,11 @@ export interface ISurfaceDevice {
 	/** The SurfaceHost the device is currently attached to */
 	surfaceHostId: string | null;
 
-	/** The module which interfaces with the hardware */
-	module: string;
+	/** Layout/topology of the surface */
+	surfaceSpec: SomeSurfaceSpec;
+
+	// /** The module which interfaces with the hardware */
+	// module: string;
 	/** Unique id of the hardware within the module */
 	uid: string;
 
@@ -23,4 +28,7 @@ export interface ISurfaceDevice {
 	adopted: boolean;
 	/** Once the device is adopted it can be linked to a surface */
 	surfaceSpaceId?: string;
+
+	/** When the device was last seen */
+	lastSeen: number;
 }

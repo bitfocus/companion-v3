@@ -3,6 +3,7 @@ import {
 	IButtonControlRenderLayer,
 	IControlRender,
 	ISurfaceSpacePage,
+	SomeSurfaceSpec,
 	SurfaceDeviceStatus,
 } from '@companion/core-shared/dist/collections/index.js';
 import { createChildLogger } from '../logger.js';
@@ -18,7 +19,7 @@ export enum IConnectedSurfaceState {
 }
 
 export interface IConnectedSurface {
-	readonly moduleName: string;
+	readonly surfaceSpec: SomeSurfaceSpec;
 	readonly uid: string;
 
 	/** Set the brightness of displays/backlights on the surface */
@@ -70,7 +71,7 @@ export class SurfaceHost {
 					'surfaceSpaceId' in doc.updateDescription.updatedFields
 				) {
 					// If surfaceSpaceId changed, re-setup
-					this.setupSurfaceForSpace(doc.documentKey);
+					this.setupSurfaceForSpace((doc.documentKey as any)._id);
 				}
 			},
 			onDelete: null,
@@ -78,32 +79,57 @@ export class SurfaceHost {
 		watchCollection(this.core.models.controlRenders, undefined, {
 			onInsert: (doc) => {
 				if (doc.documentKey) {
-					this.renderUpdated(doc.documentKey);
+					this.renderUpdated((doc.documentKey as any)._id);
 				}
 			},
 			onReplace: (doc) => {
 				if (doc.documentKey) {
-					this.renderUpdated(doc.documentKey);
+					this.renderUpdated((doc.documentKey as any)._id);
 				}
 			},
 			onUpdate: (doc) => {
 				if (doc.documentKey) {
-					this.renderUpdated(doc.documentKey);
+					this.renderUpdated((doc.documentKey as any)._id);
 				}
 			},
 			onDelete: (doc) => {
 				if (doc.documentKey) {
-					this.renderDeleted(doc.documentKey);
+					this.renderDeleted((doc.documentKey as any)._id);
 				}
 			},
 		});
+
+		setInterval(() => {
+			// Update lastSeen of active devices
+			this.core.models.surfaceDevices
+				.deleteMany({
+					surfaceHostId: this.surfaceHostId,
+					_id: { $in: Object.keys(this.surfaces) },
+				})
+				.catch((e) => {
+					logger.error(`Failed to update lastSeen of active devices: ${e}`);
+				});
+
+			// Delete any devices which havent been seen in a while
+			const tolerance = 1 * 60 * 1000; // 1 minute
+			this.core.models.surfaceDevices
+				.deleteMany({
+					adopted: false,
+					lastSeen: { $lt: Date.now() - tolerance },
+				})
+				.catch((e) => {
+					logger.error(`Failed to cleanup devices not seen in a while: ${e}`);
+				});
+		}, 15000);
 	}
 
 	private renderToAll(controlId: string, doc: IControlRender | null): void {
-		for (const surface of this.surfaces.values()) {
+		for (const [deviceId, surface] of this.surfaces.entries()) {
 			const wrappedSlots = surface.currentControlIds[controlId];
 			if (wrappedSlots && surface.surface) {
 				wrappedSlots.sent = true;
+
+				logger.debug(`New render for "${deviceId}" "${wrappedSlots.slotIds.join(', ')}"`);
 
 				for (const slotId of wrappedSlots.slotIds) {
 					surface.surface.drawControl(slotId, doc ? doc.cachedStyle : DEFAULT_STYLE, doc ? doc.pngStr : null);
@@ -117,12 +143,13 @@ export class SurfaceHost {
 		this.core.models.controlRenders
 			.findOne({ _id: controlId })
 			.then((render) => {
+				logger.debug(`New render of "${controlId}"`);
 				if (render) {
 					this.renderToAll(controlId, render);
 				}
 			})
 			.catch((e) => {
-				console.error(`Failed to fetch render: ${e}`);
+				logger.error(`Failed to fetch render: ${e}`);
 			});
 	}
 	private renderDeleted(controlId: string): void {
@@ -172,34 +199,51 @@ export class SurfaceHost {
 	/** A surface has connected */
 	async surfaceConnected(deviceId: string, surface: IConnectedSurface): Promise<void> {
 		await this.getWrappedSurface(deviceId).queue.add(async () => {
+			const surface2 = this.surfaces.get(deviceId);
+			if (!surface2) {
+				// Already cleaned up
+				logger.error(`Skipping init of "${deviceId}" as it has been cleaned up unexpectedly`);
+				return;
+			}
+
 			// Ensure the device exists in the db
 			const deviceInfo = await this.core.models.surfaceDevices.findOne({ _id: deviceId });
 			if (!deviceInfo) {
+				logger.info(`Discovered new surface "${deviceId}"`);
 				await this.core.models.surfaceDevices.insertOne({
 					_id: deviceId,
 					name: '',
 					status: SurfaceDeviceStatus.DETECTED,
 					surfaceHostId: this.surfaceHostId,
 					adopted: false,
-					module: surface.moduleName,
+					surfaceSpec: surface.surfaceSpec,
 					uid: surface.uid,
+					lastSeen: Date.now(),
 				});
 			} else {
+				// TODO - ensure the spec is similar enough to work, and update the cached copy
+
+				logger.info(`Claimed existing surface "${deviceId}"`);
 				await this.core.models.surfaceDevices.updateOne(
 					{
 						_id: deviceId,
 					},
 					{
-						status: SurfaceDeviceStatus.DETECTED,
-						surfaceHostId: this.surfaceHostId,
-						module: surface.moduleName,
-						uid: surface.uid,
+						$set: {
+							status: SurfaceDeviceStatus.DETECTED,
+							surfaceHostId: this.surfaceHostId,
+							// module: surface.moduleName,
+							uid: surface.uid,
+							lastSeen: Date.now(),
+						},
 					},
 				);
 			}
 
+			surface2.surface = surface;
+
 			// Setup space info for the surface
-			await this.setupSurfaceForSpaceInner(deviceId, deviceInfo?.surfaceSpaceId ?? null);
+			await this.setupSurfaceForSpaceInner(deviceId, surface2, deviceInfo?.surfaceSpaceId ?? null);
 		});
 	}
 
@@ -214,25 +258,26 @@ export class SurfaceHost {
 						surfaceHostId: this.surfaceHostId,
 					});
 					if (device) {
-						this.setupSurfaceForSpaceInner(deviceId, device.surfaceSpaceId ?? null);
+						this.setupSurfaceForSpaceInner(deviceId, surface, device.surfaceSpaceId ?? null);
 					}
 				})
 				.catch((e) => {
-					console.error(`Failed to setup surface for space: ${e}`);
+					logger.error(`Failed to setup surface for space: ${e}`);
 				});
 		}
 	}
 
-	private async setupSurfaceForSpaceInner(deviceId: string, surfaceSpaceId: string | null): Promise<void> {
-		const device = this.surfaces.get(deviceId);
-		if (!device || !device.surface) {
-			throw new Error('Device not running');
-		}
-
+	private async setupSurfaceForSpaceInner(
+		deviceId: string,
+		device: WrappedSurface,
+		surfaceSpaceId: string | null,
+	): Promise<void> {
 		if (device.surfaceSpaceId === surfaceSpaceId) {
 			// Nothing changed
 			return;
 		}
+
+		logger.info(`Updating surface "${deviceId}" for space "${surfaceSpaceId}"`);
 
 		// Update ids on the entry
 		device.surfaceSpaceId = surfaceSpaceId;
@@ -240,15 +285,30 @@ export class SurfaceHost {
 		device.currentControlIds = {};
 		device.slotToControlIds = {};
 
-		// Clear in preparation for the change
-		device.surface.clearSurface(
-			surfaceSpaceId ? IConnectedSurfaceState.Pending : IConnectedSurfaceState.Unassigned,
-		);
+		if (device.surface) {
+			logger.info(`Preparing surface "${deviceId}" for space change`);
 
-		if (surfaceSpaceId) {
+			// Clear in preparation for the change
+			device.surface.clearSurface(
+				surfaceSpaceId ? IConnectedSurfaceState.Pending : IConnectedSurfaceState.Unassigned,
+			);
+
 			// If we have a space selected
-			const space = await this.core.models.surfaceSpaces.findOne({ _id: surfaceSpaceId });
+			const space = surfaceSpaceId
+				? await this.core.models.surfaceSpaces.findOne({ _id: surfaceSpaceId })
+				: undefined;
 			if (!space) {
+				logger.info(`Surface "${deviceId}" is attached to missing space`);
+
+				await this.core.models.surfaceDevices.updateOne(
+					{ _id: deviceId },
+					{
+						$set: {
+							status: SurfaceDeviceStatus.DETECTED,
+						},
+					},
+				);
+
 				device.surfaceSpaceId = null;
 				device.surfacePageId = null;
 				device.currentControlIds = {};
@@ -271,6 +331,17 @@ export class SurfaceHost {
 			} else {
 				// Space is valid
 
+				logger.info(`Surface "${deviceId}" is attached to space`);
+
+				await this.core.models.surfaceDevices.updateOne(
+					{ _id: deviceId },
+					{
+						$set: {
+							status: SurfaceDeviceStatus.READY,
+						},
+					},
+				);
+
 				const page: ISurfaceSpacePage | undefined = space.pages[0];
 				// Start on the first page
 				device.surfacePageId = page?._id ?? null;
@@ -279,13 +350,15 @@ export class SurfaceHost {
 
 				if (page) {
 					// Update the list of controls for the page
-					for (const [slotId, controlId] of Object.entries(page)) {
+					for (const [slotId, controlId] of Object.entries(page.controls)) {
 						const wrappedSlotIds: SlotIdsWrapped = (device.currentControlIds[controlId] = device
 							.currentControlIds[controlId] || {
 							slotIds: [],
 							sent: false,
 						});
 
+						// TODO - ensure slotId is valid for the attached device (eg, in a grid it is not)
+						// TODO - perhaps this is where some xy translation should be applied?
 						wrappedSlotIds.slotIds.push(slotId);
 					}
 
@@ -298,10 +371,13 @@ export class SurfaceHost {
 							.find({ _id: { $in: controlIds } })
 							.toArray()
 							.then((renders) => {
+								logger.info(
+									`Surface "${deviceId}" has ${renders.length} renders to use (from ${controlIds.length} controls)`,
+								);
 								this.surfaceDrawRenders(deviceId, renders, true);
 							})
 							.catch((e) => {
-								//
+								logger.error(`Surface "${deviceId}" failed to draw renders: ${e}`);
 							});
 					}
 				}
@@ -333,12 +409,19 @@ export class SurfaceHost {
 
 	/** A surface has disconnected */
 	async surfaceDisonnected(deviceId: string): Promise<void> {
-		const wrapped = this.getWrappedSurface(deviceId);
-		await wrapped.queue.add(async () => {
-			// Clear space info for the surface
-			await this.setupSurfaceForSpaceInner(deviceId, null);
+		await this.getWrappedSurface(deviceId).queue.add(async () => {
+			const surface = this.surfaces.get(deviceId);
+			if (!surface) {
+				// Already disconnected
+				return;
+			}
 
-			wrapped.surface = null;
+			logger.info(`Removing device: "${deviceId}"`);
+
+			surface.surface = null;
+
+			// Clear space info for the surface
+			await this.setupSurfaceForSpaceInner(deviceId, surface, null);
 
 			await Promise.all([
 				this.core.models.surfaceDevices.updateOne(
@@ -371,6 +454,7 @@ export class SurfaceHost {
 		if (surface) {
 			const controlId = surface.slotToControlIds[slotId];
 			if (controlId) {
+				logger.debug(`Doing press for "${controlId}" "${pressed}"`);
 				await this.controlRunner.pressControl(controlId, pressed);
 			}
 		}

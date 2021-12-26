@@ -14,7 +14,7 @@
  * disclosing the source code of your own applications.
  *
  */
-import { IButtonControlRenderLayer } from '@companion/core-shared/dist/collections';
+import { IButtonControlRenderLayer, SomeSurfaceSpec } from '@companion/core-shared/dist/collections';
 import net from 'net';
 import { createChildLogger } from '../logger.js';
 import { IConnectedSurface } from './surface-host.js';
@@ -32,7 +32,7 @@ export class SatelliteDevice implements IConnectedSurface {
 		private readonly socket: net.Socket,
 		private readonly deviceId: string,
 		private readonly options: SatelliteOptions,
-		public readonly moduleName: string,
+		public readonly surfaceSpec: SomeSurfaceSpec,
 	) {}
 
 	public get uid(): string {
